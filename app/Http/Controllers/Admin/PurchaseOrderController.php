@@ -1,0 +1,78 @@
+<?php
+
+namespace App\Http\Controllers\Admin;
+
+use App\Http\Controllers\Controller;
+use App\Http\Requests\Admin\PurchaseOrderRequest;
+use App\Models\PurchaseOrder;
+use App\Models\Tender;
+use App\Models\TenderHistory;
+use Illuminate\Http\RedirectResponse;
+use Illuminate\View\View;
+
+class PurchaseOrderController extends Controller
+{
+    /**
+     * Show the create PO form.
+     */
+    public function create(Tender $tender): View
+    {
+        $result = $tender->result()->with(['winner'])->first();
+
+        abort_if(is_null($result), 422, 'Pilih pemenang tender terlebih dahulu sebelum membuat PO.');
+        abort_if($tender->purchaseOrder()->exists(), 422, 'PO untuk tender ini sudah dibuat.');
+
+        // Suggest a PO number
+        $suggestedPoNumber = 'PO-' . strtoupper(substr(md5($tender->id . now()), 0, 8));
+
+        return view('admin.purchase-orders.create', compact('tender', 'result', 'suggestedPoNumber'));
+    }
+
+    /**
+     * Store a new Purchase Order.
+     */
+    public function store(PurchaseOrderRequest $request, Tender $tender): RedirectResponse
+    {
+        $result = $tender->result()->with(['winner'])->first();
+
+        abort_if(is_null($result), 422, 'Pilih pemenang tender terlebih dahulu.');
+        abort_if($tender->purchaseOrder()->exists(), 422, 'PO untuk tender ini sudah ada.');
+
+        PurchaseOrder::create([
+            'tender_result_id' => $result->id,
+            'tender_id'        => $tender->id,
+            'vendor_id'        => $result->winner_vendor_id,
+            'po_number'        => $request->input('po_number'),
+            'amount'           => $request->input('amount'),
+            'issued_date'      => $request->input('issued_date'),
+            'notes'            => $request->input('notes'),
+            'generated_by'     => auth()->id(),
+        ]);
+
+        TenderHistory::create([
+            'tender_id'   => $tender->id,
+            'actor_id'    => auth()->id(),
+            'action'      => 'po_generated',
+            'old_status'  => $tender->status,
+            'new_status'  => $tender->status,
+            'description' => "PO {$request->input('po_number')} diterbitkan.",
+            'created_at'  => now(),
+        ]);
+
+        return redirect()
+            ->route('admin.tenders.purchase-order.show', $tender)
+            ->with('success', 'Purchase Order berhasil dibuat.');
+    }
+
+    /**
+     * Show the Purchase Order.
+     */
+    public function show(Tender $tender): View
+    {
+        $po = $tender->purchaseOrder()->with(['vendor.user', 'tender', 'generator'])->first();
+
+        abort_if(is_null($po), 404, 'PO belum dibuat untuk tender ini.');
+
+        return view('admin.purchase-orders.show', compact('tender', 'po'));
+    }
+}
