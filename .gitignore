@@ -1,9 +1,7 @@
 *.log
 .DS_Store
 .env
-.env.backup
-.env.production
-.phpactor.json
+.env.*
 .phpunit.result.cache
 /.codex
 /.cursor/
@@ -24,3 +22,11 @@ _ide_helper.php
 Homestead.json
 Homestead.yaml
 Thumbs.db
+
+# Additional rules based on user request
+/storage/logs/*.log
+/storage/framework/cache/*
+/storage/framework/sessions/*
+/storage/framework/views/*
+npm-debug.log
+yarn-error.log
