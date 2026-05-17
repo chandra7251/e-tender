@@ -7,29 +7,29 @@
 <div class="max-w-3xl space-y-6">
 
     <a href="{{ route('admin.tenders.show', $tender) }}"
-       class="inline-flex items-center gap-1.5 text-sm text-gray-500 hover:text-gray-300 transition-colors">
-        <svg class="h-4 w-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"
-             stroke-width="1.5" stroke="currentColor">
+       class="inline-flex items-center gap-2 text-sm font-bold text-gray-700 hover:text-gray-900 transition-colors">
+        <svg class="h-4 w-4 stroke-2" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"
+             stroke="currentColor">
             <path stroke-linecap="round" stroke-linejoin="round" d="M15.75 19.5L8.25 12l7.5-7.5"/>
         </svg>
-        Kembali ke Detail Tender
+        Kembali Ke Detail Tender
     </a>
 
-    <form method="POST" action="{{ route('admin.tenders.update', $tender) }}" class="space-y-6">
+    <form method="POST" action="{{ route('admin.tenders.update', $tender) }}">
         @csrf
         @method('PUT')
 
         @include('admin.tenders._form', compact('tender'))
 
-        <div class="flex items-center justify-end gap-3 border-t border-gray-800 pt-4">
+        <div class="flex items-center justify-end gap-3 border-t border-gray-300 pt-6 mt-6">
             <a href="{{ route('admin.tenders.show', $tender) }}"
-               class="rounded-lg border border-gray-700 px-4 py-2 text-sm text-gray-400
-                      hover:text-white transition-colors duration-150">
+               class="rounded-md border border-[#3553A8] bg-[#F0F2F5] px-8 py-2.5 text-sm font-bold text-[#3553A8]
+                      hover:bg-indigo-50 transition-colors duration-150">
                 Batal
             </a>
             <button type="submit"
-                    class="rounded-lg bg-indigo-600 px-5 py-2 text-sm font-semibold text-white
-                           hover:bg-indigo-500 transition-colors duration-150">
+                    class="rounded-md bg-[#3553A8] border border-[#3553A8] px-8 py-2.5 text-sm font-bold text-white
+                           hover:bg-[#2B438A] transition-colors duration-150">
                 Simpan Perubahan
             </button>
         </div>
