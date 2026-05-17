@@ -1,95 +1,75 @@
 <!DOCTYPE html>
-<html lang="id" class="h-full bg-gray-950">
+<html lang="id" class="h-full bg-[#F0F2F5]">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="csrf-token" content="{{ csrf_token() }}">
     <title>@yield('title', 'Admin Panel') — E-Procurement</title>
 
-    {{-- Tailwind CSS via CDN (replace with Vite build if needed) --}}
     <script src="https://cdn.tailwindcss.com"></script>
-    <script>
-        tailwind.config = {
-            darkMode: 'class',
-            theme: {
-                extend: {
-                    colors: {
-                        brand: {
-                            50:  '#eef2ff',
-                            100: '#e0e7ff',
-                            500: '#6366f1',
-                            600: '#4f46e5',
-                            700: '#4338ca',
-                        }
-                    }
-                }
-            }
-        }
-    </script>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        body { font-family: 'Poppins', sans-serif; }
+    </style>
 </head>
 
-<body class="h-full dark">
-<div class="flex h-full min-h-screen bg-gray-950 text-gray-100">
+<body class="h-full">
+<div class="flex h-full min-h-screen bg-[#F0F2F5] text-gray-800">
 
     {{-- ── Sidebar ──────────────────────────────────────────────────────── --}}
-    <aside class="flex w-60 flex-col bg-gray-900 border-r border-gray-800">
+    <aside class="flex w-64 flex-col bg-[#3553A8] border-r border-[#4A6BCC]">
 
         {{-- Logo / App name --}}
-        <div class="flex h-16 items-center px-6 border-b border-gray-800">
-            <span class="text-lg font-bold tracking-tight text-indigo-400">E-Procurement</span>
+        <div class="flex h-[72px] items-center px-6 border-b border-[#4A6BCC]">
+            <img src="{{ asset('images/auth/logo.png') }}" alt="E-Tender Logo" class="h-10 w-auto">
         </div>
 
         {{-- Nav links --}}
-        <nav class="flex-1 space-y-1 px-3 py-4">
+        <nav class="flex-1 space-y-2 px-4 py-6">
             <a href="{{ route('admin.dashboard') }}"
-               class="flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium
-                      {{ request()->routeIs('admin.dashboard') ? 'bg-indigo-600 text-white' : 'text-gray-400 hover:bg-gray-800 hover:text-white' }}
+               class="flex items-center gap-3 rounded-lg px-4 py-3 text-sm font-semibold
+                      {{ request()->routeIs('admin.dashboard') ? 'bg-white text-[#3553A8]' : 'text-white hover:bg-[#2B438A]' }}
                       transition-colors duration-150">
-                {{-- Dashboard icon --}}
-                <svg class="h-5 w-5 shrink-0" xmlns="http://www.w3.org/2000/svg" fill="none"
-                     viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
-                    <path stroke-linecap="round" stroke-linejoin="round"
-                          d="M3.75 6A2.25 2.25 0 016 3.75h2.25A2.25 2.25 0 0110.5 6v2.25a2.25 2.25 0 01-2.25 2.25H6a2.25 2.25 0 01-2.25-2.25V6zM3.75 15.75A2.25 2.25 0 016 13.5h2.25a2.25 2.25 0 012.25 2.25V18A2.25 2.25 0 018.25 20.25H6A2.25 2.25 0 013.75 18v-2.25zM13.5 6a2.25 2.25 0 012.25-2.25H18A2.25 2.25 0 0120.25 6v2.25A2.25 2.25 0 0118 10.5h-2.25a2.25 2.25 0 01-2.25-2.25V6zM13.5 15.75a2.25 2.25 0 012.25-2.25H18a2.25 2.25 0 012.25 2.25V18A2.25 2.25 0 0118 20.25h-2.25A2.25 2.25 0 0113.5 18v-2.25z"/>
+                {{-- Dashboard icon (Grid) --}}
+                <svg class="h-5 w-5 shrink-0" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor">
+                    <path fill-rule="evenodd" d="M3 6a3 3 0 013-3h2.25a3 3 0 013 3v2.25a3 3 0 01-3 3H6a3 3 0 01-3-3V6zm9.75 0a3 3 0 013-3H18a3 3 0 013 3v2.25a3 3 0 01-3 3h-2.25a3 3 0 01-3-3V6zM3 15.75a3 3 0 013-3h2.25a3 3 0 013 3V18a3 3 0 01-3 3H6a3 3 0 01-3-3v-2.25zm9.75 0a3 3 0 013-3H18a3 3 0 013 3V18a3 3 0 01-3 3h-2.25a3 3 0 01-3-3v-2.25z" clip-rule="evenodd" />
                 </svg>
                 Dashboard
             </a>
 
             <a href="{{ route('admin.vendors.index') }}"
-               class="flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium
-                      {{ request()->routeIs('admin.vendors*') ? 'bg-indigo-600 text-white' : 'text-gray-400 hover:bg-gray-800 hover:text-white' }}
+               class="flex items-center gap-3 rounded-lg px-4 py-3 text-sm font-semibold
+                      {{ request()->routeIs('admin.vendors*') ? 'bg-white text-[#3553A8]' : 'text-white hover:bg-[#2B438A]' }}
                       transition-colors duration-150">
-                {{-- Vendors icon --}}
-                <svg class="h-5 w-5 shrink-0" xmlns="http://www.w3.org/2000/svg" fill="none"
-                     viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
-                    <path stroke-linecap="round" stroke-linejoin="round"
-                          d="M18 18.72a9.094 9.094 0 003.741-.479 3 3 0 00-4.682-2.72m.94 3.198l.001.031c0 .225-.012.447-.037.666A11.944 11.944 0 0112 21c-2.17 0-4.207-.576-5.963-1.584A6.062 6.062 0 016 18.719m12 0a5.971 5.971 0 00-.941-3.197m0 0A5.995 5.995 0 0012 12.75a5.995 5.995 0 00-5.058 2.772m0 0a3 3 0 00-4.681 2.72 8.986 8.986 0 003.74.477m.94-3.197a5.971 5.971 0 00-.94 3.197M15 6.75a3 3 0 11-6 0 3 3 0 016 0zm6 3a2.25 2.25 0 11-4.5 0 2.25 2.25 0 014.5 0zm-13.5 0a2.25 2.25 0 11-4.5 0 2.25 2.25 0 014.5 0z"/>
+                {{-- Vendors icon (Users) --}}
+                <svg class="h-5 w-5 shrink-0" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor">
+                    <path d="M4.5 6.375a4.125 4.125 0 118.25 0 4.125 4.125 0 01-8.25 0zM14.25 8.625a3.375 3.375 0 116.75 0 3.375 3.375 0 01-6.75 0zM1.5 19.125a7.125 7.125 0 0114.25 0v.003l-.001.119a.75.75 0 01-.363.63 13.067 13.067 0 01-6.761 1.873c-2.472 0-4.786-.684-6.76-1.873a.75.75 0 01-.364-.63l-.001-.122zM17.25 19.128l-.001.144a2.25 2.25 0 01-.233.96 10.088 10.088 0 005.06-1.01.75.75 0 00.42-.643 4.875 4.875 0 00-6.957-4.611 8.586 8.586 0 011.71 5.157v.003z" />
                 </svg>
-                Vendors
+                Vendor
             </a>
 
             <a href="{{ route('admin.tenders.index') }}"
-               class="flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium
-                      {{ request()->routeIs('admin.tenders*') ? 'bg-indigo-600 text-white' : 'text-gray-400 hover:bg-gray-800 hover:text-white' }}
+               class="flex items-center gap-3 rounded-lg px-4 py-3 text-sm font-semibold
+                      {{ request()->routeIs('admin.tenders*') ? 'bg-white text-[#3553A8]' : 'text-white hover:bg-[#2B438A]' }}
                       transition-colors duration-150">
-                {{-- Tenders icon --}}
-                <svg class="h-5 w-5 shrink-0" xmlns="http://www.w3.org/2000/svg" fill="none"
-                     viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
-                    <path stroke-linecap="round" stroke-linejoin="round"
-                          d="M9 12h3.75M9 15h3.75M9 18h3.75m3 .75H18a2.25 2.25 0 002.25-2.25V6.108c0-1.135-.845-2.098-1.976-2.192a48.424 48.424 0 00-1.123-.08m-5.801 0c-.065.21-.1.433-.1.664 0 .414.336.75.75.75h4.5a.75.75 0 00.75-.75 2.25 2.25 0 00-.1-.664m-5.8 0A2.251 2.251 0 0113.5 2.25H15c1.012 0 1.867.668 2.15 1.586m-5.8 0c-.376.023-.75.05-1.124.08C9.095 4.01 8.25 4.973 8.25 6.108V8.25m0 0H4.875c-.621 0-1.125.504-1.125 1.125v11.25c0 .621.504 1.125 1.125 1.125h9.75c.621 0 1.125-.504 1.125-1.125V9.375c0-.621-.504-1.125-1.125-1.125H8.25zM6.75 12h.008v.008H6.75V12zm0 3h.008v.008H6.75V15zm0 3h.008v.008H6.75V18z"/>
+                {{-- Tenders icon (Document) --}}
+                <svg class="h-5 w-5 shrink-0" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor">
+                    <path fill-rule="evenodd" d="M5.625 1.5c-1.036 0-1.875.84-1.875 1.875v17.25c0 1.035.84 1.875 1.875 1.875h12.75c1.035 0 1.875-.84 1.875-1.875V12.75A3.75 3.75 0 0016.5 9h-1.875a1.875 1.875 0 01-1.875-1.875V5.25A3.75 3.75 0 009 1.5H5.625zM7.5 15a.75.75 0 01.75-.75h7.5a.75.75 0 010 1.5h-7.5A.75.75 0 017.5 15zm.75 2.25a.75.75 0 000 1.5H12a.75.75 0 000-1.5H8.25z" clip-rule="evenodd" />
+                    <path d="M12.971 1.816A5.23 5.23 0 0114.25 5.25v1.875c0 .207.168.375.375.375H16.5a5.23 5.23 0 013.434 1.279 9.768 9.768 0 00-6.963-6.963z" />
                 </svg>
-                Tenders
+                Tender
             </a>
         </nav>
 
         {{-- Logout button at bottom of sidebar --}}
-        <div class="border-t border-gray-800 p-4">
+        <div class="border-t border-[#4A6BCC] p-4">
             <form method="POST" action="{{ route('admin.logout') }}">
                 @csrf
                 <button type="submit"
-                        class="flex w-full items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium
-                               text-gray-400 hover:bg-red-900/40 hover:text-red-400 transition-colors duration-150">
+                        class="flex w-full items-center gap-3 rounded-lg px-4 py-3 text-sm font-medium
+                               text-white hover:bg-[#2B438A] transition-colors duration-150">
                     <svg class="h-5 w-5 shrink-0" xmlns="http://www.w3.org/2000/svg" fill="none"
-                         viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+                         viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
                         <path stroke-linecap="round" stroke-linejoin="round"
                               d="M15.75 9V5.25A2.25 2.25 0 0013.5 3h-6a2.25 2.25 0 00-2.25 2.25v13.5A2.25 2.25 0 007.5 21h6a2.25 2.25 0 002.25-2.25V15M12 9l-3 3m0 0l3 3m-3-3h12.75"/>
                     </svg>
@@ -103,33 +83,44 @@
     <div class="flex flex-1 flex-col overflow-hidden">
 
         {{-- Topbar --}}
-        <header class="flex h-16 items-center justify-between border-b border-gray-800 bg-gray-900 px-6">
-            <h1 class="text-base font-semibold text-gray-100">@yield('page-title', 'Admin Panel')</h1>
-            <div class="flex items-center gap-2 text-sm text-gray-400">
-                <svg class="h-4 w-4" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"
-                     fill="currentColor">
-                    <path fill-rule="evenodd"
-                          d="M18.685 19.097A9.723 9.723 0 0021.75 12c0-5.385-4.365-9.75-9.75-9.75S2.25 6.615 2.25 12a9.723 9.723 0 003.065 7.097A9.716 9.716 0 0012 21.75a9.716 9.716 0 006.685-2.653zm-12.54-1.285A7.486 7.486 0 0112 15a7.486 7.486 0 015.855 2.812A8.224 8.224 0 0112 20.25a8.224 8.224 0 01-5.855-2.438zM15.75 9a3.75 3.75 0 11-7.5 0 3.75 3.75 0 017.5 0z"
-                          clip-rule="evenodd"/>
-                </svg>
-                {{ auth()->user()->name ?? 'Admin' }}
+        <header class="flex h-[72px] items-center justify-between border-b border-[#4A6BCC] bg-[#3553A8] px-8">
+            <h1 class="text-xl font-bold text-white tracking-wide">@yield('page-title', 'Dashboard')</h1>
+            
+            <div class="flex items-center gap-8">
+                {{-- Search Bar --}}
+                <div class="relative hidden sm:block">
+                    <div class="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3">
+                        <svg class="h-5 w-5 text-indigo-200" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
+                            <path fill-rule="evenodd" d="M9 3.5a5.5 5.5 0 100 11 5.5 5.5 0 000-11zM2 9a7 7 0 1112.452 4.391l3.328 3.329a.75.75 0 11-1.06 1.06l-3.329-3.328A7 7 0 012 9z" clip-rule="evenodd" />
+                        </svg>
+                    </div>
+                    <input type="text" name="search" id="search" class="block w-64 rounded-full border border-indigo-300 bg-transparent py-1.5 pl-10 pr-3 text-white placeholder:text-indigo-200 focus:outline-none focus:ring-1 focus:ring-white sm:text-sm sm:leading-6" placeholder="Search">
+                </div>
+
+                {{-- Profile --}}
+                <div class="flex items-center gap-3">
+                    <span class="text-sm font-medium text-white">{{ auth()->user()->name ?? 'Admin Tender' }}</span>
+                    <div class="h-10 w-10 overflow-hidden rounded-full border-2 border-white/20">
+                        <img src="https://ui-avatars.com/api/?name=Admin+Tender&background=28C5D4&color=fff" alt="Avatar" class="h-full w-full object-cover">
+                    </div>
+                </div>
             </div>
         </header>
 
         {{-- Flash messages --}}
         @if (session('success'))
-            <div class="mx-6 mt-4 rounded-lg bg-emerald-900/50 border border-emerald-700 px-4 py-3 text-sm text-emerald-300">
+            <div class="mx-8 mt-6 rounded-lg bg-emerald-50 border border-emerald-200 px-4 py-3 text-sm text-emerald-600">
                 {{ session('success') }}
             </div>
         @endif
         @if (session('error'))
-            <div class="mx-6 mt-4 rounded-lg bg-red-900/50 border border-red-700 px-4 py-3 text-sm text-red-300">
+            <div class="mx-8 mt-6 rounded-lg bg-red-50 border border-red-200 px-4 py-3 text-sm text-red-600">
                 {{ session('error') }}
             </div>
         @endif
 
         {{-- Page content --}}
-        <main class="flex-1 overflow-y-auto p-6">
+        <main class="flex-1 overflow-y-auto p-8">
             @yield('content')
         </main>
     </div>

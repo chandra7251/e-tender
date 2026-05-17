@@ -4,95 +4,99 @@
 @section('page-title', 'Monitoring Bid')
 
 @section('content')
-<div class="space-y-4">
+<div class="space-y-6">
 
     {{-- Back + header --}}
     <div class="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
         <a href="{{ route('admin.tenders.show', $tender) }}"
-           class="inline-flex items-center gap-1.5 text-sm text-gray-500 hover:text-gray-300 transition-colors">
-            <svg class="h-4 w-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"
-                 stroke-width="1.5" stroke="currentColor">
+           class="inline-flex items-center gap-2 text-sm font-bold text-gray-700 hover:text-gray-900 transition-colors">
+            <svg class="h-4 w-4 stroke-2" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"
+                 stroke="currentColor">
                 <path stroke-linecap="round" stroke-linejoin="round" d="M15.75 19.5L8.25 12l7.5-7.5"/>
             </svg>
-            Kembali ke Detail Tender
+            Kembali Ke Detail Tender
         </a>
-        <span class="text-sm font-medium text-gray-400 truncate">{{ $tender->title }}</span>
+        <div class="text-sm">
+            <span class="font-bold text-[#3553A8] truncate max-w-sm inline-block">{{ $tender->title }}</span>
+        </div>
     </div>
 
     {{-- Summary cards --}}
     <div class="grid grid-cols-2 gap-4 sm:grid-cols-3">
-        <div class="rounded-xl border border-gray-800 bg-gray-900 p-4">
-            <p class="text-xs text-gray-500">Total Bid</p>
-            <p class="mt-1 text-2xl font-bold text-indigo-400">{{ $bids->count() }}</p>
+        {{-- Total Bid --}}
+        <div class="rounded-md border border-[#3553A8] bg-[#3553A8] p-4 shadow-sm">
+            <p class="text-xs font-medium text-white mb-1">Total Bid</p>
+            <p class="text-xl font-bold text-white">{{ $bids->count() }}</p>
         </div>
-        <div class="rounded-xl border border-teal-800 bg-teal-900/30 p-4">
-            <p class="text-xs text-gray-500">Bid Terendah</p>
-            <p class="mt-1 text-2xl font-bold text-teal-400">
-                {{ $bids->isNotEmpty() ? 'Rp ' . number_format($bids->first()->bid_amount, 0, ',', '.') : '—' }}
+        {{-- Bid Terendah --}}
+        <div class="rounded-md border border-[#3553A8] bg-[#F0F2F5] p-4 shadow-sm">
+            <p class="text-xs font-medium text-[#3553A8] mb-1">Bid Terendah</p>
+            <p class="text-xl font-bold text-[#3553A8]">
+                {{ $bids->isNotEmpty() ? 'Rp ' . number_format($bids->first()->bid_amount, 0, ',', '.') : '-' }}
             </p>
         </div>
-        <div class="rounded-xl border border-gray-800 bg-gray-900 p-4">
-            <p class="text-xs text-gray-500">Bid Tertinggi</p>
-            <p class="mt-1 text-2xl font-bold text-gray-300">
-                {{ $bids->isNotEmpty() ? 'Rp ' . number_format($bids->last()->bid_amount, 0, ',', '.') : '—' }}
+        {{-- Bid Tertinggi --}}
+        <div class="rounded-md border border-[#3553A8] bg-[#3553A8] p-4 shadow-sm">
+            <p class="text-xs font-medium text-white mb-1">Bid Tertinggi</p>
+            <p class="text-xl font-bold text-white">
+                {{ $bids->isNotEmpty() ? 'Rp ' . number_format($bids->last()->bid_amount, 0, ',', '.') : '-' }}
             </p>
         </div>
     </div>
 
     {{-- Table --}}
-    <div class="overflow-x-auto rounded-xl border border-gray-800 bg-gray-900">
-        <table class="w-full text-sm">
+    <div class="overflow-x-auto rounded-md bg-[#3553A8] shadow-sm">
+        <table class="w-full text-sm text-white">
             <thead>
-                <tr class="border-b border-gray-800 text-left text-xs font-semibold uppercase tracking-widest text-gray-500">
-                    <th class="px-5 py-3">Rank</th>
-                    <th class="px-5 py-3">Vendor</th>
-                    <th class="px-5 py-3">Email</th>
-                    <th class="px-5 py-3 text-right">Bid Amount</th>
-                    <th class="px-5 py-3">Notes</th>
-                    <th class="px-5 py-3">Submitted</th>
-                    <th class="px-5 py-3"></th>
+                <tr class="border-b border-[#4A6BCC] text-left text-xs font-bold uppercase tracking-wider text-indigo-200">
+                    <th class="px-6 py-4">Rank</th>
+                    <th class="px-6 py-4">Vendor</th>
+                    <th class="px-6 py-4">Email</th>
+                    <th class="px-6 py-4 text-right">Bid Amount</th>
+                    <th class="px-6 py-4">Notes</th>
+                    <th class="px-6 py-4">Submitted</th>
+                    <th class="px-6 py-4"></th>
                 </tr>
             </thead>
-            <tbody class="divide-y divide-gray-800">
+            <tbody class="divide-y divide-[#4A6BCC]">
                 @forelse ($bids as $i => $bid)
-                    <tr class="{{ $bid->id === $lowestBidId ? 'bg-teal-900/20' : 'hover:bg-gray-800/40' }} transition-colors duration-100">
-                        <td class="px-5 py-3">
+                    <tr class="{{ $bid->id === $lowestBidId ? 'bg-[#2B438A]' : 'hover:bg-[#2B438A]' }} transition-colors duration-150">
+                        <td class="px-6 py-4">
                             @if ($bid->id === $lowestBidId)
-                                <span class="inline-flex items-center gap-1 rounded-full border border-teal-700
-                                             bg-teal-900/50 px-2.5 py-0.5 text-xs font-semibold text-teal-400">
+                                <span class="inline-flex items-center gap-1 rounded bg-[#28C5D4] px-2 py-1 text-xs font-bold text-white">
                                     ★ Terendah
                                 </span>
                             @else
-                                <span class="text-gray-600">#{{ $i + 1 }}</span>
+                                <span class="text-indigo-50 font-bold">#{{ $i + 1 }}</span>
                             @endif
                         </td>
-                        <td class="px-5 py-3 font-medium text-gray-100">
+                        <td class="px-6 py-4 font-bold tracking-wide">
                             {{ $bid->vendor->company_name ?? '-' }}
                         </td>
-                        <td class="px-5 py-3 text-gray-400">
+                        <td class="px-6 py-4 text-indigo-50">
                             {{ $bid->vendor->user->email ?? '-' }}
                         </td>
-                        <td class="px-5 py-3 text-right font-mono font-semibold
-                                   {{ $bid->id === $lowestBidId ? 'text-teal-400' : 'text-gray-100' }}">
+                        <td class="px-6 py-4 text-right font-mono font-bold
+                                   {{ $bid->id === $lowestBidId ? 'text-[#28C5D4]' : 'text-white' }}">
                             Rp {{ number_format($bid->bid_amount, 0, ',', '.') }}
                         </td>
-                        <td class="px-5 py-3 text-gray-500 max-w-xs truncate">
+                        <td class="px-6 py-4 text-indigo-50 max-w-xs truncate">
                             {{ $bid->notes ?? '-' }}
                         </td>
-                        <td class="px-5 py-3 text-gray-500">
+                        <td class="px-6 py-4 text-indigo-50">
                             {{ $bid->submitted_at?->format('d M Y, H:i') ?? '-' }}
                         </td>
-                        <td class="px-5 py-3 text-right">
+                        <td class="px-6 py-4 text-right">
                             <a href="{{ route('admin.tenders.bids.histories', [$tender, $bid]) }}"
-                               class="rounded-md bg-gray-800 px-3 py-1.5 text-xs font-medium text-gray-300
-                                      hover:bg-indigo-600 hover:text-white transition-colors duration-150">
+                               class="rounded bg-[#2B438A] border border-[#4A6BCC] px-4 py-1.5 text-xs font-bold text-white
+                                      hover:bg-[#1E3066] transition-colors duration-150">
                                 Histori
                             </a>
                         </td>
                     </tr>
                 @empty
                     <tr>
-                        <td colspan="7" class="px-5 py-10 text-center text-sm text-gray-600">
+                        <td colspan="7" class="px-6 py-12 text-center text-sm text-indigo-200">
                             Belum ada bid masuk pada tender ini.
                         </td>
                     </tr>

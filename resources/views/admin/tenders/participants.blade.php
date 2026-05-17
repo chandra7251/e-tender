@@ -4,73 +4,73 @@
 @section('page-title', 'Peserta Tender')
 
 @section('content')
-<div class="space-y-4">
+<div class="space-y-6">
 
     {{-- Back + header --}}
     <div class="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
         <a href="{{ route('admin.tenders.show', $tender) }}"
-           class="inline-flex items-center gap-1.5 text-sm text-gray-500 hover:text-gray-300 transition-colors">
-            <svg class="h-4 w-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"
-                 stroke-width="1.5" stroke="currentColor">
+           class="inline-flex items-center gap-2 text-sm font-bold text-gray-700 hover:text-gray-900 transition-colors">
+            <svg class="h-4 w-4 stroke-2" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"
+                 stroke="currentColor">
                 <path stroke-linecap="round" stroke-linejoin="round" d="M15.75 19.5L8.25 12l7.5-7.5"/>
             </svg>
-            Kembali ke Detail Tender
+            Kembali Ke Detail Tender
         </a>
-        <div class="text-sm text-gray-500">
-            <span class="font-medium text-gray-300 truncate max-w-xs inline-block">{{ $tender->title }}</span>
+        <div class="text-sm">
+            <span class="font-bold text-[#3553A8] truncate max-w-sm inline-block">{{ $tender->title }}</span>
         </div>
     </div>
 
     {{-- Stat --}}
-    <div class="rounded-xl border border-gray-800 bg-gray-900 px-5 py-4">
-        <p class="text-sm text-gray-500">
+    <div class="rounded-md bg-[#3553A8] px-6 py-4 shadow-sm">
+        <p class="text-sm font-bold text-white flex items-center">
             Total Peserta:
-            <span class="ml-1 text-2xl font-bold text-indigo-400">{{ $participants->count() }}</span>
+            <span class="ml-2 text-xl font-bold">{{ $participants->count() }}</span>
         </p>
     </div>
 
     {{-- Table --}}
-    <div class="overflow-hidden rounded-xl border border-gray-800 bg-gray-900">
-        <table class="w-full text-sm">
+    <div class="overflow-x-auto rounded-md bg-[#3553A8] shadow-sm">
+        <table class="w-full text-sm text-white">
             <thead>
-                <tr class="border-b border-gray-800 text-left text-xs font-semibold uppercase tracking-widest text-gray-500">
-                    <th class="px-5 py-3">#</th>
-                    <th class="px-5 py-3">Perusahaan</th>
-                    <th class="px-5 py-3">Email</th>
-                    <th class="px-5 py-3">Status Vendor</th>
-                    <th class="px-5 py-3">Bergabung</th>
+                <tr class="border-b border-[#4A6BCC] text-left text-xs font-bold uppercase tracking-wider text-indigo-200">
+                    <th class="px-6 py-4 w-16">#</th>
+                    <th class="px-6 py-4">Perusahaan</th>
+                    <th class="px-6 py-4">Email</th>
+                    <th class="px-6 py-4">Status Vendor</th>
+                    <th class="px-6 py-4">Bergabung</th>
                 </tr>
             </thead>
-            <tbody class="divide-y divide-gray-800">
+            <tbody class="divide-y divide-[#4A6BCC]">
                 @forelse ($participants as $i => $participant)
-                    <tr class="hover:bg-gray-800/40 transition-colors duration-100">
-                        <td class="px-5 py-3 text-gray-600">{{ $i + 1 }}</td>
-                        <td class="px-5 py-3 font-medium text-gray-100">
+                    <tr class="hover:bg-[#2B438A] transition-colors duration-150">
+                        <td class="px-6 py-4 text-indigo-50 font-bold">{{ $i + 1 }}</td>
+                        <td class="px-6 py-4 font-bold">
                             {{ $participant->vendor->company_name ?? '-' }}
                         </td>
-                        <td class="px-5 py-3 text-gray-400">
+                        <td class="px-6 py-4 text-indigo-50">
                             {{ $participant->vendor->user->email ?? '-' }}
                         </td>
-                        <td class="px-5 py-3">
+                        <td class="px-6 py-4">
                             @php
                                 $status = $participant->vendor->verification_status ?? 'unknown';
                                 $badge = match($status) {
-                                    'approved' => 'bg-emerald-900/50 text-emerald-400 border-emerald-700',
-                                    'rejected' => 'bg-red-900/50 text-red-400 border-red-700',
-                                    default    => 'bg-amber-900/50 text-amber-400 border-amber-700',
+                                    'approved' => 'bg-[#28C5D4] text-white',
+                                    'rejected' => 'bg-[#788B9A] text-white',
+                                    default    => 'bg-[#F09459] text-white',
                                 };
                             @endphp
-                            <span class="inline-flex items-center rounded-full border px-2.5 py-0.5 text-xs font-medium {{ $badge }}">
+                            <span class="inline-flex items-center rounded-full px-3 py-1 text-xs font-bold {{ $badge }}">
                                 {{ ucfirst($status) }}
                             </span>
                         </td>
-                        <td class="px-5 py-3 text-gray-500">
+                        <td class="px-6 py-4 text-indigo-50">
                             {{ $participant->joined_at?->format('d M Y, H:i') ?? '-' }}
                         </td>
                     </tr>
                 @empty
                     <tr>
-                        <td colspan="5" class="px-5 py-10 text-center text-sm text-gray-600">
+                        <td colspan="5" class="px-6 py-12 text-center text-sm text-indigo-200">
                             Belum ada vendor yang bergabung pada tender ini.
                         </td>
                     </tr>
