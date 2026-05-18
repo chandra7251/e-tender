@@ -167,13 +167,13 @@
                         <div class="relative flex items-center">
                             <input 
                                 id="password" 
-                                type="password" 
+                                type="password"
                                 name="password" 
                                 required 
                                 placeholder="••••••••••••••" 
                                 class="form-input pr-12 @error('password') border-red-400 @enderror"
                             >
-                            <button type="button" class="absolute right-4 text-gray-300 hover:text-gray-500 focus:outline-none transition-colors">
+                            <button type="button" onclick="document.getElementById('password').type = document.getElementById('password').type === 'password' ? 'text' : 'password'" class="absolute right-4 text-gray-300 hover:text-gray-500 focus:outline-none transition-colors">
                                 <!-- Eye Icon -->
                                 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="w-6 h-6">
                                     <path d="M12 15a3 3 0 100-6 3 3 0 000 6z" />
@@ -191,13 +191,6 @@
                         <button type="submit" class="submit-btn">
                             Masuk
                         </button>
-                    </div>
-
-                    <!-- Forgot Password -->
-                    <div class="text-center mt-5">
-                        <a href="#" class="text-sm text-gray-400 hover:text-gray-600 transition-colors">
-                            Lupa kata sandi?
-                        </a>
                     </div>
                 </form>
 
