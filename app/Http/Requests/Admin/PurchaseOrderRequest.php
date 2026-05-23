@@ -15,7 +15,7 @@ class PurchaseOrderRequest extends FormRequest
     {
         return [
             'po_number'   => ['required', 'string', 'max:100', 'unique:purchase_orders,po_number'],
-            'amount'      => ['required', 'numeric', 'min:0'],
+            'amount'      => ['required', 'numeric', 'min:1'],
             'issued_date' => ['required', 'date'],
             'notes'       => ['nullable', 'string', 'max:1000'],
         ];
@@ -27,7 +27,7 @@ class PurchaseOrderRequest extends FormRequest
             'po_number.required' => 'Nomor PO wajib diisi.',
             'po_number.unique'   => 'Nomor PO sudah digunakan.',
             'amount.required'    => 'Jumlah PO wajib diisi.',
-            'amount.min'         => 'Jumlah PO tidak boleh negatif.',
+            'amount.min'         => 'Jumlah PO harus lebih dari 0.',
             'issued_date.required' => 'Tanggal PO wajib diisi.',
         ];
     }

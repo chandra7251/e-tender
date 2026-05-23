@@ -15,14 +15,22 @@ class WinnerSelectionController extends Controller
 {
     /**
      * Show the winner selection form.
+     * FIX BUG-01: Tender harus berstatus 'closed' sebelum winner bisa dipilih.
      */
     public function create(Tender $tender): View
     {
-        // Guard: no bids = cannot select winner
-        abort_if($tender->bids()->count() === 0, 422, 'Tender belum memiliki bid.');
+        // Guard: hanya bisa pilih winner saat tender sudah closed
+        abort_if(
+            $tender->status !== 'closed',
+            422,
+            "Pemenang hanya bisa dipilih saat tender berstatus 'closed'. Status saat ini: '{$tender->status}'."
+        );
 
-        // Guard: winner already exists
+        // Guard: winner sudah pernah dipilih
         abort_if($tender->result()->exists(), 422, 'Pemenang tender sudah dipilih sebelumnya.');
+
+        // Guard: tidak ada bid
+        abort_if($tender->bids()->count() === 0, 422, 'Tender belum memiliki bid.');
 
         $bids = $tender->bids()
             ->with(['vendor.user'])
@@ -34,18 +42,27 @@ class WinnerSelectionController extends Controller
 
     /**
      * Store the selected winner.
+     * FIX BUG-01: Guard status + FIX LOW-02: eager load vendor.
      */
     public function store(WinnerSelectionRequest $request, Tender $tender): RedirectResponse
     {
-        // Guard: winner already exists
+        // Guard: status harus closed
+        abort_if(
+            $tender->status !== 'closed',
+            422,
+            "Pemenang hanya bisa dipilih saat tender berstatus 'closed'."
+        );
+
+        // Guard: winner sudah ada
         abort_if($tender->result()->exists(), 422, 'Pemenang tender sudah dipilih.');
 
-        $bid = Bid::findOrFail($request->input('bid_id'));
+        // FIX LOW-02: eager load vendor agar tidak N+1 saat generate description
+        $bid = Bid::with('vendor')->findOrFail($request->input('bid_id'));
 
-        // Ensure the bid belongs to this tender
+        // Pastikan bid milik tender ini
         abort_if($bid->tender_id !== $tender->id, 422, 'Bid tidak berasal dari tender ini.');
 
-        $result = TenderResult::create([
+        TenderResult::create([
             'tender_id'          => $tender->id,
             'winner_vendor_id'   => $bid->vendor_id,
             'winning_bid_id'     => $bid->id,

@@ -13,6 +13,7 @@ class VendorProfileRequest extends FormRequest
     public function rules(): array
     {
         return [
+            'name'         => ['nullable', 'string', 'max:255'],
             'company_name' => ['required', 'string', 'max:255'],
             'phone'        => ['nullable', 'string', 'max:30'],
             'address'      => ['nullable', 'string', 'max:1000'],

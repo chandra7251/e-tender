@@ -13,8 +13,9 @@ return Application::configure(basePath: dirname(__DIR__))
     )
     ->withMiddleware(function (Middleware $middleware): void {
         $middleware->alias([
-            'role'     => \App\Http\Middleware\RoleMiddleware::class,
-            'auth.api' => \App\Http\Middleware\ApiAuth::class,
+            'role'             => \App\Http\Middleware\RoleMiddleware::class,
+            'vendor.approved'  => \App\Http\Middleware\EnsureVendorApproved::class,
+            // auth.api dihapus — diganti auth:api (JWT guard)
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {

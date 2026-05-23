@@ -22,8 +22,15 @@ class VendorProfileController extends Controller
     /** PUT /api/vendors/me */
     public function update(VendorProfileRequest $request): JsonResponse
     {
-        $vendor = auth()->user()->vendor;
+        $user   = auth()->user();
+        $vendor = $user->vendor;
 
+        // Update nama PIC di tabel users (jika dikirim)
+        if ($request->filled('name')) {
+            $user->update(['name' => $request->input('name')]);
+        }
+
+        // Update data perusahaan di tabel vendors
         $vendor->update([
             'company_name' => $request->input('company_name'),
             'phone'        => $request->input('phone'),

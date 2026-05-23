@@ -9,8 +9,9 @@ use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
+use Tymon\JWTAuth\Contracts\JWTSubject;
 
-class User extends Authenticatable
+class User extends Authenticatable implements JWTSubject
 {
     /** @use HasFactory<UserFactory> */
     use HasFactory, Notifiable, SoftDeletes;
@@ -47,6 +48,22 @@ class User extends Authenticatable
         return [
             'email_verified_at' => 'datetime',
             'password'          => 'hashed',
+        ];
+    }
+
+    // ─── JWT Interface ────────────────────────────────────────────────────────
+
+    /** Return the identifier that will be stored in the JWT subject claim. */
+    public function getJWTIdentifier(): mixed
+    {
+        return $this->getKey();
+    }
+
+    /** Return custom claims to be added to the JWT payload. */
+    public function getJWTCustomClaims(): array
+    {
+        return [
+            'role' => $this->role,
         ];
     }
 

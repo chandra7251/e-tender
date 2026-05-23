@@ -38,12 +38,15 @@ class TenderParticipantController extends Controller
         }
 
         // Guard: no duplicate join
-        $alreadyJoined = TenderParticipant::where('tender_id', $tender->id)
+        // FIX BUG-03: withTrashed() agar konsisten dengan DB unique constraint
+        // yang tidak mengabaikan soft-deleted rows — mencegah 500 error dari constraint violation.
+        $alreadyJoined = TenderParticipant::withTrashed()
+            ->where('tender_id', $tender->id)
             ->where('vendor_id', $vendor->id)
             ->exists();
 
         if ($alreadyJoined) {
-            return $this->error('Vendor sudah bergabung pada tender ini.', null, 422);
+            return $this->error('Vendor sudah pernah bergabung pada tender ini.', null, 422);
         }
 
         $participant = TenderParticipant::create([

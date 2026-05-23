@@ -13,10 +13,13 @@ use Illuminate\View\View;
 
 class TenderController extends Controller
 {
+    // Status yang masih boleh diedit datanya (sebelum bidding aktif)
+    private const EDITABLE_STATUSES = ['draft', 'open', 'aanwijzing'];
+
     private const VALID_STATUSES = ['draft', 'open', 'aanwijzing', 'bidding', 'closed', 'finished'];
 
     /**
-     * List all tenders with optional filter and search.
+     * List all tenders dengan optional filter dan search.
      */
     public function index(Request $request): View
     {
@@ -44,20 +47,22 @@ class TenderController extends Controller
     }
 
     /**
-     * Store a new tender.
+     * Store a new tender — selalu dibuat dengan status 'draft'.
      */
     public function store(TenderRequest $request): RedirectResponse
     {
+        // FIX MED-04: Paksa status draft saat create, abaikan input status dari form.
         $tender = Tender::create([
             ...$request->validated(),
             'created_by' => auth()->id(),
+            'status'     => 'draft',
         ]);
 
         TenderHistory::create([
             'tender_id'   => $tender->id,
             'actor_id'    => auth()->id(),
             'action'      => 'tender_created',
-            'new_status'  => $tender->status,
+            'new_status'  => 'draft',
             'description' => 'Tender dibuat oleh admin.',
             'created_at'  => now(),
         ]);
@@ -79,18 +84,44 @@ class TenderController extends Controller
 
     /**
      * Show edit tender form.
+     * FIX BUG-02: Larang akses form edit jika tender sudah live.
      */
-    public function edit(Tender $tender): View
+    public function edit(Tender $tender): View|RedirectResponse
     {
+        if (!in_array($tender->status, self::EDITABLE_STATUSES)) {
+            return redirect()
+                ->route('admin.tenders.show', $tender)
+                ->with('error', "Tender tidak bisa diedit saat berstatus '{$tender->status}'.");
+        }
+
         return view('admin.tenders.edit', compact('tender'));
     }
 
     /**
      * Update an existing tender.
+     * FIX BUG-02: Guard — tidak bisa edit data saat tender sedang aktif (bidding/closed/finished).
      */
     public function update(TenderRequest $request, Tender $tender): RedirectResponse
     {
+        // Guard: data tender tidak boleh diubah saat sudah live
+        if (!in_array($tender->status, self::EDITABLE_STATUSES)) {
+            return redirect()
+                ->route('admin.tenders.show', $tender)
+                ->with('error', "Data tender tidak dapat diubah saat status '{$tender->status}'. Gunakan ubah status.");
+        }
+
+        $oldStatus = $tender->status;
         $tender->update($request->validated());
+
+        TenderHistory::create([
+            'tender_id'   => $tender->id,
+            'actor_id'    => auth()->id(),
+            'action'      => 'tender_updated',
+            'old_status'  => $oldStatus,
+            'new_status'  => $tender->fresh()->status,
+            'description' => "Data tender \"{$tender->title}\" diperbarui oleh admin.",
+            'created_at'  => now(),
+        ]);
 
         return redirect()
             ->route('admin.tenders.show', $tender)
@@ -98,7 +129,8 @@ class TenderController extends Controller
     }
 
     /**
-     * Update tender status and record history.
+     * Update tender status menggunakan state machine.
+     * FIX HIGH-01: Transisi status divalidasi oleh TenderStatusRequest.
      */
     public function updateStatus(TenderStatusRequest $request, Tender $tender): RedirectResponse
     {

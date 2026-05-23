@@ -14,9 +14,17 @@ class PurchaseOrderController extends Controller
 {
     /**
      * Show the create PO form.
+     * FIX HIGH-02: PO hanya bisa dibuat setelah tender berstatus 'finished'.
      */
     public function create(Tender $tender): View
     {
+        // Guard: tender harus finished
+        abort_if(
+            $tender->status !== 'finished',
+            422,
+            "PO hanya bisa dibuat setelah tender berstatus 'finished'. Status saat ini: '{$tender->status}'."
+        );
+
         $result = $tender->result()->with(['winner'])->first();
 
         abort_if(is_null($result), 422, 'Pilih pemenang tender terlebih dahulu sebelum membuat PO.');
@@ -30,9 +38,17 @@ class PurchaseOrderController extends Controller
 
     /**
      * Store a new Purchase Order.
+     * FIX HIGH-02: Guard status finished + idempotency check.
      */
     public function store(PurchaseOrderRequest $request, Tender $tender): RedirectResponse
     {
+        // Guard: tender harus finished
+        abort_if(
+            $tender->status !== 'finished',
+            422,
+            "PO hanya bisa dibuat setelah tender berstatus 'finished'."
+        );
+
         $result = $tender->result()->with(['winner'])->first();
 
         abort_if(is_null($result), 422, 'Pilih pemenang tender terlebih dahulu.');
