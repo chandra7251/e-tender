@@ -8,13 +8,11 @@ trait ApiResponse
 {
     protected function success(mixed $data = null, string $message = 'OK', int $status = 200): JsonResponse
     {
-        $payload = ['status' => 'success', 'message' => $message];
-
-        if (!is_null($data)) {
-            $payload['data'] = $data;
-        }
-
-        return response()->json($payload, $status);
+        return response()->json([
+            'status'  => 'success',
+            'message' => $message,
+            'data'    => $data,
+        ], $status);
     }
 
     protected function error(string $message, mixed $errors = null, int $status = 400): JsonResponse

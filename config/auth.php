@@ -39,7 +39,13 @@ return [
 
     'guards' => [
         'web' => [
-            'driver' => 'session',
+            'driver'   => 'session',
+            'provider' => 'users',
+        ],
+
+        // Guard untuk Vendor API (mobile app) — menggunakan JWT stateless
+        'api' => [
+            'driver'   => 'jwt',
             'provider' => 'users',
         ],
     ],

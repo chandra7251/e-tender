@@ -16,7 +16,7 @@ class TenderController extends Controller
     /** GET /api/tenders */
     public function index(Request $request): JsonResponse
     {
-        $allowedStatuses = ['open', 'aanwijzing', 'bidding', 'finished'];
+        $allowedStatuses = ['open', 'aanwijzing', 'bidding', 'closed', 'finished'];
 
         $query = Tender::query()
             ->whereIn('status', $allowedStatuses)

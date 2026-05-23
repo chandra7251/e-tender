@@ -13,7 +13,8 @@ use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Password;
-use Illuminate\Support\Str;
+use Illuminate\Support\Facades\Validator;
+use Tymon\JWTAuth\Facades\JWTAuth;
 
 class AuthController extends Controller
 {
@@ -37,12 +38,12 @@ class AuthController extends Controller
             'verification_status' => 'pending',
         ]);
 
-        $token = Str::random(60);
-        $user->forceFill(['remember_token' => $token])->save();
+        $token = JWTAuth::fromUser($user);
 
         return $this->created([
-            'token'  => $token,
-            'vendor' => new VendorResource($vendor->load('user')),
+            'token'      => $token,
+            'token_type' => 'bearer',
+            'vendor'     => new VendorResource($vendor->load('user')),
         ], 'Registrasi berhasil. Akun Anda menunggu verifikasi admin.');
     }
 
@@ -59,20 +60,19 @@ class AuthController extends Controller
             return $this->error('Akun ini bukan akun vendor.', null, 403);
         }
 
-        $token = Str::random(60);
-        $user->forceFill(['remember_token' => $token])->save();
+        $token = JWTAuth::fromUser($user);
 
         return $this->success([
-            'token'  => $token,
-            'vendor' => new VendorResource($user->vendor()->with('user')->first()),
+            'token'      => $token,
+            'token_type' => 'bearer',
+            'vendor'     => new VendorResource($user->vendor()->with('user')->first()),
         ], 'Login berhasil.');
     }
 
     /** POST /api/auth/logout */
     public function logout(Request $request): JsonResponse
     {
-        $user = auth()->user();
-        $user->forceFill(['remember_token' => null])->save();
+        JWTAuth::invalidate(JWTAuth::getToken());
 
         return $this->success(null, 'Logout berhasil.');
     }
@@ -80,7 +80,7 @@ class AuthController extends Controller
     /** GET /api/auth/me */
     public function me(Request $request): JsonResponse
     {
-        $vendor = auth()->user()->vendor()->with('user')->first();
+        $vendor = auth('api')->user()->vendor()->with('user')->first();
 
         return $this->success(new VendorResource($vendor));
     }
@@ -88,7 +88,13 @@ class AuthController extends Controller
     /** POST /api/auth/forgot-password */
     public function forgotPassword(Request $request): JsonResponse
     {
-        $request->validate(['email' => ['required', 'email']]);
+        $validator = Validator::make($request->all(), [
+            'email' => ['required', 'email'],
+        ]);
+
+        if ($validator->fails()) {
+            return $this->error('Validasi gagal.', $validator->errors(), 422);
+        }
 
         $status = Password::sendResetLink($request->only('email'));
 
@@ -102,11 +108,15 @@ class AuthController extends Controller
     /** POST /api/auth/reset-password */
     public function resetPassword(Request $request): JsonResponse
     {
-        $request->validate([
+        $validator = Validator::make($request->all(), [
             'token'    => ['required'],
             'email'    => ['required', 'email'],
             'password' => ['required', 'min:8', 'confirmed'],
         ]);
+
+        if ($validator->fails()) {
+            return $this->error('Validasi gagal.', $validator->errors(), 422);
+        }
 
         $status = Password::reset(
             $request->only('email', 'password', 'password_confirmation', 'token'),
@@ -125,12 +135,16 @@ class AuthController extends Controller
     /** PUT /api/auth/change-password */
     public function changePassword(Request $request): JsonResponse
     {
-        $request->validate([
+        $validator = Validator::make($request->all(), [
             'current_password' => ['required'],
             'password'         => ['required', 'min:8', 'confirmed'],
         ]);
 
-        $user = auth()->user();
+        if ($validator->fails()) {
+            return $this->error('Validasi gagal.', $validator->errors(), 422);
+        }
+
+        $user = auth('api')->user();
 
         if (!Hash::check($request->input('current_password'), $user->password)) {
             return $this->error('Password lama tidak sesuai.', null, 422);

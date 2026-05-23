@@ -29,7 +29,9 @@ class DashboardController extends Controller
             'bid_total'              => Bid::count(),
             'participant_total'      => TenderParticipant::count(),
             'active_bidding_tenders' => Tender::where('status', 'bidding')->count(),
-            'lowest_bid'             => Bid::min('bid_amount'),
+            // FIX LOW-01: Ambil bid terendah hanya dari tender yang sedang aktif bidding
+            'lowest_bid'             => Bid::whereHas('tender', fn ($q) => $q->where('status', 'bidding'))
+                                           ->min('bid_amount'),
         ];
 
         return view('admin.dashboard.index', compact('stats'));

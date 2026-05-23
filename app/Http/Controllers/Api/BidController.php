@@ -38,19 +38,9 @@ class BidController extends Controller
     {
         $vendor = auth()->user()->vendor;
 
-        // Guard: already has a bid — should use update instead
-        $existing = Bid::where('tender_id', $tender->id)
-            ->where('vendor_id', $vendor->id)
-            ->first();
-
-        if ($existing) {
-            return $this->error(
-                'Anda sudah memiliki bid. Gunakan endpoint update untuk mengubah bid.',
-                null, 422
-            );
-        }
-
         try {
+            // FIX HIGH-03: pre-check dihapus dari sini karena sudah di-handle
+            // secara atomik dengan lockForUpdate di dalam BiddingService::submitBid().
             $this->biddingService->assertVendorCanBid($vendor, $tender);
             $this->biddingService->assertBiddingOpen($tender);
         } catch (\RuntimeException $e) {
@@ -72,12 +62,15 @@ class BidController extends Controller
     {
         $vendor = auth()->user()->vendor;
 
-        // Guard: vendor can only update their own bid
+        // Guard: vendor hanya bisa update bid miliknya sendiri
         if ($bid->vendor_id !== $vendor->id || $bid->tender_id !== $tender->id) {
             return $this->error('Bid tidak ditemukan.', null, 404);
         }
 
         try {
+            // FIX MED-02: tambah assertVendorCanBid agar vendor yang di-reject
+            // tidak bisa update bid yang sudah ada.
+            $this->biddingService->assertVendorCanBid($vendor, $tender);
             $this->biddingService->assertBiddingOpen($tender);
         } catch (\RuntimeException $e) {
             return $this->error($e->getMessage(), null, $e->getCode() ?: 422);

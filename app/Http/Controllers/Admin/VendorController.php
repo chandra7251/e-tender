@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Admin\VendorVerificationRequest;
+use App\Models\TenderHistory;
 use App\Models\Vendor;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -59,6 +60,13 @@ class VendorController extends Controller
             'verified_at'         => now(),
         ]);
 
+        // Log vendor_approved ke tender yang diikuti vendor (jika ada).
+        // Catatan: tender_histories.tender_id is NOT NULL (schema constraint),
+        // sehingga vendor-level events hanya bisa di-log jika vendor sudah join tender.
+        $this->logVendorEvent($vendor, 'vendor_approved',
+            "Vendor {$vendor->company_name} diapprove oleh admin."
+        );
+
         return redirect()
             ->route('admin.vendors.show', $vendor)
             ->with('success', "Vendor {$vendor->company_name} berhasil diapprove.");
@@ -76,8 +84,52 @@ class VendorController extends Controller
             'verified_at'         => now(),
         ]);
 
+        // Log vendor_rejected ke tender yang diikuti vendor (jika ada).
+        $this->logVendorEvent($vendor, 'vendor_rejected',
+            "Vendor {$vendor->company_name} direject oleh admin." .
+            ($request->notes ? " Alasan: {$request->notes}" : '')
+        );
+
         return redirect()
             ->route('admin.vendors.show', $vendor)
             ->with('success', "Vendor {$vendor->company_name} berhasil direject.");
+    }
+
+    /**
+     * Log a vendor verification event ke tender_histories.
+     *
+     * FIX HIGH-05 (setelah migration nullable): tender_id kini nullable sehingga
+     * event vendor-level bisa dilog langsung ke tender_histories tanpa FK ke tender.
+     * Jika vendor sudah join tender, log ke masing-masing tender (lebih kontekstual).
+     */
+    private function logVendorEvent(Vendor $vendor, string $action, string $description): void
+    {
+        $tenderIds = $vendor->tenderParticipants()->pluck('tender_id');
+
+        if ($tenderIds->isEmpty()) {
+            // Vendor belum join tender manapun — log dengan tender_id = null.
+            // Migration 2026_05_13_050000 sudah membuat kolom ini nullable.
+            TenderHistory::create([
+                'tender_id'   => null,
+                'actor_id'    => auth()->id(),
+                'action'      => $action,
+                'description' => $description,
+                'metadata'    => ['vendor_id' => $vendor->id, 'company_name' => $vendor->company_name],
+                'created_at'  => now(),
+            ]);
+            return;
+        }
+
+        // Vendor sudah join tender — log ke setiap tender yang diikuti.
+        foreach ($tenderIds as $tenderId) {
+            TenderHistory::create([
+                'tender_id'   => $tenderId,
+                'actor_id'    => auth()->id(),
+                'action'      => $action,
+                'description' => $description,
+                'metadata'    => ['vendor_id' => $vendor->id, 'company_name' => $vendor->company_name],
+                'created_at'  => now(),
+            ]);
+        }
     }
 }
