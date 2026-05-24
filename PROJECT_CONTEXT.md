@@ -19,7 +19,9 @@ Sistem ini bukan aplikasi listing tender biasa. Sistem harus mendukung workflow 
 11. Sistem menghasilkan hasil tender dan PO sederhana.
 12. Sistem menyimpan histori proses tender.
 
-## Technology Stack
+---
+
+## 2. Technology Stack
 
 Project ini menggunakan teknologi berikut:
 
@@ -57,11 +59,14 @@ Project ini menggunakan teknologi berikut:
 - Antigravity
 - Claude Sonnet 4.6 sebagai coding assistant
 
-## 2. Role System
+---
 
-Sistem memiliki 2 role utama:
+## 3. Role System
+
+Sistem memiliki 2 role utama.
 
 ### Admin / Procurement
+
 Platform:
 - Laravel Web Dashboard
 
@@ -81,6 +86,7 @@ Tugas:
 - history/audit
 
 ### Vendor
+
 Platform:
 - Mobile App / API Client
 
@@ -99,43 +105,94 @@ Tugas:
 - melihat bid sendiri
 - melihat hasil tender
 
-## 3. Important Security Rule
+---
+
+## 4. Important Security Rule
+
+### Admin Web
 
 Admin web menggunakan:
 - session authentication
 - CSRF protection
 - role:admin middleware
 
-Vendor mobile/API nanti menggunakan:
-- token-based authentication
-- role:vendor middleware
+Admin route berada di:
+- `routes/web.php`
 
-Jangan menggunakan Sanctum untuk saat ini.
-Jangan install Passport kecuali diminta eksplisit.
-Jangan implementasi auth API dulu jika task saat ini hanya database.
+Admin disebut:
+- Admin Web Routes
 
-CSRF bukan pengganti login. CSRF hanya proteksi request web session.
+Admin tidak disebut sebagai REST API murni karena menggunakan session dan CSRF.
 
-## 4. Current Development Scope
+### Vendor Mobile API
 
-Untuk fase awal, fokus hanya pada:
+Vendor mobile/API menggunakan:
+- custom token-based authentication
+- Bearer token
+- middleware `auth.api`
 
-1. Database migration.
-2. Model relationship.
-3. Seeder dasar.
+Implementasi sementara:
+- token dikirim melalui header `Authorization: Bearer <token>`
+- token disimpan pada kolom `users.remember_token`
+- protected vendor route memakai middleware `auth.api`
 
-Jangan membuat:
-- controller
-- route
-- Blade view
-- API endpoint
-- frontend
-- middleware
-- service class
+Catatan:
+- Jangan menggunakan Sanctum.
+- Jangan install Passport.
+- Jangan mengganti auth strategy pada Phase 8.
+- Jika ditemukan kelemahan auth, cukup laporkan atau perbaiki minor tanpa mengganti arsitektur.
+- Vendor API idealnya juga memastikan user memiliki role `vendor`.
 
-kecuali diminta secara eksplisit.
+### CSRF Rule
 
-## 5. Database Tables Required
+CSRF bukan pengganti login.  
+CSRF hanya proteksi request web session.
+
+---
+
+## 5. Current Development Scope
+
+Project saat ini berada pada Phase 8:
+
+Final Testing + Security Review + Cleanup + Documentation Sync.
+
+Fitur utama yang sudah dibuat:
+- database migration
+- model relationship
+- seeder dasar
+- admin authentication
+- admin dashboard
+- vendor management
+- vendor verification
+- tender management
+- aanwijzing
+- participant monitoring
+- bidding monitoring
+- winner selection
+- result management
+- purchase order
+- tender history
+- vendor mobile API
+
+Scope saat ini:
+- audit route
+- audit security
+- audit validation
+- audit API response
+- audit seeder
+- cleanup UI admin
+- sinkronisasi dengan dokumentasi Apidog
+- demo flow testing
+
+Jangan membuat fitur baru besar.
+Jangan mengubah arsitektur.
+Jangan membuat tabel baru.
+Jangan mengganti auth strategy.
+Jangan menjalankan migrate:fresh tanpa izin.
+
+---
+
+## 6. Database Tables Required
 
 Tabel utama project:
 
@@ -155,9 +212,11 @@ Tabel utama project:
 
 Tabel Laravel default seperti cache dan jobs boleh tetap ada.
 
-## 6. Tables Not Allowed Yet
+---
 
-Jangan membuat tabel tambahan berikut:
+## 7. Tables Not Allowed
+
+Jangan membuat tabel tambahan berikut tanpa izin:
 
 - payments
 - contracts
@@ -172,9 +231,12 @@ Jangan membuat tabel tambahan berikut:
 
 Alasannya: belum ada requirement wajib.
 
-## 7. Table Design Summary
+---
+
+## 8. Table Design Summary
 
 ### users
+
 Digunakan untuk admin dan vendor login.
 
 Tambahan wajib:
@@ -182,6 +244,7 @@ Tambahan wajib:
 - soft delete
 
 ### vendors
+
 Menyimpan data perusahaan vendor.
 
 Field utama:
@@ -200,6 +263,7 @@ Rule:
 - hanya approved vendor yang bisa ikut tender
 
 ### vendor_documents
+
 Menyimpan dokumen perusahaan vendor.
 
 Field utama:
@@ -213,6 +277,7 @@ Field utama:
 - soft delete
 
 ### tenders
+
 Menyimpan data tender dan timeline.
 
 Field utama:
@@ -229,6 +294,7 @@ Field utama:
 - soft delete
 
 ### tender_participants
+
 Menyimpan vendor yang join tender.
 
 Field utama:
@@ -241,6 +307,7 @@ Constraint:
 - unique tender_id + vendor_id
 
 ### tender_announcements
+
 Menyimpan informasi aanwijzing / update tender.
 
 Field utama:
@@ -252,6 +319,7 @@ Field utama:
 - soft delete
 
 ### bids
+
 Menyimpan bid aktif/terakhir vendor.
 
 Field utama:
@@ -266,6 +334,7 @@ Constraint:
 - unique tender_id + vendor_id
 
 ### bid_histories
+
 Menyimpan histori perubahan bid.
 
 Field utama:
@@ -283,6 +352,7 @@ Catatan:
 - append-only audit log
 
 ### tender_results
+
 Menyimpan hasil tender dan pemenang.
 
 Field utama:
@@ -297,6 +367,7 @@ Field utama:
 - soft delete
 
 ### purchase_orders
+
 Menyimpan PO sederhana hasil tender.
 
 Field utama:
@@ -311,6 +382,7 @@ Field utama:
 - soft delete
 
 ### tender_histories
+
 Menyimpan histori proses tender.
 
 Field utama:
@@ -335,8 +407,12 @@ Contoh action:
 - bid_updated
 - winner_selected
 - po_generated
+- vendor_approved
+- vendor_rejected
 
-## 8. Model Relationship
+---
+
+## 9. Model Relationship
 
 ### User
 - hasOne Vendor
@@ -398,7 +474,9 @@ Contoh action:
 - belongsTo Tender
 - belongsTo User as actor
 
-## 9. Seeder Requirement
+---
+
+## 10. Seeder Requirement
 
 Seeder dasar wajib membuat:
 
@@ -438,9 +516,11 @@ Minimal 2 tender:
 - 1 histori bid dummy
 
 ### Optional Result/PO
-Boleh buat 1 tender result dan 1 PO jika data konsisten.
+Boleh buat 1 tender result dan 1 PO jika datanya konsisten.
 
-## 10. Business Rules
+---
+
+## 11. Business Rules
 
 ### Vendor Verification
 - Vendor baru status pending.
@@ -458,6 +538,14 @@ Status valid:
 - closed
 - finished
 
+### Public Tender API
+Tender listing/detail boleh public.
+
+Rule:
+- tender draft tidak boleh tampil di public API
+- data internal admin tidak boleh tampil di public API
+- response public hanya boleh berisi data yang aman untuk vendor/public
+
 ### Bidding
 Vendor hanya boleh submit bid jika:
 - vendor approved
@@ -470,6 +558,14 @@ Bidding harus ditolak jika:
 - vendor belum approved
 - vendor belum join tender
 
+Vendor hanya boleh:
+- melihat bid miliknya sendiri
+- mengubah bid miliknya sendiri
+
+Vendor tidak boleh:
+- melihat bid vendor lain
+- mengubah bid vendor lain
+
 ### Winner Selection
 Admin hanya boleh memilih pemenang dari vendor yang:
 - sudah menjadi participant
@@ -479,28 +575,57 @@ Selection method:
 - lowest_price
 - admin_consideration
 
+Winner tidak boleh dipilih dua kali untuk tender yang sama.
+
 ### Purchase Order
-PO hanya boleh dibuat setelah winner selected.
+PO hanya boleh dibuat setelah winner selected.  
+PO tidak boleh duplicate untuk tender yang sama.
 
-## 11. Development Rules for AI Agent
+---
 
-Wajib:
-- baca file ini sebelum mengubah kode
-- ikuti scope task yang diberikan user
-- jangan membuat fitur di luar requirement
-- jangan menghapus file default Laravel
-- jangan membuat tabel tambahan tanpa izin
-- jangan membuat controller/route jika task hanya database
-- jangan menjalankan destructive command tanpa izin
+## 12. Route Count Target
 
-Dilarang:
-- migrate:fresh tanpa izin
-- install package auth tanpa izin
-- membuat UI tanpa diminta
-- mengubah nama tabel seenaknya
-- mengganti workflow bisnis
+Endpoint fitur utama yang diharapkan:
 
-## Frontend Styling Rule
+### Vendor Mobile API
+- Lokasi: `routes/api.php`
+- Jumlah: 21 endpoint
+
+### Admin Web Routes
+- Lokasi: `routes/web.php`
+- Jumlah: 27 endpoint
+
+### Total Fitur Utama
+- 48 endpoint
+
+Catatan:
+- Route root `/` hanya redirect ke admin login.
+- Route `/` tidak dihitung sebagai endpoint fitur utama.
+- Admin disebut Admin Web Routes, bukan Admin API.
+
+---
+
+## 13. API Response Format
+
+Semua Vendor API harus menggunakan format response berikut.
+
+### Success
+{
+  "status": "success",
+  "message": "...",
+  "data": ...
+}
+
+### Error
+{
+  "status": "error",
+  "message": "...",
+  "errors": ...
+}
+
+---
+
+## 14. Frontend Styling Rule
 
 Untuk admin web Laravel:
 - Gunakan Tailwind CSS.
@@ -508,11 +633,43 @@ Untuk admin web Laravel:
 - Jangan pakai AdminLTE.
 - Jangan pakai template dashboard berat.
 - Buat UI sederhana, rapi, responsif, dan mudah dikembangkan.
-- Komponen minimal:
-  - sidebar
-  - navbar
-  - card statistik
-  - table
-  - form
-  - badge status
-  - button action
+
+Komponen minimal:
+- sidebar
+- navbar
+- card statistik
+- table
+- form
+- badge status
+- button action
+- empty state
+
+---
+
+## 15. Development Rules for AI Agent
+
+Wajib:
+- baca file ini sebelum mengubah kode
+- baca TASK_CURRENT.md sebelum mengubah kode
+- ikuti scope task yang diberikan user
+- jangan membuat fitur di luar requirement
+- jangan menghapus file default Laravel
+- jangan membuat tabel tambahan tanpa izin
+- jangan mengganti auth strategy tanpa izin
+- jangan menjalankan destructive command tanpa izin
+
+Dilarang:
+- migrate:fresh tanpa izin
+- install package auth tanpa izin
+- membuat UI baru tanpa diminta
+- mengubah nama tabel seenaknya
+- mengganti workflow bisnis
+- membuat fitur payment/contract/chat/review tanpa izin
+
+Pada Phase 8:
+- fokus audit
+- bug fixing kecil
+- security review
+- cleanup
+- dokumentasi sync
+- demo flow check
