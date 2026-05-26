@@ -359,3 +359,148 @@ interface ApiResponse<T> {
 | `vendor.pending@example.com` | `password` | Vendor pending — untuk test 403 |
 | `vendor.rejected@example.com` | `password` | Vendor rejected — untuk test 403 |
 | `admin@example.com` | `password` | Admin (web only, bukan API) |
+
+---
+
+---
+
+## Bagian 3 — Update: ULID Tie-Breaker untuk Bid (26 Mei 2026)
+
+> **Konteks:** Dosen mempertanyakan *"Jika 2 vendor bid sama, jam sama, detik sama — siapa menang?"*
+> Backend sudah mengimplementasikan solusi 3-level tie-breaker.
+> Ada **1 potensi breaking change** dan **1 field baru** yang perlu kamu ketahui.
+
+---
+
+### ⚠️ E. `submitted_at` Sekarang Punya Microseconds (Potensi Breaking Change)
+
+Kolom `submitted_at` di database diubah dari `DATETIME` (presisi detik) menjadi `DATETIME(6)` (presisi microsecond).
+
+**Format ISO8601 di API response bisa berubah:**
+
+| Kondisi | Format `submitted_at` |
+|---|---|
+| Bid lama (data sebelum 26 Mei) | `"2026-05-20T10:00:00+07:00"` *(tanpa microsecond)* |
+| Bid baru (setelah 26 Mei) | `"2026-05-26T10:00:00.123456+07:00"` *(dengan microsecond)* |
+
+**Jika mobile parse `submitted_at` dengan format strict (misalnya `yyyy-MM-dd'T'HH:mm:ssXXX`), maka format baru dengan `.123456` akan crash atau error.**
+
+**Fix yang diperlukan di mobile:**
+
+```typescript
+// ❌ Parsing strict — AKAN CRASH jika ada microsecond:
+const date = new Date('2026-05-26T10:00:00.123456+07:00'); // OK di JS, tapi...
+
+// Dart/Flutter — AKAN CRASH dengan format kustom strict:
+// DateFormat("yyyy-MM-dd'T'HH:mm:ssXXX").parse(submittedAt); // ❌
+
+// ✅ Gunakan parser yang toleran terhadap microsecond:
+
+// Ionic / Angular (TypeScript):
+// new Date() di JavaScript sudah handle ISO8601 + microsecond dengan baik ✅
+const date = new Date(bid.submitted_at); // aman
+
+// Flutter / Dart:
+// DateTime.parse() sudah handle microsecond secara native ✅
+final date = DateTime.parse(bid.submittedAt); // aman
+
+// Jika menggunakan library intl / DateFormat di Dart, gunakan:
+// DateFormat("yyyy-MM-dd'T'HH:mm:ss").parseLoose(submittedAt); // toleran
+```
+
+**Tampilan yang direkomendasikan untuk user:**
+```typescript
+// Tampilkan waktu sampai detik saja (microsecond tidak perlu ditampilkan ke user):
+formatBidTime(submittedAt: string): string {
+  const date = new Date(submittedAt);
+  return date.toLocaleString('id-ID', {
+    day: '2-digit', month: 'short', year: 'numeric',
+    hour: '2-digit', minute: '2-digit', second: '2-digit'
+  });
+  // Output: "26 Mei 2026, 10.00.00"
+}
+```
+
+---
+
+### 🆕 F. Field Baru `ulid` di Response Bid
+
+Setiap response dari endpoint bid sekarang menyertakan field `ulid`:
+
+```json
+{
+  "status": "success",
+  "data": {
+    "id": 42,
+    "ulid": "01JWMX3KKGT8PV2QN1...",
+    "tender_id": 5,
+    "bid_amount": 95000000.00,
+    "notes": "Harga sudah termasuk pengiriman",
+    "submitted_at": "2026-05-26T10:00:00.123456+07:00",
+    "updated_at": "2026-05-26T10:00:00.123456+07:00"
+  }
+}
+```
+
+**Kenapa ada `ulid`?**
+
+ULID adalah identifier unik yang bersifat **sortable** (bisa diurutkan berdasarkan waktu pembuatan). Sistem menggunakannya sebagai **tie-breaker level 3** jika:
+1. `bid_amount` dua vendor sama persis, DAN
+2. `submitted_at` microsecond-nya sama (sangat jarang terjadi)
+
+**Aksi mobile:**
+
+> **Tidak ada aksi wajib.** `ulid` adalah field informatif.
+> Field ini *non-breaking* — kamu boleh abaikan, atau simpan di model untuk keperluan debugging/display.
+
+```typescript
+// Opsional — tambahkan ke interface Bid:
+interface Bid {
+  id: number;
+  ulid: string;        // ← tambahan baru (opsional dipakai)
+  tender_id: number;
+  bid_amount: number;
+  notes: string | null;
+  submitted_at: string;
+  updated_at: string;
+}
+```
+
+---
+
+### Logika Pemenang yang Kamu Perlu Tahu (Untuk UI "Siapa Menang")
+
+Jika kamu menampilkan daftar bid di halaman monitoring atau hasil tender, **urutkan dengan logika yang sama dengan backend** agar konsisten:
+
+```typescript
+// Urutkan bid untuk tampilkan pemenang "natural":
+sortBidsForWinner(bids: Bid[]): Bid[] {
+  return [...bids].sort((a, b) => {
+    // 1. Bid terendah menang
+    if (a.bid_amount !== b.bid_amount) {
+      return a.bid_amount - b.bid_amount;
+    }
+    // 2. Submit lebih awal menang (microsecond precision)
+    const timeA = new Date(a.submitted_at).getTime();
+    const timeB = new Date(b.submitted_at).getTime();
+    if (timeA !== timeB) return timeA - timeB;
+    // 3. ULID lebih kecil menang (sortable string comparison)
+    return a.ulid.localeCompare(b.ulid);
+  });
+}
+
+// Pemenang = bids[0] setelah sort
+const winner = this.sortBidsForWinner(bids)[0];
+```
+
+---
+
+### Update Checklist
+
+Tambahkan item berikut ke checklist integrasi:
+
+| # | Item | Prioritas | Aksi |
+|---|---|---|---|
+| 9 | Fix parser `submitted_at` agar toleran microsecond | 🔴 **Tinggi** | Gunakan `new Date()` / `DateTime.parse()` — jangan format strict |
+| 10 | Tambah field `ulid` ke interface/model Bid | 🟢 Rendah | Opsional, untuk consistency |
+| 11 | Urutkan tampilan bid dengan logika 3-level tie-breaker | 🟡 Sedang | Konsisten dengan urutan backend |

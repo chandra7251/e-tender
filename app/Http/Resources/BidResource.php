@@ -11,10 +11,11 @@ class BidResource extends JsonResource
     {
         return [
             'id'           => $this->id,
+            'ulid'         => $this->ulid,         // Identifier unik & sortable (ULID)
             'tender_id'    => $this->tender_id,
             'bid_amount'   => (float) $this->bid_amount,
             'notes'        => $this->notes,
-            'submitted_at' => $this->submitted_at?->toIso8601String(),
+            'submitted_at' => $this->submitted_at?->toIso8601String(), // microsecond precision
             'updated_at'   => $this->updated_at?->toIso8601String(),
         ];
     }
