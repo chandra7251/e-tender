@@ -38,7 +38,17 @@
         <div class="rounded-xl border border-gray-800 bg-gray-900 overflow-hidden">
             <div class="border-b border-gray-800 px-5 py-3">
                 <h2 class="text-sm font-semibold text-gray-300">Pilih Bid Pemenang</h2>
-                <p class="text-xs text-gray-600 mt-0.5">Klik baris untuk memilih. Diurutkan dari bid terendah.</p>
+                <p class="text-xs text-gray-500 mt-1">
+                    Urutan prioritas pemenang:
+                    <span class="text-teal-400 font-medium">① Bid terendah</span>
+                    &rarr;
+                    <span class="text-blue-400 font-medium">② Waktu submit tercepat</span>
+                    &rarr;
+                    <span class="text-purple-400 font-medium">③ ULID (urutan masuk ke server)</span>
+                </p>
+                <p class="text-xs text-gray-600 mt-0.5">
+                    Jika dua vendor punya bid yang sama, vendor dengan waktu submit lebih awal otomatis di posisi teratas.
+                </p>
             </div>
             <table class="w-full text-sm">
                 <thead>
@@ -47,40 +57,70 @@
                         <th class="px-5 py-3">Rank</th>
                         <th class="px-5 py-3">Vendor</th>
                         <th class="px-5 py-3 text-right">Bid Amount</th>
+                        <th class="px-5 py-3">Waktu Submit</th>
                         <th class="px-5 py-3">Notes</th>
                     </tr>
                 </thead>
                 <tbody class="divide-y divide-gray-800">
                     @foreach ($bids as $i => $bid)
-                        <tr class="hover:bg-gray-800/60 transition-colors duration-100 cursor-pointer"
-                            onclick="document.getElementById('bid_{{ $bid->id }}').click()">
-                            <td class="px-5 py-3">
-                                <input type="radio" id="bid_{{ $bid->id }}" name="bid_id"
-                                       value="{{ $bid->id }}"
-                                       class="h-4 w-4 accent-indigo-500"
-                                       {{ $i === 0 ? 'checked' : '' }}>
-                            </td>
-                            <td class="px-5 py-3">
-                                @if ($i === 0)
-                                    <span class="rounded-full border border-teal-700 bg-teal-900/50
-                                                 px-2.5 py-0.5 text-xs font-semibold text-teal-400">
-                                        ★ Terendah
+                    @php
+                        // Deteksi tie: cek apakah ada bid lain dengan amount yang sama
+                        $isTie = $bids->where('bid_amount', $bid->bid_amount)->count() > 1;
+                    @endphp
+                    <tr class="hover:bg-gray-800/60 transition-colors duration-100 cursor-pointer"
+                        onclick="document.getElementById('bid_{{ $bid->id }}').click()">
+                        <td class="px-5 py-3">
+                            <input type="radio" id="bid_{{ $bid->id }}" name="bid_id"
+                                   value="{{ $bid->id }}"
+                                   class="h-4 w-4 accent-indigo-500"
+                                   {{ $i === 0 ? 'checked' : '' }}>
+                        </td>
+                        <td class="px-5 py-3">
+                            @if ($i === 0)
+                                <span class="rounded-full border border-teal-700 bg-teal-900/50
+                                             px-2.5 py-0.5 text-xs font-semibold text-teal-400">
+                                    ★ Terendah
+                                </span>
+                                @if ($isTie)
+                                    {{-- Ada bid lain dengan amount sama — tie-breaker aktif --}}
+                                    <span class="ml-1 rounded-full border border-blue-700 bg-blue-900/40
+                                                 px-2 py-0.5 text-xs font-semibold text-blue-400"
+                                          title="Tie-breaker: dipilih karena submit lebih awal">
+                                        ⚡ Tie-winner
                                     </span>
-                                @else
-                                    <span class="text-gray-600">#{{ $i + 1 }}</span>
                                 @endif
-                            </td>
-                            <td class="px-5 py-3 font-medium text-gray-100">
-                                {{ $bid->vendor->company_name ?? '-' }}
-                            </td>
-                            <td class="px-5 py-3 text-right font-mono font-semibold
-                                       {{ $i === 0 ? 'text-teal-400' : 'text-gray-100' }}">
-                                Rp {{ number_format($bid->bid_amount, 0, ',', '.') }}
-                            </td>
-                            <td class="px-5 py-3 text-gray-500 max-w-xs truncate">
-                                {{ $bid->notes ?? '-' }}
-                            </td>
-                        </tr>
+                            @else
+                                <span class="text-gray-600">#{{ $i + 1 }}</span>
+                                @if ($isTie && $bids[$i - 1]->bid_amount == $bid->bid_amount)
+                                    <span class="ml-1 text-xs text-yellow-600" title="Sama dengan bid di atasnya — kalah waktu submit">
+                                        ⚠ Tie
+                                    </span>
+                                @endif
+                            @endif
+                        </td>
+                        <td class="px-5 py-3 font-medium text-gray-100">
+                            {{ $bid->vendor->company_name ?? '-' }}
+                        </td>
+                        <td class="px-5 py-3 text-right font-mono font-semibold
+                                   {{ $i === 0 ? 'text-teal-400' : 'text-gray-100' }}">
+                            Rp {{ number_format($bid->bid_amount, 0, ',', '.') }}
+                        </td>
+                        <td class="px-5 py-3">
+                            {{-- Waktu submit dengan presisi microsecond --}}
+                            <span class="font-mono text-xs {{ $i === 0 ? 'text-blue-400' : 'text-gray-500' }}">
+                                {{ $bid->submitted_at->format('d/m/Y H:i:s') }}<span class="text-gray-600">.{{ $bid->submitted_at->format('u') }}</span>
+                            </span>
+                            @if ($isTie)
+                                <br>
+                                <span class="text-xs text-gray-700" title="ULID tie-breaker: {{ $bid->ulid }}">
+                                    ID: {{ substr($bid->ulid ?? '', 0, 10) }}…
+                                </span>
+                            @endif
+                        </td>
+                        <td class="px-5 py-3 text-gray-500 max-w-xs truncate">
+                            {{ $bid->notes ?? '-' }}
+                        </td>
+                    </tr>
                     @endforeach
                 </tbody>
             </table>

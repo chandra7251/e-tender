@@ -32,9 +32,18 @@ class WinnerSelectionController extends Controller
         // Guard: tidak ada bid
         abort_if($tender->bids()->count() === 0, 422, 'Tender belum memiliki bid.');
 
+        // ─── Tie-breaker Order ─────────────────────────────────────────────────
+        // Jika dua vendor punya bid_amount yang sama:
+        //   1. submitted_at ASC  → siapa yang submit duluan (presisi microsecond)
+        //   2. ulid ASC          → tie-breaker akhir (ULID encode timestamp milidetik + random)
+        //
+        // Bid di posisi [0] pada $bids adalah pemenang "natural" jika admin memilih
+        // berdasarkan nilai terendah + waktu tercepat.
         $bids = $tender->bids()
             ->with(['vendor.user'])
             ->orderBy('bid_amount', 'asc')
+            ->orderBy('submitted_at', 'asc')
+            ->orderBy('ulid', 'asc')
             ->get();
 
         return view('admin.winners.create', compact('tender', 'bids'));
