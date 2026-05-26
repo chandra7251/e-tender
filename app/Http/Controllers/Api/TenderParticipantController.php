@@ -15,6 +15,21 @@ class TenderParticipantController extends Controller
 
     public function __construct(protected TenderHistoryService $historyService) {}
 
+    /** GET /api/tenders/{tender}/participants/check */
+    public function check(Tender $tender): JsonResponse
+    {
+        $vendor = auth()->user()->vendor;
+
+        $participant = $tender->participants()
+            ->where('vendor_id', $vendor->id)
+            ->first();
+
+        return $this->success([
+            'is_participant' => !is_null($participant),
+            'joined_at'      => $participant?->joined_at?->toIso8601String(),
+        ]);
+    }
+
     /** POST /api/tenders/{tender}/participants */
     public function store(Tender $tender): JsonResponse
     {

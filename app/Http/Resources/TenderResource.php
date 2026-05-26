@@ -9,6 +9,16 @@ class TenderResource extends JsonResource
 {
     public function toArray(Request $request): array
     {
+        // Cek apakah vendor yang login adalah peserta tender ini
+        $vendor        = $request->user()?->vendor;
+        $isParticipant = false;
+
+        if ($vendor) {
+            $isParticipant = $this->participants()
+                ->where('vendor_id', $vendor->id)
+                ->exists();
+        }
+
         return [
             'id'              => $this->id,
             'title'           => $this->title,
@@ -20,6 +30,7 @@ class TenderResource extends JsonResource
             'aanwijzing_date' => $this->aanwijzing_date?->toIso8601String(),
             'bidding_start'   => $this->bidding_start?->toIso8601String(),
             'bidding_end'     => $this->bidding_end?->toIso8601String(),
+            'is_participant'  => $isParticipant,
             'created_at'      => $this->created_at?->toIso8601String(),
         ];
     }

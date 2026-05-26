@@ -77,6 +77,25 @@ class AuthController extends Controller
         return $this->success(null, 'Logout berhasil.');
     }
 
+    /** POST /api/auth/refresh */
+    public function refresh(): JsonResponse
+    {
+        try {
+            $newToken = auth('api')->refresh();
+
+            return $this->success([
+                'token'      => $newToken,
+                'token_type' => 'bearer',
+                'expires_in' => config('jwt.ttl') * 60,
+            ], 'Token berhasil diperbarui.');
+
+        } catch (\Tymon\JWTAuth\Exceptions\TokenExpiredException $e) {
+            return $this->error('Sesi berakhir. Silakan login kembali.', null, 401);
+        } catch (\Tymon\JWTAuth\Exceptions\JWTException $e) {
+            return $this->error('Token tidak valid.', null, 401);
+        }
+    }
+
     /** GET /api/auth/me */
     public function me(Request $request): JsonResponse
     {

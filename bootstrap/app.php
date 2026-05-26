@@ -3,6 +3,7 @@
 use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Configuration\Exceptions;
 use Illuminate\Foundation\Configuration\Middleware;
+use Illuminate\Http\JsonResponse;
 
 return Application::configure(basePath: dirname(__DIR__))
     ->withRouting(
@@ -19,6 +20,24 @@ return Application::configure(basePath: dirname(__DIR__))
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {
-        //
+        // Semua unhandled exception di API route → return JSON, bukan HTML
+        $exceptions->render(function (\Throwable $e, \Illuminate\Http\Request $request): ?JsonResponse {
+            if ($request->is('api/*') || $request->expectsJson()) {
+                $status = method_exists($e, 'getStatusCode') ? $e->getStatusCode() : 500;
+
+                // Jangan expose pesan internal di production
+                $message = $status >= 500
+                    ? 'Terjadi kesalahan server. Silakan coba beberapa saat lagi.'
+                    : $e->getMessage();
+
+                return response()->json([
+                    'status'  => false,
+                    'message' => $message,
+                    'data'    => null,
+                ], $status);
+            }
+
+            return null; // fallback ke handler default untuk non-API
+        });
     })->create();
 

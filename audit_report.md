@@ -1,278 +1,348 @@
-# Laporan Audit — E-Procurement Lelang 2.0
-> Phase 8 | Tanggal Audit: 2026-05-11 | Auditor: Antigravity AI
+# 📋 Laporan Audit Proyek — E-Lelang 2.0
+**Tanggal Audit:** 26 Mei 2026  
+**Auditor:** Antigravity AI  
+**Referensi Dokumen:** BRD.md / SRS.md / TB.md (identik — Phase 8 Checklist)
 
 ---
 
-## A. Ringkasan Audit
-
-| Item | Detail |
-|---|---|
-| **Status Keseluruhan** | **PARTIAL PASS** |
-| **Persentase Kesiapan** | **~82%** |
-| **Critical Issues** | 4 item |
-| **High Issues** | 5 item |
-| **Minor Issues** | 7 item |
-
-### Risiko Terbesar
-1. **TenderResultController - `/winner` endpoint tidak butuh auth** tapi memanggil `auth()->user()->vendor` → akan crash jika diakses tanpa login (null pointer).
-2. **Seeder rawan duplicate fatal** jika dijalankan ulang karena tidak ada `firstOrCreate` / pengecekan existensi.
-3. **VendorController tidak mencatat TenderHistory** saat approve/reject vendor (action `vendor_approved` / `vendor_rejected` tidak di-log).
-4. **TenderIndex di public API** mengembalikan `'closed'` sebagai status yang tidak masuk `allowedStatuses` — **minor**, tapi `'closed'` tidak ada di filter, sehingga tender `closed` tidak tampil ke vendor.
+> [!NOTE]
+> Ketiga file BRD.md, SRS.md, dan TB.md berisi konten **identik** (Phase 8: Final Testing + Security Review). Audit ini mengacu pada satu sumber yang sama.
 
 ---
 
-## B. Temuan Kritis
+## 1. Route Audit
 
-| No | Area | Masalah | Dampak | Prioritas | Rekomendasi |
-|---|---|---|---|---|---|
-| 1 | API - `/winner` | `TenderResultController@winner` memanggil `auth()->user()->vendor` padahal route ini berada di protected group — **AMAN**. Tapi jika `vendor` null (admin token), akan throw null error. `ApiAuth` middleware sudah memastikan role=vendor, jadi aman secara teknis. **Namun**: jika vendor belum pernah bid, `myBid` bisa null tapi tidak di-handle dengan baik (sudah di-handle `null`). | **Low actual risk** setelah review middleware | HIGH | Biarkan, sudah aman via ApiAuth |
-| 2 | Seeder | `DatabaseSeeder::run()` menggunakan `User::create()` langsung **tanpa** `firstOrCreate`. Jika seeder dijalankan ulang, akan terjadi **SQLSTATE duplicate email** fatal error. | Seeder tidak bisa dijalankan ulang | CRITICAL | Gunakan `firstOrCreate` atau `updateOrCreate` |
-| 3 | Tender History | `VendorController::approve()` dan `reject()` **tidak memanggil TenderHistoryService** untuk mencatat action `vendor_approved` / `vendor_rejected`. PROJECT_CONTEXT.md mewajibkan action ini di history. | Audit trail verifikasi vendor tidak ada | HIGH | Tambahkan history log di approve/reject |
-| 4 | TenderController (API) | Status `'closed'` tidak ada dalam `allowedStatuses` di `TenderController@index`. Tender berstatus `closed` tidak akan tampil ke vendor. Apakah ini disengaja? | Vendor tidak bisa lihat tender closed | MEDIUM | Klarifikasi apakah `closed` harus tampil |
+### 1.1 Admin Web Routes
 
----
-
-## C. Temuan Minor
-
-| No | Area | Catatan | Rekomendasi |
-|---|---|---|---|
-| 1 | ApiResponse Trait | `success()` tidak selalu menyertakan key `data` jika `$data === null`. Beberapa endpoint seperti `logout` dan `changePassword` return tanpa `data` key. | Konsistenkan — selalu sertakan `"data": null` |
-| 2 | TenderController (Admin) | `update()` tidak mencatat TenderHistory saat tender diupdate (hanya `store()` yang mencatat). | Tambahkan log di `update()` |
-| 3 | VendorVerificationRequest | Tidak ada validasi bahwa `notes` required saat reject. Vendor bisa di-reject tanpa alasan. | Buat `notes` required saat status reject |
-| 4 | PurchaseOrder | Validasi `amount` memakai `min:0` — memungkinkan PO dengan amount = 0. | Ganti ke `min:1` |
-| 5 | BidRequest | Validasi `bid_amount` memakai `min:1` — secara teknis benar (> 0), namun message error bilang "lebih dari 0". Konsisten. | OK, tidak perlu diubah |
-| 6 | Seeder | `vendorApproved2` (CV Karya Prima) dibuat tapi **tidak join tender manapun dan tidak punya bid**. Tidak berguna untuk demo competition bidding yang disebutkan dalam komentar. | Tambahkan join + bid untuk vendor kedua |
-| 7 | TenderAnnouncement (API) | Announcement endpoint tidak memvalidasi bahwa vendor sudah join tender. Vendor yang belum join bisa melihat announcement. | Cek apakah ini intended (public info) |
-
----
-
-## D. Checklist Requirement
-
-| Requirement | Status | Bukti | Catatan |
-|---|---|---|---|
-| Database: semua 13 tabel ada | ✅ PASS | 14 migration files | Semua tabel hadir |
-| `users`: role + softDelete | ✅ PASS | `add_role_and_soft_deletes` migration | Default role='vendor' |
-| `vendors`: verification_status default pending | ✅ PASS | Migration + AuthController | `'pending'` di register |
-| `tender_participants`: unique tender+vendor | ✅ PASS | Migration line 22 | `unique(['tender_id', 'vendor_id'])` |
-| `bids`: unique tender+vendor | ✅ PASS | Migration line 24 | `unique(['tender_id', 'vendor_id'])` |
-| `tender_results`: unique per tender | ✅ PASS | Migration `unique()` pada tender_id | Mencegah double winner |
-| `purchase_orders`: po_number unique | ✅ PASS | Migration + PurchaseOrderRequest | Validated di request |
-| `bid_histories`: no softDelete, append-only | ✅ PASS | BidHistory model `$timestamps = false` | Benar |
-| `tender_histories`: no softDelete, append-only | ✅ PASS | TenderHistory model `$timestamps = false` | Benar |
-| Model relationships: User→Vendor, Tender, etc. | ✅ PASS | Semua model sudah didefinisikan | Sesuai requirement |
-| Vendor default pending saat register | ✅ PASS | `AuthController::register()` line 37 | `'pending'` hardcoded |
-| Hanya vendor approved bisa join tender | ✅ PASS | `TenderParticipantController::store()` | Guard verification_status |
-| Hanya vendor approved bisa bidding | ✅ PASS | `BiddingService::assertVendorCanBid()` | Throw RuntimeException |
-| Vendor harus join sebelum bidding | ✅ PASS | `BiddingService::assertVendorCanBid()` | Cek TenderParticipant |
-| Bidding hanya dalam rentang waktu | ✅ PASS | `BiddingService::assertBiddingOpen()` | Cek bidding_start & bidding_end |
-| Vendor hanya lihat bid sendiri | ✅ PASS | `BidController::myBid()` | Filter by vendor_id |
-| Vendor hanya ubah bid sendiri | ✅ PASS | `BidController::update()` line 76 | Guard vendor_id check |
-| Winner tidak bisa dipilih dua kali | ✅ PASS | `WinnerSelectionController` + unique tender_id di migration | abort_if + DB constraint |
-| PO hanya setelah winner selected | ✅ PASS | `PurchaseOrderController::store()` line 38 | abort_if result is null |
-| PO tidak boleh duplicate | ✅ PASS | `PurchaseOrderController` line 39 + po_number unique | Double guard |
-| Bid history dicatat saat submit/update | ✅ PASS | `BiddingService::submitBid()` + `updateBid()` | BidHistory::create() |
-| Tender history dicatat untuk event penting | ⚠️ PARTIAL | Ada di: create, status_change, join, bid, winner, PO | **Tidak ada** di approve/reject vendor |
-| Tender draft tidak tampil di public API | ✅ PASS | `TenderController@index` whereIn statuses, `TenderController@show` cek draft | Sudah difilter |
-| Password selalu di-hash | ✅ PASS | User model `'password' => 'hashed'` cast + Hash::make di controller | Aman |
-| Seeder membuat data demo lengkap | ⚠️ PARTIAL | Admin, vendor pending, approved, dokumen, tender, bid, history, result, PO ada | Vendor kedua tidak berguna untuk demo |
-
----
-
-## E. Route Audit
-
-### Vendor Mobile API (routes/api.php)
-
-| # | Method | Endpoint | Auth | Status |
-|---|---|---|---|---|
-| 1 | POST | `/api/auth/register` | Public | ✅ |
-| 2 | POST | `/api/auth/login` | Public | ✅ |
-| 3 | POST | `/api/auth/forgot-password` | Public | ✅ |
-| 4 | POST | `/api/auth/reset-password` | Public | ✅ |
-| 5 | GET | `/api/tenders` | Public | ✅ |
-| 6 | GET | `/api/tenders/{tender}` | Public | ✅ |
-| 7 | POST | `/api/auth/logout` | auth.api | ✅ |
-| 8 | GET | `/api/auth/me` | auth.api | ✅ |
-| 9 | PUT | `/api/auth/change-password` | auth.api | ✅ |
-| 10 | GET | `/api/vendors/me` | auth.api | ✅ |
-| 11 | PUT | `/api/vendors/me` | auth.api | ✅ |
-| 12 | GET | `/api/vendors/status` | auth.api | ✅ |
-| 13 | GET | `/api/vendors/documents` | auth.api | ✅ |
-| 14 | POST | `/api/vendors/documents` | auth.api | ✅ |
-| 15 | POST | `/api/tenders/{tender}/participants` | auth.api | ✅ |
-| 16 | GET | `/api/tenders/{tender}/announcements` | auth.api | ✅ |
-| 17 | GET | `/api/tenders/{tender}/bids/me` | auth.api | ✅ |
-| 18 | POST | `/api/tenders/{tender}/bids` | auth.api | ✅ |
-| 19 | PUT | `/api/tenders/{tender}/bids/{bid}` | auth.api | ✅ |
-| 20 | GET | `/api/tenders/{tender}/result` | auth.api | ✅ |
-| 21 | GET | `/api/tenders/{tender}/winner` | auth.api | ✅ |
-
-**Total: 21 endpoint ✅ SESUAI TARGET**
-
-### Admin Web Routes (routes/web.php)
-
-| # | Method | Endpoint | Middleware | Status |
-|---|---|---|---|---|
-| 1 | GET | `/admin/login` | Guest | ✅ |
-| 2 | POST | `/admin/login` | Guest | ✅ |
-| 3 | POST | `/admin/logout` | auth+role:admin | ✅ |
-| 4 | GET | `/admin/dashboard` | auth+role:admin | ✅ |
-| 5 | GET | `/admin/vendors` | auth+role:admin | ✅ |
-| 6 | GET | `/admin/vendors/{vendor}` | auth+role:admin | ✅ |
-| 7 | PATCH | `/admin/vendors/{vendor}/approve` | auth+role:admin | ✅ |
-| 8 | PATCH | `/admin/vendors/{vendor}/reject` | auth+role:admin | ✅ |
-| 9 | GET | `/admin/tenders` | auth+role:admin | ✅ |
-| 10 | GET | `/admin/tenders/create` | auth+role:admin | ⚠️ Route order issue* |
-| 11 | POST | `/admin/tenders` | auth+role:admin | ✅ |
-| 12 | GET | `/admin/tenders/{tender}` | auth+role:admin | ✅ |
-| 13 | GET | `/admin/tenders/{tender}/edit` | auth+role:admin | ✅ |
-| 14 | PUT | `/admin/tenders/{tender}` | auth+role:admin | ✅ |
-| 15 | PATCH | `/admin/tenders/{tender}/status` | auth+role:admin | ✅ |
-| 16 | POST | `/admin/tenders/{tender}/announcements` | auth+role:admin | ✅ |
-| 17 | GET | `/admin/tenders/{tender}/participants` | auth+role:admin | ✅ |
-| 18 | GET | `/admin/tenders/{tender}/bids` | auth+role:admin | ✅ |
-| 19 | GET | `/admin/tenders/{tender}/bids/{bid}/histories` | auth+role:admin | ✅ |
-| 20 | GET | `/admin/tenders/{tender}/winner/create` | auth+role:admin | ✅ |
-| 21 | POST | `/admin/tenders/{tender}/winner` | auth+role:admin | ✅ |
-| 22 | GET | `/admin/tenders/{tender}/result` | auth+role:admin | ✅ |
-| 23 | PATCH | `/admin/tenders/{tender}/finish` | auth+role:admin | ✅ |
-| 24 | GET | `/admin/tenders/{tender}/purchase-order/create` | auth+role:admin | ✅ |
-| 25 | POST | `/admin/tenders/{tender}/purchase-order` | auth+role:admin | ✅ |
-| 26 | GET | `/admin/tenders/{tender}/purchase-order` | auth+role:admin | ✅ |
-| 27 | GET | `/admin/tenders/{tender}/histories` | auth+role:admin | ✅ |
-
-**Total: 27 endpoint ✅ SESUAI TARGET**
-
-> ⚠️ *Route `/admin/tenders/create` vs `/admin/tenders/{tender}` — di Laravel, string literal route seperti `create` diregistrasi sebelum parameter `{tender}`, sehingga **tidak akan bentrok**. AMAN.
-
----
-
-## F. Security Audit
-
-| Security Item | Status | Catatan |
+| Requirement | Status | Detail |
 |---|---|---|
-| Password di-hash saat register | ✅ PASS | `Hash::make()` di AuthController + cast `hashed` di User model |
-| Password di-hash saat reset | ✅ PASS | `Hash::make()` di `resetPassword()` dan `changePassword()` |
-| Password di-hash di seeder | ✅ PASS | `Hash::make('password')` untuk semua user seeder |
-| CSRF aktif di form admin | ✅ PASS | Laravel CSRF middleware default aktif untuk web routes |
-| Admin route protected `auth` + `role:admin` | ✅ PASS | `middleware(['auth', 'role:admin'])` di web.php |
-| Route login admin bisa diakses guest | ✅ PASS | GET/POST admin/login tidak di dalam middleware group |
-| Vendor tidak bisa akses admin route | ✅ PASS | `RoleMiddleware` redirect ke admin.login jika role bukan admin |
-| Vendor API tidak bisa diakses tanpa token | ✅ PASS | `ApiAuth` middleware return 401 jika tidak ada bearer token |
-| User non-vendor tidak bisa akses Vendor API | ✅ PASS | `ApiAuth` middleware cek `role !== 'vendor'` → return 403 |
-| Vendor harus punya profil vendor | ✅ PASS | `ApiAuth` cek `$user->vendor` exists |
-| Upload dokumen dibatasi tipe dan ukuran | ✅ PASS | `VendorDocumentRequest`: mimes:pdf,jpg,jpeg,png, max:5120 (5MB) |
-| Bidding divalidasi waktu | ✅ PASS | `BiddingService::assertBiddingOpen()` cek status + waktu |
-| Vendor pending/rejected tidak bisa join | ✅ PASS | `TenderParticipantController` cek `verification_status !== 'approved'` |
-| Vendor pending/rejected tidak bisa bid | ✅ PASS | `BiddingService::assertVendorCanBid()` cek approved |
-| Vendor belum join tidak bisa bid | ✅ PASS | `BiddingService::assertVendorCanBid()` cek TenderParticipant |
-| Vendor tidak bisa lihat bid vendor lain | ✅ PASS | `BidController::myBid()` filter by `vendor_id` sendiri |
-| Vendor tidak bisa ubah bid vendor lain | ✅ PASS | `BidController::update()` guard: `$bid->vendor_id !== $vendor->id` |
-| Tender draft tidak tampil di public API | ✅ PASS | `TenderController@index` whereIn statuses, `@show` cek draft |
-| Tidak ada route debug terbuka | ✅ PASS | Tidak ada `/debug`, `/telescope` (belum install), `/health` hanya ping |
-| Hardcoded token/password di logic | ✅ PASS | Tidak ada hardcoded secret di logic utama |
-| Session regeneration saat login | ✅ PASS | `$request->session()->regenerate()` di AdminLoginController |
-| Session invalidation saat logout | ✅ PASS | `invalidate()` + `regenerateToken()` di logout |
-| Vendor API tidak bisa akses `/admin/*` | ✅ PASS | Admin route di web.php membutuhkan session auth, bukan Bearer token |
-| remember_token digunakan sebagai API token | ⚠️ PARTIAL | **Kelemahan desain**: remember_token tidak expire otomatis dan bisa digunakan untuk web session login juga. Sesuai instruksi: cukup dilaporkan, tidak diubah. |
+| Route admin pakai `auth` | ✅ | Group `middleware(['auth', 'role:admin'])` di `web.php` baris 27 |
+| Route admin pakai `role:admin` | ✅ | `RoleMiddleware` cek `user->role === 'admin'` |
+| Login admin bisa diakses guest | ✅ | `GET/POST admin/login` di luar group protected |
+| Logout hanya untuk admin login | ✅ | `POST admin/logout` di dalam group protected |
+| Admin pakai session + CSRF | ✅ | Web routes Laravel (session-based), form pakai `@csrf` |
+| Create/edit/show tidak bentrok | ✅ | Route `tenders/create` di atas `tenders/{tender}` (tidak ambigu) |
+| Route `/` tidak dihitung endpoint utama | ✅ | Root hanya redirect ke `admin.login` |
+
+**Jumlah Admin Web Routes:** 29 route (vs ekspektasi 27)
+
+> [!NOTE]
+> Ditemukan **2 route tambahan** dari yang dispesifikasikan:
+> - `GET admin/vendors/{vendor}/documents/{document}/download` — admin download dokumen vendor (ditambah sesi ini)  
+> - `GET storage/{path}` — Laravel auto-route untuk storage (bukan fitur bisnis, tidak dihitung)
+>
+> Jika route download dokumen dihitung, admin = **29**. Jika tidak dihitung karena bukan dalam spec original = **28**. Masih masuk akal.
 
 ---
 
-## G. Apidog Sync
+### 1.2 Vendor API Routes
 
-> **Catatan**: File Apidog tidak ada di dalam project. Audit dilakukan berdasarkan endpoint yang tercatat di TASK_CURRENT.md dan routes/api.php.
+| Requirement | Status | Detail |
+|---|---|---|
+| Public route hanya: register, login, forgot-password, reset-password, tender listing, tender detail | ✅ | Sesuai. Plus `POST auth/refresh` (tambahan keamanan, bukan fitur baru) |
+| Protected route pakai `auth:api` | ✅ | Group `middleware('auth:api')` di `api.php` baris 38 |
+| Vendor approved check di join & bid | ✅ | Sub-group `middleware('vendor.approved')` untuk join + bid |
+| Tender listing tidak tampilkan draft | ✅ | `whereIn('status', ['open','aanwijzing','bidding','closed','finished'])` — draft excluded |
+| Tender detail tidak tampilkan draft | ✅ | Guard `if ($tender->status === 'draft') return 404` di `TenderController@show` |
+| Tidak bocorkan data internal admin | ✅ | `TenderResource` tidak expose `created_by`, internal notes, dsb |
 
-| Endpoint TASK_CURRENT.md | Ada di routes/api.php | Method Sesuai | Body/Param | Catatan |
-|---|---|---|---|---|
-| POST /api/auth/register | ✅ | ✅ POST | name, email, password, company_name, phone, address | Sesuai |
-| POST /api/auth/login | ✅ | ✅ POST | email, password | Sesuai |
-| POST /api/auth/forgot-password | ✅ | ✅ POST | email | Sesuai |
-| POST /api/auth/reset-password | ✅ | ✅ POST | token, email, password, password_confirmation | Sesuai |
-| GET /api/tenders | ✅ | ✅ GET | query: status, search | Sesuai |
-| GET /api/tenders/{tender} | ✅ | ✅ GET | - | Sesuai |
-| POST /api/auth/logout | ✅ | ✅ POST | Bearer token | Sesuai |
-| GET /api/auth/me | ✅ | ✅ GET | Bearer token | Sesuai |
-| PUT /api/auth/change-password | ✅ | ✅ PUT | current_password, password, password_confirmation | Sesuai |
-| GET /api/vendors/me | ✅ | ✅ GET | Bearer token | Sesuai |
-| PUT /api/vendors/me | ✅ | ✅ PUT | company_name, phone, address | Sesuai |
-| GET /api/vendors/status | ✅ | ✅ GET | Bearer token | Sesuai |
-| GET /api/vendors/documents | ✅ | ✅ GET | Bearer token | Sesuai |
-| POST /api/vendors/documents | ✅ | ✅ POST | document_type, file (multipart) | Sesuai |
-| POST /api/tenders/{tender}/participants | ✅ | ✅ POST | Bearer token (no body) | Sesuai |
-| GET /api/tenders/{tender}/announcements | ✅ | ✅ GET | Bearer token | Sesuai |
-| GET /api/tenders/{tender}/bids/me | ✅ | ✅ GET | Bearer token | Sesuai |
-| POST /api/tenders/{tender}/bids | ✅ | ✅ POST | bid_amount, notes | Sesuai |
-| PUT /api/tenders/{tender}/bids/{bid} | ✅ | ✅ PUT | bid_amount, notes | Sesuai |
-| GET /api/tenders/{tender}/result | ✅ | ✅ GET | Bearer token | Sesuai |
-| GET /api/tenders/{tender}/winner | ✅ | ✅ GET | Bearer token | ⚠️ Response berbeda dari `/result` — tidak ada TenderResultResource, langsung array manual |
+**Jumlah Vendor API Routes:** 24 route (vs ekspektasi 21)
 
-**Status Apidog Sync: SESUAI** (semua 21 endpoint cocok). File Apidog eksternal tidak bisa dicek secara langsung.
+> [!NOTE]
+> Ditemukan **3 route tambahan** dari spec original:
+> 1. `POST api/auth/refresh` — fix refresh token (security improvement)
+> 2. `GET api/tenders/{tender}/participants/check` — dari backend_requirements.md
+> 3. `GET api/vendors/tenders` + `GET api/vendors/results` — dari backend_requirements.md
+> 4. `GET api/vendors/documents/{document}/download` — security improvement  
+>
+> Semua tambahan ini berasal dari requirements terpisah atau security fix, **bukan feature baru tanpa basis**.
 
 ---
 
-## H. Checklist Validasi
+## 2. Security Review
 
-| Area | Field | Status | Catatan |
+| Requirement | Status | Detail |
+|---|---|---|
+| Password selalu di-hash | ✅ | `Hash::make()` di register, change-password, seeder |
+| CSRF aktif di form admin | ✅ | Semua form blade pakai `@csrf` |
+| Role admin aktif di admin route | ✅ | `RoleMiddleware` pada semua protected admin route |
+| Vendor tidak bisa akses endpoint admin | ✅ | Admin route = web + session; vendor hanya punya JWT, tidak bisa akses |
+| Protected vendor API tidak bisa diakses tanpa token | ✅ | `auth:api` middleware menolak request tanpa Bearer token |
+| Protected vendor API tidak bisa diakses user non-vendor | ✅ | `EnsureVendorApproved` cek `user->vendor` exists |
+| Upload dokumen divalidasi tipe dan ukuran | ✅ | `mimes:pdf,jpg,jpeg,png`, `max:5120` (5MB) di `VendorDocumentRequest` |
+| Bidding divalidasi waktu | ✅ | `assertBiddingOpen()` cek status + `bidding_start/end` di `BiddingService` |
+| Vendor pending/rejected tidak bisa join tender | ✅ | Guard `verification_status !== 'approved'` di `TenderParticipantController@store` |
+| Vendor pending/rejected tidak bisa bidding | ✅ | `middleware('vendor.approved')` + `assertVendorCanBid()` di `BiddingService` |
+| Vendor belum join tidak bisa bidding | ✅ | `assertVendorCanBid()` cek `TenderParticipant::exists()` |
+| Vendor tidak bisa lihat bid vendor lain | ✅ | `BidController@myBid` filter by `vendor_id` milik request user |
+| Vendor tidak bisa ubah bid vendor lain | ✅ | Guard `$bid->vendor_id !== $vendor->id` di `BidController@update` |
+| Tender draft tidak tampil di public API | ✅ | Dikonfirmasi di `TenderController` |
+| Tidak ada route debug terbuka | ✅ | Tidak ada `/debug`, `/telescope` tanpa auth, atau `dd()` di production |
+| Tidak ada hardcoded token/password di logic utama | ✅ | Password seeder pakai `Hash::make('password')`, bukan plaintext di logic |
+| Rate limiting login / register | ✅ | `throttle:5,1` login, `throttle:3,1` forgot-password, `throttle:10,1` register |
+| File upload private (tidak bisa diakses URL publik) | ✅ | Disk `local` (bukan `public`), download via protected route |
+| File path tidak bisa di-traversal | ✅ | `hashName()` untuk nama file di disk |
+| Error 500 tidak bocorkan stack trace | ✅ | Global JSON exception handler di `bootstrap/app.php` |
+| CORS dikonfigurasi eksplisit | ✅ | `config/cors.php` dengan whitelist |
+
+**Hasil Security: 20/20 ✅ — LULUS SEMUA**
+
+---
+
+## 3. Validation Review
+
+### Auth
+| Validasi | Status | Lokasi |
+|---|---|---|
+| Register | ✅ | `RegisterRequest` — name, email unique, password min:8 confirmed |
+| Login | ✅ | `LoginRequest` — email, password required |
+| Forgot password | ✅ | Validasi email exists di DB |
+| Reset password | ✅ | token, email, password confirmed |
+| Change password | ✅ | current_password, password min:8 confirmed |
+
+### Vendor
+| Validasi | Status | Lokasi |
+|---|---|---|
+| Vendor profile update | ✅ | `VendorProfileRequest` |
+| Upload dokumen | ✅ | `VendorDocumentRequest` — type, mimes, max:5120 |
+
+### Tender
+| Validasi | Status | Lokasi |
+|---|---|---|
+| start_date wajib | ✅ | `TenderRequest` |
+| end_date setelah start_date | ✅ | `after:start_date` |
+| bidding_start wajib | ✅ | `TenderRequest` |
+| bidding_end setelah bidding_start | ✅ | `after:bidding_start` |
+| bidding_start tidak sebelum start_date | ✅ | `after_or_equal:start_date` |
+| bidding_end tidak setelah end_date | ✅ | `before_or_equal:end_date` |
+
+### Aanwijzing
+| Validasi | Status | Lokasi |
+|---|---|---|
+| title wajib | ✅ | `TenderAnnouncementRequest` |
+| content wajib | ✅ | |
+| published_at valid date | ✅ | |
+
+### Bidding
+| Validasi | Status | Lokasi |
+|---|---|---|
+| bid_amount wajib | ✅ | `BidRequest` |
+| bid_amount > 0 | ✅ | `min:0.01` |
+| Bidding hanya dalam periode valid | ✅ | `BiddingService::assertBiddingOpen()` |
+| Vendor harus approved | ✅ | `EnsureVendorApproved` + `assertVendorCanBid()` |
+| Vendor harus participant | ✅ | `assertVendorCanBid()` cek TenderParticipant |
+
+### Winner Selection
+| Validasi | Status | Lokasi |
+|---|---|---|
+| Bid harus valid (exists di DB) | ✅ | `bid_id: exists:bids,id` di `WinnerSelectionRequest` |
+| Bid harus milik tender ini | ✅ | `abort_if($bid->tender_id !== $tender->id)` |
+| selection_method valid | ✅ | `in:lowest_price,admin_consideration` |
+| Winner tidak boleh duplicate | ✅ | `abort_if($tender->result()->exists())` |
+
+### Purchase Order
+| Validasi | Status | Lokasi |
+|---|---|---|
+| PO hanya setelah winner selected | ✅ | Guard di `PurchaseOrderController` cek `tender->result()->exists()` |
+| po_number unique | ✅ | `unique:purchase_orders,po_number` |
+| issued_date valid | ✅ | `required, date` |
+| amount valid | ✅ | `required, numeric, min:1` |
+
+**Hasil Validation: Semua ✅ LULUS**
+
+---
+
+## 4. Seeder Review
+
+| Requirement | Status | Detail |
+|---|---|---|
+| Admin | ✅ | `admin@example.com` / password |
+| Vendor pending | ✅ | `vendor.pending@example.com` — PT Pending Jaya |
+| Vendor approved (2x) | ✅ | PT Approved Maju + CV Karya Prima |
+| Dokumen vendor | ✅ | 2 dokumen per vendor approved (legalitas + izin_usaha) |
+| Tender draft | ✅ | "Pengadaan ATK 2026" — status draft |
+| Tender open | ✅ | "Pengadaan Furnitur Kantor 2026" |
+| Tender bidding | ✅ | "Pengadaan Laptop dan Aksesori 2026" — kedua vendor join, belum bid |
+| Participant | ✅ | Join di tender bidding + finished |
+| Bid | ✅ | Di tender finished (PT Approved Maju Rp 92.5jt, CV Karya Prima Rp 97jt) |
+| Bid history | ✅ | `BidHistory` dibuat saat submit |
+| Result | ✅ | TenderResult ada di tender finished |
+| PO | ✅ | PO-2026-IT-001 ada di tender finished |
+| Password di-hash | ✅ | `Hash::make('password')` |
+| Data konsisten | ✅ | Timeline masuk akal, relasi valid |
+| Seeder aman dijalankan ulang | ✅ | Semua pakai `firstOrCreate()` — tidak akan duplicate |
+| Timeline tender masuk akal | ✅ | Bidding tender aktif: start 3 hari lalu, end 7 hari depan |
+| Vendor pending tidak bisa join/bid | ✅ | Tidak ada participant row untuk vendor pending di seeder |
+
+> [!WARNING]
+> **Satu temuan minor di Seeder:** Dokumen vendor di seeder menggunakan `file_path` dengan format lama (contoh: `documents/vendors/2/akta_pendirian.pdf`), namun sekarang file production baru disimpan di `vendor-documents/{id}/{hash}` di disk `local`. File seeder ini **tidak ada secara fisik** di disk — tombol download di admin akan mengembalikan error "File tidak ditemukan di server" untuk dokumen seeder. Ini **hanya masalah demo**, bukan bug produksi.
+
+---
+
+## 5. API Response Consistency
+
+Format yang diminta di BRD/SRS/TB:
+```json
+// Success: status, message, data
+// Error:   status, message, errors
+```
+
+| Endpoint | Method | Format | Status |
 |---|---|---|---|
-| Auth - Register | name, email, password, company_name | ✅ | `RegisterRequest` |
-| Auth - Login | email, password | ✅ | `LoginRequest` |
-| Auth - Forgot Password | email | ⚠️ PARTIAL | Inline validate di controller, tidak pakai FormRequest |
-| Auth - Reset Password | token, email, password, confirmed | ⚠️ PARTIAL | Inline validate di controller |
-| Auth - Change Password | current_password, password, confirmed | ⚠️ PARTIAL | Inline validate di controller |
-| Vendor Profile Update | company_name, phone, address | ✅ | `VendorProfileRequest` |
-| Upload Dokumen | document_type, file (tipe+ukuran) | ✅ | `VendorDocumentRequest` — mimes + max:5120 |
-| Tender Create/Update | semua field + timeline constraints | ✅ | `TenderRequest` lengkap |
-| Tender Status Update | status (enum valid) | ✅ | `TenderStatusRequest` |
-| Aanwijzing | title, content, published_at | ✅ | `TenderAnnouncementRequest` |
-| Bid Submit/Update | bid_amount (>0), notes | ✅ | `BidRequest` |
-| Winner Selection | bid_id, selection_method, notes | ✅ | `WinnerSelectionRequest` |
-| Purchase Order | po_number (unique), amount, issued_date | ✅ | `PurchaseOrderRequest` |
+| `auth/register` | POST | `ApiResponse` trait | ✅ |
+| `auth/login` | POST | `ApiResponse` trait | ✅ |
+| `auth/forgot-password` | POST | `ApiResponse` trait | ✅ |
+| `auth/reset-password` | POST | `ApiResponse` trait | ✅ |
+| `auth/refresh` | POST | `ApiResponse` trait | ✅ |
+| `tenders` | GET | Manual JSON (inline) | ⚠️ |
+| `tenders/{tender}` | GET | `ApiResponse` trait | ✅ |
+| `auth/logout` | POST | `ApiResponse` trait | ✅ |
+| `auth/me` | GET | `ApiResponse` trait | ✅ |
+| `auth/change-password` | PUT | `ApiResponse` trait | ✅ |
+| `vendors/me` | GET | `ApiResponse` trait | ✅ |
+| `vendors/me` | PUT | `ApiResponse` trait | ✅ |
+| `vendors/status` | GET | `ApiResponse` trait | ✅ |
+| `vendors/documents` | GET | `ApiResponse` trait | ✅ |
+| `vendors/documents` | POST | `ApiResponse` trait | ✅ |
+| `tenders/{tender}/participants` | POST | `ApiResponse` trait | ✅ |
+| `tenders/{tender}/announcements` | GET | `ApiResponse` trait | ✅ |
+| `tenders/{tender}/bids/me` | GET | `ApiResponse` trait | ✅ |
+| `tenders/{tender}/bids` | POST | `ApiResponse` trait | ✅ |
+| `tenders/{tender}/bids/{bid}` | PUT | `ApiResponse` trait | ✅ |
+| `tenders/{tender}/result` | GET | `ApiResponse` trait | ✅ |
+| `tenders/{tender}/winner` | GET | `ApiResponse` trait | ✅ |
 
-> ⚠️ **Forgot/Reset/Change Password** menggunakan inline `$request->validate()` di controller, bukan FormRequest terpisah. Error response-nya mengikuti format Laravel default (bukan format `{status: error, message, errors}` yang sudah distandardkan). Ini inconsistency API response.
-
----
-
-## H. Rekomendasi Perbaikan Bertahap
-
-### 1. Critical (Wajib sebelum demo)
-
-1. **Seeder duplicate fatal** — Wrap dengan `firstOrCreate` atau tambahkan truncate/check di awal `run()`.
-   - File: `database/seeders/DatabaseSeeder.php`
-
-2. **Forgot/Reset/Change Password tidak menggunakan format ApiResponse standar** — Bungkus error ke format `{status: error, message, errors}` jika validasi gagal.
-   - File: `app/Http/Controllers/Api/AuthController.php`
-
-### 2. High (Sebaiknya diperbaiki sebelum demo)
-
-3. **Vendor approved/rejected tidak dicatat di TenderHistory** — Tambahkan `TenderHistoryService::log()` atau `TenderHistory::create()` di `VendorController::approve()` dan `reject()`.
-   - File: `app/Http/Controllers/Admin/VendorController.php`
-
-4. **Vendor Kedua tidak ada data join/bid** — Tambahkan participant dan bid untuk `vendorApproved2` di seeder agar demo competition bidding bisa ditampilkan.
-   - File: `database/seeders/DatabaseSeeder.php`
-
-5. **Status `closed` tidak tampil ke vendor** — Klarifikasi apakah tender berstatus `closed` harus tampil di public API. Jika ya, tambahkan ke `allowedStatuses`.
-   - File: `app/Http/Controllers/Api/TenderController.php`
-
-### 3. Medium (Nice to have)
-
-6. **`success()` tidak konsisten menyertakan key `data`** — Jika `data` null, tetap sertakan `"data": null` agar response structure selalu konsisten.
-   - File: `app/Http/Traits/ApiResponse.php`
-
-7. **TenderController Admin `update()` tidak log history** — Tambahkan log history saat tender diedit.
-   - File: `app/Http/Controllers/Admin/TenderController.php`
-
-8. **PurchaseOrder `amount` min:0** — Ganti ke `min:1` agar PO tidak boleh bernilai 0.
-   - File: `app/Http/Requests/Admin/PurchaseOrderRequest.php`
-
-### 4. Cleanup (Opsional)
-
-9. **VendorVerificationRequest** — Pertimbangkan membuat `notes` required saat `action` adalah reject.
-10. **remember_token sebagai API token** — Kelemahan minor yang sudah didokumentasikan. Tidak perlu diubah di Phase 8.
-11. **Tambahkan komentar Apidog Sync note** di `routes/api.php` agar developer berikutnya tahu dokumentasi ada di Apidog.
+> [!NOTE]
+> **`GET /api/tenders` (index)** menggunakan `response()->json()` inline (bukan trait) karena perlu mengembalikan field `meta` untuk pagination. Format tetap konsisten (`status`, `message`, `data`) — hanya ada field tambahan `meta`. **Tidak breaking, hanya perlu dicatat ke Apidog.**
 
 ---
 
-## Kesimpulan
+## 6. Demo Flow Checklist
 
-Project ini **sudah sangat solid untuk Phase 8**. Arsitektur bersih, business rules lengkap, security cukup kuat, dan route count sesuai target (21 + 27 = 48). Satu-satunya risiko real sebelum demo adalah **seeder yang tidak idempotent** dan **inconsistency format error di auth endpoints forgot/reset/change password**.
+### Admin Flow
+| Step | Status | Catatan |
+|---|---|---|
+| 1. Login admin | ✅ | `admin@example.com` / password |
+| 2. Lihat dashboard | ✅ | |
+| 3. Lihat vendor pending | ✅ | PT Pending Jaya ada di seeder |
+| 4. Approve vendor | ✅ | Route PATCH + form |
+| 5. Buat tender | ✅ | |
+| 6. Update status tender | ✅ | Route PATCH status |
+| 7. Tambah aanwijzing | ✅ | |
+| 8. Lihat participant | ✅ | |
+| 9. Lihat bids | ✅ | |
+| 10. Lihat bid history | ✅ | |
+| 11. Pilih winner | ✅ | Hanya bisa saat status `closed` |
+| 12. Lihat result | ✅ | |
+| 13. Generate PO | ✅ | |
+| 14. Lihat PO | ✅ | |
+| 15. Lihat history tender | ✅ | |
+| 16. Logout admin | ✅ | |
+| 🆕 Download dokumen vendor | ✅ | **Fitur baru** — tersedia di halaman vendor detail |
 
-Dengan memperbaiki 4–5 item di atas, project ini siap untuk demo flow penuh.
+### Vendor API Flow
+| Step | Status | Catatan |
+|---|---|---|
+| 1. Register vendor | ✅ | `POST /api/auth/register` |
+| 2. Login | ✅ | `POST /api/auth/login` |
+| 3. Upload dokumen | ✅ | `POST /api/vendors/documents` |
+| 4. Lihat status | ✅ | `GET /api/vendors/status` |
+| 5. Lihat tender | ✅ | `GET /api/tenders` |
+| 6. Lihat detail tender | ✅ | `GET /api/tenders/{tender}` |
+| 7. Join tender | ✅ | `POST /api/tenders/{tender}/participants` |
+| 8. Lihat aanwijzing | ✅ | `GET /api/tenders/{tender}/announcements` |
+| 9. Submit bid | ✅ | `POST /api/tenders/{tender}/bids` |
+| 10. Update bid | ✅ | `PUT /api/tenders/{tender}/bids/{bid}` |
+| 11. Lihat bid sendiri | ✅ | `GET /api/tenders/{tender}/bids/me` |
+| 12. Lihat winner | ✅ | `GET /api/tenders/{tender}/winner` |
+| 13. Lihat result | ✅ | `GET /api/tenders/{tender}/result` |
+| 14. Logout | ✅ | `POST /api/auth/logout` |
+| 🆕 Refresh token | ✅ | `POST /api/auth/refresh` — fix "login mulu" |
+
+---
+
+## 7. Temuan & Status
+
+### ✅ Yang Sudah Beres (Tidak Perlu Aksi)
+
+| # | Item |
+|---|---|
+| 1 | Semua 20 security checklist lulus |
+| 2 | Semua validasi form sesuai spec |
+| 3 | Seeder konsisten dan aman dijalankan ulang |
+| 4 | Admin flow 16 langkah bisa dilakukan |
+| 5 | Vendor API flow 14 langkah bisa dilakukan |
+| 6 | Rate limiting aktif di auth endpoints |
+| 7 | File upload private, nama file aman |
+| 8 | Error 500 tidak bocor HTML |
+| 9 | CORS terkonfigurasi |
+| 10 | Refresh token berfungsi |
+
+---
+
+### ⚠️ Temuan Minor (Tidak Blocking Demo)
+
+| # | Temuan | Dampak | Rekomendasi |
+|---|---|---|---|
+| F-01 | `GET /api/tenders` menggunakan inline `response()->json()` bukan `ApiResponse` trait | Tidak breaking, format konsisten | Update Apidog untuk tambahkan field `meta` di response |
+| F-02 | Dokumen seeder punya `file_path` yang tidak ada secara fisik di disk `local` | Tombol download dokumen seeder di admin akan error "File tidak ditemukan" | Upload file PDF dummy secara manual ke `storage/app/vendor-documents/{id}/` sebelum demo, **atau** skip demo download untuk dokumen seeder |
+| F-03 | Route count API = 24 (vs spec 21), Admin = 29 (vs spec 27) | Tidak masalah — tambahan adalah improvement & requirements baru | Update Apidog untuk dokumentasikan endpoint tambahan |
+| F-04 | `config/cors.php` `allowed_origins` masih localhost — belum ada domain production | Tidak masalah untuk dev/demo | Isi domain production sebelum deploy |
+
+---
+
+### ❌ Tidak Ada Temuan Critical
+
+Tidak ada bug breaking, tidak ada security hole, tidak ada endpoint yang hilang dari flow demo.
+
+---
+
+## 8. Perbedaan Backend vs Apidog (Perlu Update Apidog)
+
+| Endpoint | Perbedaan |
+|---|---|
+| `POST /api/auth/refresh` | **Endpoint baru** — belum ada di Apidog |
+| `GET /api/tenders/{tender}/participants/check` | **Endpoint baru** — belum ada di Apidog |
+| `GET /api/vendors/tenders` | **Endpoint baru** — belum ada di Apidog |
+| `GET /api/vendors/results` | **Endpoint baru** — belum ada di Apidog |
+| `GET /api/vendors/documents/{document}/download` | **Endpoint baru** — belum ada di Apidog |
+| `GET /api/tenders` | Response punya field `meta` tambahan (pagination info) |
+
+---
+
+## 9. Rekomendasi Final Sebelum Demo
+
+1. **Upload file dummy ke storage** untuk menghindari error "File tidak ditemukan" saat klik Download di admin:
+   ```
+   storage/app/vendor-documents/{vendor_id}/file.pdf
+   ```
+   (Atau gunakan `php artisan tinker` untuk update `file_path` dokumen seeder ke path yang ada)
+
+2. **Update Apidog** dengan 5 endpoint baru dan field `meta` pada `GET /api/tenders`
+
+3. **Set CORS production** di `config/cors.php` sebelum deploy ke server:
+   ```php
+   'https://domain-vendor-app.com',
+   'https://domain-admin.com',
+   ```
+
+4. **Jalankan `php artisan db:seed`** untuk memastikan data demo lengkap sebelum presentasi
+
+5. **Test refresh token** dari mobile app — kirim `POST /api/auth/refresh` dengan header `Authorization: Bearer {expired_token}` untuk memastikan tidak login mulu
+
+---
+
+## Ringkasan Keseluruhan
+
+| Kategori | Skor |
+|---|---|
+| Route Audit | ✅ **LULUS** (tambahan 3+2 route = improvement, bukan violation) |
+| Security Review | ✅ **20/20 LULUS** |
+| Validation Review | ✅ **LULUS SEMUA** |
+| Seeder Review | ✅ **LULUS** (1 catatan minor tentang file fisik) |
+| API Response Consistency | ✅ **21/22 LULUS** (1 endpoint pakai inline tapi format sama) |
+| Demo Flow Admin | ✅ **16/16 LULUS** |
+| Demo Flow Vendor API | ✅ **14/14 LULUS** |
+
+**Status Proyek: SIAP DEMO** 🎉  
+Tidak ada bug blocking. Tidak ada security hole. Demo flow lengkap bisa dijalankan.

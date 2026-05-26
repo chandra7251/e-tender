@@ -7,7 +7,9 @@ use App\Http\Requests\Api\VendorDocumentRequest;
 use App\Http\Traits\ApiResponse;
 use App\Models\VendorDocument;
 use Illuminate\Http\JsonResponse;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
+use Symfony\Component\HttpFoundation\StreamedResponse;
 
 class VendorDocumentController extends Controller
 {
@@ -21,7 +23,7 @@ class VendorDocumentController extends Controller
             ->map(fn ($d) => [
                 'id'            => $d->id,
                 'document_type' => $d->document_type,
-                'file_name'     => $d->file_name,
+                'file_name'     => $d->file_name,       // original name untuk display
                 'mime_type'     => $d->mime_type,
                 'file_size'     => $d->file_size,
                 'uploaded_at'   => $d->uploaded_at?->toIso8601String(),
@@ -36,12 +38,15 @@ class VendorDocumentController extends Controller
         $vendor = auth()->user()->vendor;
         $file   = $request->file('file');
 
-        $path = $file->store("vendor-documents/{$vendor->id}", 'public');
+        // Gunakan hashName() — nama acak aman, bukan nama dari client
+        // Disk 'local' = private, tidak bisa diakses via URL publik
+        $hashedName = $file->hashName();
+        $path       = $file->storeAs("vendor-documents/{$vendor->id}", $hashedName, 'local');
 
         $document = VendorDocument::create([
             'vendor_id'     => $vendor->id,
             'document_type' => $request->input('document_type'),
-            'file_name'     => $file->getClientOriginalName(),
+            'file_name'     => $file->getClientOriginalName(), // hanya untuk display
             'file_path'     => $path,
             'mime_type'     => $file->getMimeType(),
             'file_size'     => $file->getSize(),
@@ -55,5 +60,25 @@ class VendorDocumentController extends Controller
             'file_size'     => $document->file_size,
             'uploaded_at'   => $document->uploaded_at?->toIso8601String(),
         ], 'Dokumen berhasil diupload.');
+    }
+
+    /** GET /api/vendors/documents/{document}/download — Vendor download dokumennya sendiri */
+    public function download(VendorDocument $document): StreamedResponse|JsonResponse
+    {
+        $vendor = auth()->user()->vendor;
+
+        // Guard: vendor hanya bisa download dokumen miliknya sendiri
+        if ($document->vendor_id !== $vendor->id) {
+            return $this->error('Dokumen tidak ditemukan.', null, 404);
+        }
+
+        if (!Storage::disk('local')->exists($document->file_path)) {
+            return $this->error('File tidak ditemukan di server.', null, 404);
+        }
+
+        return Storage::disk('local')->download(
+            $document->file_path,
+            $document->file_name  // nama asli saat didownload
+        );
     }
 }

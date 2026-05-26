@@ -10,6 +10,7 @@ use App\Http\Controllers\Admin\TenderHistoryController;
 use App\Http\Controllers\Admin\TenderParticipantController;
 use App\Http\Controllers\Admin\TenderResultController;
 use App\Http\Controllers\Admin\VendorController;
+use App\Http\Controllers\Admin\VendorDocumentController;
 use App\Http\Controllers\Admin\WinnerSelectionController;
 use Illuminate\Support\Facades\Route;
 
@@ -31,11 +32,16 @@ Route::prefix('admin')->name('admin.')->group(function () {
         // Dashboard
         Route::get('dashboard', [DashboardController::class, 'index'])->name('dashboard');
 
-        // ── Vendor Management ────────────────────────────────────────────────
+        // ── Vendor Management ─────────────────────────────────────────────────────────────
         Route::get('vendors',                   [VendorController::class, 'index'])->name('vendors.index');
         Route::get('vendors/{vendor}',          [VendorController::class, 'show'])->name('vendors.show');
         Route::patch('vendors/{vendor}/approve',[VendorController::class, 'approve'])->name('vendors.approve');
         Route::patch('vendors/{vendor}/reject', [VendorController::class, 'reject'])->name('vendors.reject');
+
+        // Download dokumen vendor untuk validasi legalitas
+        Route::get('vendors/{vendor}/documents/{document}/download',
+            [VendorDocumentController::class, 'download']
+        )->name('vendors.documents.download');
 
         // ── Tender Management ────────────────────────────────────────────────
         Route::get('tenders',               [TenderController::class, 'index'])->name('tenders.index');
