@@ -113,6 +113,9 @@ Authorization: Bearer <token>
   }
 }
 ```
+> ⚠️ **Catatan penting:** Key di dalam `data` adalah `user` (bukan `vendor`).
+> Data profil vendor lengkap (company_name, dll) di-fetch terpisah via `GET /api/vendors/me`.
+```
 
 **Response gagal (401):**
 ```json

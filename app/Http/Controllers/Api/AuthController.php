@@ -30,7 +30,7 @@ class AuthController extends Controller
             'role'     => 'vendor',
         ]);
 
-        $vendor = Vendor::create([
+        Vendor::create([
             'user_id'             => $user->id,
             'company_name'        => $request->input('company_name'),
             'phone'               => $request->input('phone'),
@@ -43,7 +43,13 @@ class AuthController extends Controller
         return $this->created([
             'token'      => $token,
             'token_type' => 'bearer',
-            'vendor'     => new VendorResource($vendor->load('user')),
+            'expires_in' => config('jwt.ttl') * 60,
+            'user'       => [
+                'id'    => $user->id,
+                'name'  => $user->name,
+                'email' => $user->email,
+                'role'  => $user->role,
+            ],
         ], 'Registrasi berhasil. Akun Anda menunggu verifikasi admin.');
     }
 
@@ -65,7 +71,13 @@ class AuthController extends Controller
         return $this->success([
             'token'      => $token,
             'token_type' => 'bearer',
-            'vendor'     => new VendorResource($user->vendor()->with('user')->first()),
+            'expires_in' => config('jwt.ttl') * 60,
+            'user'       => [
+                'id'    => $user->id,
+                'name'  => $user->name,
+                'email' => $user->email,
+                'role'  => $user->role,
+            ],
         ], 'Login berhasil.');
     }
 
