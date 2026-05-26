@@ -20,9 +20,13 @@ return [
         // Development — izinkan localhost untuk testing
         'http://localhost',
         'http://localhost:3000',
+        'http://localhost:4200',  // Angular dev server
         'http://localhost:8080',
+        'http://localhost:8100',  // Ionic serve (default)
+        'http://localhost:8101',  // Ionic serve (fallback port)
         'http://127.0.0.1',
-        'http://127.0.0.1:8080/',
+        'http://127.0.0.1:8080',
+        'http://127.0.0.1:8100',
 
         // TODO: Ganti/tambah dengan domain production saat deploy
         // 'https://vendor-app.domain-kamu.com',
