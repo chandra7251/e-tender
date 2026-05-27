@@ -87,16 +87,7 @@
             <h1 class="text-xl font-bold text-white tracking-wide">@yield('page-title', 'Dashboard')</h1>
             
             <div class="flex items-center gap-8">
-                {{-- Search Bar --}}
-                <div class="relative hidden sm:block">
-                    <div class="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3">
-                        <svg class="h-5 w-5 text-indigo-200" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
-                            <path fill-rule="evenodd" d="M9 3.5a5.5 5.5 0 100 11 5.5 5.5 0 000-11zM2 9a7 7 0 1112.452 4.391l3.328 3.329a.75.75 0 11-1.06 1.06l-3.329-3.328A7 7 0 012 9z" clip-rule="evenodd" />
-                        </svg>
-                    </div>
-                    <input type="text" name="search" id="search" class="block w-64 rounded-full border border-indigo-300 bg-transparent py-1.5 pl-10 pr-3 text-white placeholder:text-indigo-200 focus:outline-none focus:ring-1 focus:ring-white sm:text-sm sm:leading-6" placeholder="Search">
-                </div>
-
+                {{-- Search Bar removed as requested --}}
                 {{-- Profile --}}
                 <div class="flex items-center gap-3">
                     <span class="text-sm font-medium text-white">{{ auth()->user()->name ?? 'Admin Tender' }}</span>
