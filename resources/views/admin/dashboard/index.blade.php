@@ -246,18 +246,62 @@
             $mEnd        = $selMon->copy()->endOfMonth();
             $daysInMonth = $mEnd->day;
 
-            // ── Pre-fetch all tenders once for efficiency ─────────────────
-            $allT = \App\Models\Tender::select('status', 'start_date', 'created_at')->get();
+            // ── Pre-fetch semua tender untuk eksistensi waktu ────────────
+            $allTenders = \App\Models\Tender::select('id', 'status', 'start_date', 'created_at')
+                ->get()->keyBy('id');
 
-            // Helper: count tenders per status active at/before $endDateStr
-            $getCounts = function(string $endStr) use ($allT): array {
+            // ── Pre-fetch semua event status dari tender_histories ────────
+            // Dikelompokkan per tender_id, diurutkan berdasarkan waktu kejadian.
+            // Gunakan whereNotNull('new_status') untuk menangkap semua event 
+            // (termasuk 'winner_selected' yang mungkin tidak ber-action 'status_changed')
+            $allHistories = \App\Models\TenderHistory::whereNotNull('new_status')
+                ->select('tender_id', 'new_status', 'created_at')
+                ->orderBy('tender_id')
+                ->orderBy('created_at')
+                ->get()
+                ->groupBy('tender_id');
+
+            // Helper: hitung jumlah tender per status pada titik waktu $endStr.
+            $getCounts = function(string $endStr) use ($allTenders, $allHistories): array {
                 $c = ['open'=>0,'bidding'=>0,'aanwijzing'=>0,'finished'=>0,'closed'=>0,'draft'=>0];
-                foreach ($allT as $t) {
-                    $raw = $t->start_date ?: $t->created_at;
-                    if (!$raw) continue;
-                    $ds = is_string($raw) ? $raw : (method_exists($raw,'format') ? $raw->format('Y-m-d H:i:s') : (string)$raw);
-                    $ds = substr($ds, 0, 19);
-                    if ($ds <= $endStr && array_key_exists($t->status, $c)) $c[$t->status]++;
+                foreach ($allTenders as $tenderId => $tender) {
+                    // 1. Kapan tender mulai muncul di grafik?
+                    // Draft -> pakai created_at. Lainnya -> pakai start_date (atau fallback ke created_at)
+                    $rawDate = $tender->status === 'draft' 
+                        ? $tender->created_at 
+                        : ($tender->start_date ?: $tender->created_at);
+                    
+                    $baseDateStr = $rawDate instanceof \Carbon\Carbon
+                        ? $rawDate->format('Y-m-d H:i:s')
+                        : substr((string)$rawDate, 0, 19);
+                    
+                    if ($baseDateStr > $endStr) continue; // Tender belum dimulai pada tanggal ini
+
+                    // 2. Cari status historis dari tender_histories
+                    $statusAtDate = null;
+                    $firstKnownStatus = null;
+                    
+                    if ($allHistories->has($tenderId)) {
+                        $firstKnownStatus = $allHistories[$tenderId]->first()->new_status;
+                        foreach ($allHistories[$tenderId] as $h) {
+                            $hDate = $h->created_at instanceof \Carbon\Carbon
+                                ? $h->created_at->format('Y-m-d H:i:s')
+                                : substr((string)$h->created_at, 0, 19);
+                            if ($hDate <= $endStr) {
+                                $statusAtDate = $h->new_status; // status terakhir sebelum/pada tanggal ini
+                            }
+                        }
+                    }
+
+                    // 3. Fallback: Jika tanggal grafik < histori pertama yang tercatat, 
+                    //    gunakan status awal (firstKnownStatus) BUKAN status terkini.
+                    if ($statusAtDate === null) {
+                        $statusAtDate = $firstKnownStatus ?? $tender->status;
+                    }
+
+                    if ($statusAtDate && array_key_exists($statusAtDate, $c)) {
+                        $c[$statusAtDate]++;
+                    }
                 }
                 return $c;
             };
