@@ -15,7 +15,7 @@
         Kembali Ke Daftar Tender
     </a>
 
-    <form method="POST" action="{{ route('admin.tenders.store') }}">
+    <form method="POST" action="{{ route('admin.tenders.store') }}" enctype="multipart/form-data">
         @csrf
 
         @include('admin.tenders._form', ['tender' => null])

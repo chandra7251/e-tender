@@ -17,6 +17,7 @@ class Tender extends Model
         'title',
         'description',
         'specification',
+        'photo_path',
         'start_date',
         'end_date',
         'aanwijzing_date',
@@ -35,6 +36,16 @@ class Tender extends Model
             'bidding_end'     => 'datetime',
         ];
     }
+
+    /** URL publik foto (null jika belum ada foto) */
+    public function getPhotoUrlAttribute(): ?string
+    {
+        return $this->photo_path
+            ? \Illuminate\Support\Facades\Storage::disk('public')->url($this->photo_path)
+            : null;
+    }
+
+    protected $appends = ['photo_url'];
 
     // ─── Relationships ────────────────────────────────────────────────────────
 

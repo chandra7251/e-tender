@@ -9,6 +9,7 @@ use App\Models\Tender;
 use App\Models\TenderHistory;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Storage;
 use Illuminate\View\View;
 
 class TenderController extends Controller
@@ -51,9 +52,17 @@ class TenderController extends Controller
      */
     public function store(TenderRequest $request): RedirectResponse
     {
-        // FIX MED-04: Paksa status draft saat create, abaikan input status dari form.
+        $data = $request->validated();
+
+        // Handle photo upload
+        if ($request->hasFile('photo')) {
+            $data['photo_path'] = $request->file('photo')->store('tenders/photos', 'public');
+        }
+        unset($data['photo']); // tidak ada kolom 'photo', yg disimpan 'photo_path'
+
+        // FIX MED-04: Paksa status draft saat create
         $tender = Tender::create([
-            ...$request->validated(),
+            ...$data,
             'created_by' => auth()->id(),
             'status'     => 'draft',
         ]);
@@ -110,8 +119,19 @@ class TenderController extends Controller
                 ->with('error', "Data tender tidak dapat diubah saat status '{$tender->status}'. Gunakan ubah status.");
         }
 
+        $data = $request->validated();
+
+        // Handle photo upload — hapus foto lama jika ada foto baru
+        if ($request->hasFile('photo')) {
+            if ($tender->photo_path) {
+                Storage::disk('public')->delete($tender->photo_path);
+            }
+            $data['photo_path'] = $request->file('photo')->store('tenders/photos', 'public');
+        }
+        unset($data['photo']);
+
         $oldStatus = $tender->status;
-        $tender->update($request->validated());
+        $tender->update($data);
 
         TenderHistory::create([
             'tender_id'   => $tender->id,

@@ -66,6 +66,31 @@
         @error('specification')<p class="mt-1.5 text-xs text-red-300">{{ $message }}</p>@enderror
     </div>
 
+    {{-- Photo --}}
+    <div>
+        <label for="photo" class="mb-2 block text-sm font-bold text-white">
+            Foto Barang / Jasa
+            <span class="text-xs font-normal text-indigo-200">(opsional · maks. 3 MB · JPG / PNG)</span>
+        </label>
+
+        {{-- Preview foto yang sudah ada (saat edit) --}}
+        @if ($tender?->photo_url)
+            <div class="mb-3">
+                <img src="{{ $tender->photo_url }}" alt="Foto tender"
+                     class="h-40 w-full rounded-lg object-cover border border-[#4A6BCC]">
+                <p class="mt-1 text-xs text-indigo-200">Foto saat ini. Upload foto baru untuk mengganti.</p>
+            </div>
+        @endif
+
+        <input id="photo" type="file" name="photo" accept="image/jpeg,image/png"
+               class="block w-full rounded-md border border-[#4A6BCC] bg-[#2B438A] px-3 py-2 text-sm
+                      text-indigo-100 file:mr-4 file:rounded file:border-0
+                      file:bg-[#4A6BCC] file:px-3 file:py-1.5 file:text-sm file:text-white
+                      file:cursor-pointer hover:file:bg-[#5A7BE0]
+                      @error('photo') border-red-400 @enderror">
+        @error('photo')<p class="mt-1.5 text-xs text-red-300">{{ $message }}</p>@enderror
+    </div>
+
     {{-- Status --}}
     <div>
         <label for="status" class="mb-2 block text-sm font-bold text-white">

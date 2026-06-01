@@ -15,7 +15,7 @@
         Kembali Ke Detail Tender
     </a>
 
-    <form method="POST" action="{{ route('admin.tenders.update', $tender) }}">
+    <form method="POST" action="{{ route('admin.tenders.update', $tender) }}" enctype="multipart/form-data">
         @csrf
         @method('PUT')
 

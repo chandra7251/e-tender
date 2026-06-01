@@ -24,6 +24,7 @@ class TenderResource extends JsonResource
             'title'           => $this->title,
             'description'     => $this->description,
             'specification'   => $this->specification,
+            'photo_url'       => $this->photo_url,   // null jika belum ada foto
             'status'          => $this->status,
             'start_date'      => $this->start_date?->toIso8601String(),
             'end_date'        => $this->end_date?->toIso8601String(),
