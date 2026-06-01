@@ -48,6 +48,27 @@
                 Vendor
             </a>
 
+            {{-- Pengajuan Vendor (dari Mobile App) --}}
+            <a href="{{ route('admin.submissions.index') }}"
+               class="flex items-center gap-3 rounded-lg px-4 py-3 text-sm font-semibold
+                      {{ request()->routeIs('admin.submissions*') ? 'bg-white text-[#3553A8]' : 'text-white hover:bg-[#2B438A]' }}
+                      transition-colors duration-150">
+                {{-- Inbox / Submission icon --}}
+                <svg class="h-5 w-5 shrink-0" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor">
+                    <path fill-rule="evenodd" d="M6.912 3a3 3 0 00-2.868 2.118l-2.411 7.838a3 3 0 00-.133.882V18a3 3 0 003 3h15a3 3 0 003-3v-4.162c0-.299-.045-.596-.133-.882l-2.412-7.838A3 3 0 0017.088 3H6.912zm13.823 9.75H16.5a3 3 0 00-2.83 2h-3.34a3 3 0 00-2.83-2H3.265l1.943-6.317A1.5 1.5 0 016.912 4.5h10.176a1.5 1.5 0 011.434 1.433l1.943 6.317a.75.75 0 01-.23-.5z" clip-rule="evenodd"/>
+                </svg>
+                <span class="flex-1">Pengajuan Vendor</span>
+                @php
+                    $pendingCount = \App\Models\VendorSubmission::where('status','pending')->count();
+                @endphp
+                @if ($pendingCount > 0)
+                    <span class="ml-auto inline-flex h-5 min-w-[1.25rem] items-center justify-center rounded-full
+                                 bg-[#F09459] px-1.5 text-[10px] font-bold text-white">
+                        {{ $pendingCount > 99 ? '99+' : $pendingCount }}
+                    </span>
+                @endif
+            </a>
+
             <a href="{{ route('admin.tenders.index') }}"
                class="flex items-center gap-3 rounded-lg px-4 py-3 text-sm font-semibold
                       {{ request()->routeIs('admin.tenders*') ? 'bg-white text-[#3553A8]' : 'text-white hover:bg-[#2B438A]' }}

@@ -11,6 +11,7 @@ use App\Http\Controllers\Admin\TenderParticipantController;
 use App\Http\Controllers\Admin\TenderResultController;
 use App\Http\Controllers\Admin\VendorController;
 use App\Http\Controllers\Admin\VendorDocumentController;
+use App\Http\Controllers\Admin\SubmissionController;
 use App\Http\Controllers\Admin\WinnerSelectionController;
 use Illuminate\Support\Facades\Route;
 
@@ -89,6 +90,12 @@ Route::prefix('admin')->name('admin.')->group(function () {
         // ── Tender History ───────────────────────────────────────────────────
         Route::get('tenders/{tender}/histories', [TenderHistoryController::class, 'index'])
             ->name('tenders.histories.index');
+
+        // ── Pengajuan Vendor (dari Mobile App) ───────────────────────────────
+        Route::get('submissions',                       [SubmissionController::class, 'index'])->name('submissions.index');
+        Route::get('submissions/{submission}',          [SubmissionController::class, 'show'])->name('submissions.show');
+        Route::patch('submissions/{submission}/approve',[SubmissionController::class, 'approve'])->name('submissions.approve');
+        Route::patch('submissions/{submission}/reject', [SubmissionController::class, 'reject'])->name('submissions.reject');
 
     });
 });
