@@ -60,4 +60,9 @@ class Vendor extends Model
     {
         return $this->hasMany(TenderResult::class, 'winner_vendor_id');
     }
+
+    public function submissions(): HasMany
+    {
+        return $this->hasMany(VendorSubmission::class);
+    }
 }

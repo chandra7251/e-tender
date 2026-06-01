@@ -9,6 +9,8 @@ use App\Http\Controllers\Api\TenderResultController;
 use App\Http\Controllers\Api\VendorController;
 use App\Http\Controllers\Api\VendorDocumentController;
 use App\Http\Controllers\Api\VendorProfileController;
+use App\Http\Controllers\Api\VendorSubmissionController;
+use App\Http\Controllers\Api\AdminSubmissionController;
 use Illuminate\Support\Facades\Route;
 
 /*
@@ -73,3 +75,17 @@ Route::middleware('auth:api')->group(function () {
     });
 });
 
+// ── Vendor Submission Routes ──────────────────────────────────────────────────
+Route::middleware('auth:api')->prefix('vendor')->name('api.vendor.')->group(function () {
+    Route::get('submissions',      [VendorSubmissionController::class, 'index'])->name('submissions.index');
+    Route::get('submissions/{id}', [VendorSubmissionController::class, 'show'])->name('submissions.show');
+    Route::post('submissions',     [VendorSubmissionController::class, 'store'])->name('submissions.store');
+});
+
+// ── Admin Submission Routes ───────────────────────────────────────────────────
+Route::middleware(['auth:api', 'role:admin'])->prefix('admin')->name('api.admin.')->group(function () {
+    Route::get('submissions',              [AdminSubmissionController::class, 'index'])->name('submissions.index');
+    Route::get('submissions/{id}',         [AdminSubmissionController::class, 'show'])->name('submissions.show');
+    Route::patch('submissions/{id}/approve', [AdminSubmissionController::class, 'approve'])->name('submissions.approve');
+    Route::patch('submissions/{id}/reject',  [AdminSubmissionController::class, 'reject'])->name('submissions.reject');
+});
