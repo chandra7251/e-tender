@@ -13,10 +13,12 @@ return Application::configure(basePath: dirname(__DIR__))
         health: '/up',
     )
     ->withMiddleware(function (Middleware $middleware): void {
+        // Pastikan CORS middleware aktif untuk semua request (termasuk OPTIONS preflight dari Capacitor)
+        $middleware->prepend(\Illuminate\Http\Middleware\HandleCors::class);
+
         $middleware->alias([
             'role'             => \App\Http\Middleware\RoleMiddleware::class,
             'vendor.approved'  => \App\Http\Middleware\EnsureVendorApproved::class,
-            // auth.api dihapus — diganti auth:api (JWT guard)
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {

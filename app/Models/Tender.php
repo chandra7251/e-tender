@@ -17,6 +17,7 @@ class Tender extends Model
         'title',
         'description',
         'specification',
+        'open_bidding_price',
         'photo_path',
         'start_date',
         'end_date',
@@ -29,11 +30,12 @@ class Tender extends Model
     protected function casts(): array
     {
         return [
-            'start_date'      => 'datetime',
-            'end_date'        => 'datetime',
-            'aanwijzing_date' => 'datetime',
-            'bidding_start'   => 'datetime',
-            'bidding_end'     => 'datetime',
+            'open_bidding_price' => 'float',
+            'start_date'         => 'datetime',
+            'end_date'           => 'datetime',
+            'aanwijzing_date'    => 'datetime',
+            'bidding_start'      => 'datetime',
+            'bidding_end'        => 'datetime',
         ];
     }
 

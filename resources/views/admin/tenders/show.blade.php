@@ -100,6 +100,14 @@
                         <p class="text-xs font-bold uppercase tracking-wide text-indigo-200 mb-1">Spesifikasi</p>
                         <p class="text-sm text-white whitespace-pre-line">{{ $tender->specification }}</p>
                     </div>
+                    @if ($tender->open_bidding_price)
+                    <div>
+                        <p class="text-xs font-bold uppercase tracking-wide text-indigo-200 mb-1">Harga Pembukaan Bidding (HPS)</p>
+                        <p class="text-lg font-bold text-white">
+                            Rp {{ number_format($tender->open_bidding_price, 0, ',', '.') }}
+                        </p>
+                    </div>
+                    @endif
                     <div class="pt-4 border-t border-[#4A6BCC] mt-6">
                         <p class="text-xs font-medium text-indigo-200">Dibuat oleh: {{ $tender->creator->name ?? '-' }}</p>
                     </div>

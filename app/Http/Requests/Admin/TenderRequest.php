@@ -14,15 +14,16 @@ class TenderRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'title'           => ['required', 'string', 'max:255'],
-            'description'     => ['required', 'string'],
-            'specification'   => ['required', 'string'],
-            'photo'           => ['nullable', 'image', 'mimes:jpeg,jpg,png', 'max:3072'],
-            'start_date'      => ['required', 'date'],
-            'end_date'        => ['required', 'date', 'after:start_date'],
-            'aanwijzing_date' => ['nullable', 'date'],
-            'bidding_start'   => ['required', 'date', 'after_or_equal:start_date'],
-            'bidding_end'     => ['required', 'date', 'after:bidding_start', 'before_or_equal:end_date'],
+            'title'               => ['required', 'string', 'max:255'],
+            'description'         => ['required', 'string'],
+            'specification'       => ['required', 'string'],
+            'open_bidding_price'  => ['nullable', 'numeric', 'min:0'],
+            'photo'               => ['nullable', 'image', 'mimes:jpeg,jpg,png', 'max:3072'],
+            'start_date'          => ['required', 'date'],
+            'end_date'            => ['required', 'date', 'after:start_date'],
+            'aanwijzing_date'     => ['nullable', 'date'],
+            'bidding_start'       => ['required', 'date', 'after_or_equal:start_date'],
+            'bidding_end'         => ['required', 'date', 'after:bidding_start', 'before_or_equal:end_date'],
             // 'status' dikelola eksklusif via PATCH /tenders/{tender}/status
         ];
     }
@@ -33,6 +34,8 @@ class TenderRequest extends FormRequest
             'title.required'               => 'Judul tender wajib diisi.',
             'description.required'         => 'Deskripsi tender wajib diisi.',
             'specification.required'       => 'Spesifikasi tender wajib diisi.',
+            'open_bidding_price.numeric'   => 'Harga pembukaan harus berupa angka.',
+            'open_bidding_price.min'       => 'Harga pembukaan tidak boleh negatif.',
             'start_date.required'          => 'Tanggal mulai wajib diisi.',
             'end_date.required'            => 'Tanggal selesai wajib diisi.',
             'end_date.after'               => 'Tanggal selesai harus setelah tanggal mulai.',

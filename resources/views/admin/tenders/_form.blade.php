@@ -66,6 +66,27 @@
         @error('specification')<p class="mt-1.5 text-xs text-red-300">{{ $message }}</p>@enderror
     </div>
 
+    {{-- Open Bidding Price (HPS) --}}
+    <div>
+        <label for="open_bidding_price" class="mb-2 block text-sm font-bold text-white">
+            Harga Pembukaan Bidding (HPS)
+            <span class="text-xs font-normal text-indigo-200">(opsional · dalam Rupiah)</span>
+        </label>
+        <div class="relative">
+            <span class="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-4 text-sm font-semibold text-indigo-200">
+                Rp
+            </span>
+            <input id="open_bidding_price" type="number" name="open_bidding_price" min="0" step="1"
+                   value="{{ old('open_bidding_price', $tender?->open_bidding_price) }}"
+                   placeholder="0"
+                   class="w-full rounded-md border border-[#4A6BCC] bg-[#2B438A] pl-10 pr-4 py-2.5 text-sm
+                          text-white placeholder-indigo-200 outline-none
+                          focus:border-white focus:ring-1 focus:ring-white
+                          @error('open_bidding_price') border-red-400 @enderror">
+        </div>
+        @error('open_bidding_price')<p class="mt-1.5 text-xs text-red-300">{{ $message }}</p>@enderror
+    </div>
+
     {{-- Photo --}}
     <div>
         <label for="photo" class="mb-2 block text-sm font-bold text-white">
@@ -91,23 +112,25 @@
         @error('photo')<p class="mt-1.5 text-xs text-red-300">{{ $message }}</p>@enderror
     </div>
 
-    {{-- Status --}}
+    {{-- Status — read-only, diubah via menu Ubah Status di halaman detail --}}
     <div>
-        <label for="status" class="mb-2 block text-sm font-bold text-white">
-            Status <span class="text-red-500">*</span>
-        </label>
-        <select id="status" name="status"
-                class="w-full rounded-md border border-[#4A6BCC] bg-[#2B438A] px-4 py-2.5 text-sm
-                       text-white outline-none
-                       focus:border-white focus:ring-1 focus:ring-white
-                       @error('status') border-red-400 @enderror">
-            @foreach (['draft','open','aanwijzing','bidding','closed','finished'] as $s)
-                <option value="{{ $s }}" {{ $val('status', 'draft') === $s ? 'selected' : '' }}>
-                    {{ ucfirst($s) }}
-                </option>
-            @endforeach
-        </select>
-        @error('status')<p class="mt-1.5 text-xs text-red-300">{{ $message }}</p>@enderror
+        <label class="mb-2 block text-sm font-bold text-white">Status</label>
+        <div class="flex items-center gap-3 rounded-md border border-[#4A6BCC] bg-[#2B438A] px-4 py-2.5">
+            @php
+                $currentStatus = $tender?->status ?? 'draft';
+                $statusColor = match($currentStatus) {
+                    'open'       => 'bg-green-500',
+                    'aanwijzing' => 'bg-yellow-500',
+                    'bidding'    => 'bg-blue-500',
+                    'closed'     => 'bg-gray-500',
+                    'finished'   => 'bg-purple-500',
+                    default      => 'bg-slate-400', // draft
+                };
+            @endphp
+            <span class="inline-block h-2.5 w-2.5 rounded-full {{ $statusColor }}"></span>
+            <span class="text-sm font-semibold text-white">{{ ucfirst($currentStatus) }}</span>
+            <span class="ml-auto text-xs text-indigo-300">Ubah status melalui halaman detail tender</span>
+        </div>
     </div>
 
 </div>

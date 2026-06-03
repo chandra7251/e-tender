@@ -4,43 +4,24 @@ return [
 
     /*
     |--------------------------------------------------------------------------
-    | CORS Configuration — API Mobile App
+    | CORS Configuration — API Mobile App (Development)
     |--------------------------------------------------------------------------
-    |
-    | Batasi akses API hanya dari origin yang diizinkan.
-    | Ubah 'allowed_origins' sesuai domain mobile app / web admin production.
-    |
     */
 
     'paths' => ['api/*', 'sanctum/csrf-cookie'],
 
-    'allowed_methods' => ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
+    'allowed_methods' => ['*'],
 
-    'allowed_origins' => [
-        // Development — izinkan localhost untuk testing
-        'http://localhost',
-        'http://localhost:3000',
-        'http://localhost:4200',  // Angular dev server
-        'http://localhost:8080',
-        'http://localhost:8100',  // Ionic serve (default)
-        'http://localhost:8101',  // Ionic serve (fallback port)
-        'http://127.0.0.1',
-        'http://127.0.0.1:8080',
-        'http://127.0.0.1:8100',
-
-        // TODO: Ganti/tambah dengan domain production saat deploy
-        // 'https://vendor-app.domain-kamu.com',
-        // 'https://admin.domain-kamu.com',
-    ],
+    'allowed_origins' => ['*'],
 
     'allowed_origins_patterns' => [],
 
-    'allowed_headers' => ['Content-Type', 'Authorization', 'X-Requested-With', 'Accept'],
+    'allowed_headers' => ['*'],
 
-    'exposed_headers' => ['Content-Disposition'], // perlu untuk response download file
+    'exposed_headers' => ['Content-Disposition'],
 
-    'max_age' => 86400, // 24 jam preflight cache
+    'max_age' => 86400,
 
-    'supports_credentials' => false, // JWT = stateless, tidak butuh cookies/session
+    'supports_credentials' => false,
 
 ];
