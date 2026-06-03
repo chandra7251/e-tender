@@ -21,7 +21,7 @@
 
         {{-- Logo / App name --}}
         <div class="flex h-[72px] items-center px-6 border-b border-[#4A6BCC]">
-            <img src="{{ asset('images/auth/logo.png') }}" alt="E-Tender Logo" class="h-10 w-auto">
+            <img src="{{ asset('images/auth/logo.png') }}" alt="E-Tender Logo" class="h-14 w-auto object-contain">
         </div>
 
         {{-- Nav links --}}
