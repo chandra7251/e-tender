@@ -51,6 +51,7 @@ Route::prefix('admin')->name('admin.')->group(function () {
         Route::get('tenders/{tender}',      [TenderController::class, 'show'])->name('tenders.show');
         Route::get('tenders/{tender}/edit', [TenderController::class, 'edit'])->name('tenders.edit');
         Route::put('tenders/{tender}',      [TenderController::class, 'update'])->name('tenders.update');
+        Route::delete('tenders/{tender}/photos/{photo}', [TenderController::class, 'deletePhoto'])->name('tenders.photos.destroy');
         Route::patch('tenders/{tender}/status', [TenderController::class, 'updateStatus'])->name('tenders.status');
 
         // ── Announcement / Aanwijzing ────────────────────────────────────────

@@ -108,6 +108,38 @@
                         </p>
                     </div>
                     @endif
+
+                    {{-- Foto Barang / Jasa --}}
+                    @if ($tender->photos->isNotEmpty())
+                    <div>
+                        <p class="text-xs font-bold uppercase tracking-wide text-indigo-200 mb-3">Foto Barang / Jasa</p>
+                        <div class="grid grid-cols-2 gap-4 sm:grid-cols-3">
+                            @foreach ($tender->photos as $i => $photo)
+                                <div class="relative group overflow-hidden rounded-xl border border-[#4A6BCC] aspect-square">
+                                    <a href="{{ $photo->photo_url }}" target="_blank" rel="noopener noreferrer" class="block h-full w-full">
+                                        <img src="{{ $photo->photo_url }}"
+                                             alt="Foto tender {{ $tender->title }} - {{ $i+1 }}"
+                                             class="h-full w-full object-cover transition-transform duration-300 group-hover:scale-105"
+                                             onerror="this.closest('div').innerHTML='<p class=\'text-xs text-indigo-300 italic p-3\'>Foto tidak dapat ditampilkan.</p>'">
+                                    </a>
+                                    
+                                    {{-- Overlay download per foto --}}
+                                    <div class="absolute inset-0 pointer-events-none flex items-end justify-center p-3 opacity-0 group-hover:opacity-100 transition-opacity duration-200 bg-gradient-to-t from-black/60 to-transparent">
+                                        <a href="{{ $photo->photo_url }}" download="foto-tender-{{ $tender->id }}-{{ $i+1 }}.jpg"
+                                           class="pointer-events-auto inline-flex items-center gap-1.5 rounded-md bg-white/90 px-3 py-1.5 text-xs font-bold text-[#3553A8] hover:bg-white transition-colors duration-150 shadow-sm"
+                                           onclick="event.stopPropagation();">
+                                            <svg class="h-3.5 w-3.5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
+                                                <path stroke-linecap="round" stroke-linejoin="round" d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5M16.5 12L12 16.5m0 0L7.5 12m4.5 4.5V3"/>
+                                            </svg>
+                                            Download
+                                        </a>
+                                    </div>
+                                </div>
+                            @endforeach
+                        </div>
+                    </div>
+                    @endif
+
                     <div class="pt-4 border-t border-[#4A6BCC] mt-6">
                         <p class="text-xs font-medium text-indigo-200">Dibuat oleh: {{ $tender->creator->name ?? '-' }}</p>
                     </div>

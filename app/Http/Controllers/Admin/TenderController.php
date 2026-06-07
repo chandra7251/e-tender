@@ -54,11 +54,7 @@ class TenderController extends Controller
     {
         $data = $request->validated();
 
-        // Handle photo upload
-        if ($request->hasFile('photo')) {
-            $data['photo_path'] = $request->file('photo')->store('tenders/photos', 'public');
-        }
-        unset($data['photo']); // tidak ada kolom 'photo', yg disimpan 'photo_path'
+        // tidak ada kolom 'photo' lagi di validasi, dihapus
 
         // FIX MED-04: Paksa status draft saat create
         $tender = Tender::create([
@@ -66,6 +62,14 @@ class TenderController extends Controller
             'created_by' => auth()->id(),
             'status'     => 'draft',
         ]);
+
+        // Handle multi-photo upload
+        if ($request->hasFile('photos')) {
+            foreach ($request->file('photos') as $photo) {
+                $path = $photo->store('tenders/photos', 'public');
+                $tender->photos()->create(['photo_path' => $path]);
+            }
+        }
 
         TenderHistory::create([
             'tender_id'   => $tender->id,
@@ -86,7 +90,7 @@ class TenderController extends Controller
      */
     public function show(Tender $tender): View
     {
-        $tender->load(['creator', 'announcements.creator', 'participants.vendor', 'histories.actor']);
+        $tender->load(['creator', 'announcements.creator', 'participants.vendor', 'histories.actor', 'photos']);
 
         return view('admin.tenders.show', compact('tender'));
     }
@@ -103,6 +107,7 @@ class TenderController extends Controller
                 ->with('error', "Tender tidak bisa diedit saat berstatus '{$tender->status}'.");
         }
 
+        $tender->load('photos');
         return view('admin.tenders.edit', compact('tender'));
     }
 
@@ -121,14 +126,21 @@ class TenderController extends Controller
 
         $data = $request->validated();
 
-        // Handle photo upload — hapus foto lama jika ada foto baru
-        if ($request->hasFile('photo')) {
-            if ($tender->photo_path) {
-                Storage::disk('public')->delete($tender->photo_path);
+        // Validasi jumlah foto agar tidak melebihi 3
+        if ($request->hasFile('photos')) {
+            $existingCount = $tender->photos()->count();
+            $newCount = count($request->file('photos'));
+            if (($existingCount + $newCount) > 3) {
+                return back()->withInput()->withErrors([
+                    'photos' => "Total maksimal foto adalah 3. Saat ini Anda memiliki {$existingCount} foto."
+                ]);
             }
-            $data['photo_path'] = $request->file('photo')->store('tenders/photos', 'public');
+
+            foreach ($request->file('photos') as $photo) {
+                $path = $photo->store('tenders/photos', 'public');
+                $tender->photos()->create(['photo_path' => $path]);
+            }
         }
-        unset($data['photo']);
 
         $oldStatus = $tender->status;
         $tender->update($data);
@@ -173,5 +185,22 @@ class TenderController extends Controller
         return redirect()
             ->route('admin.tenders.show', $tender)
             ->with('success', "Status tender berhasil diubah menjadi {$newStatus}.");
+    }
+
+    /**
+     * Delete an individual tender photo.
+     */
+    public function deletePhoto(Tender $tender, \App\Models\TenderPhoto $photo): RedirectResponse
+    {
+        if ($photo->tender_id !== $tender->id) {
+            abort(404);
+        }
+
+        if ($photo->photo_path) {
+            Storage::disk('public')->delete($photo->photo_path);
+        }
+        $photo->delete();
+
+        return back()->with('success', 'Foto berhasil dihapus.');
     }
 }

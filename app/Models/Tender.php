@@ -18,7 +18,6 @@ class Tender extends Model
         'description',
         'specification',
         'open_bidding_price',
-        'photo_path',
         'start_date',
         'end_date',
         'aanwijzing_date',
@@ -39,15 +38,7 @@ class Tender extends Model
         ];
     }
 
-    /** URL publik foto (null jika belum ada foto) */
-    public function getPhotoUrlAttribute(): ?string
-    {
-        return $this->photo_path
-            ? \Illuminate\Support\Facades\Storage::disk('public')->url($this->photo_path)
-            : null;
-    }
-
-    protected $appends = ['photo_url'];
+    // Hapus photo_url accessor lama karena diganti relasi photos
 
     // ─── Relationships ────────────────────────────────────────────────────────
 
@@ -59,6 +50,11 @@ class Tender extends Model
     public function participants(): HasMany
     {
         return $this->hasMany(TenderParticipant::class);
+    }
+
+    public function photos(): HasMany
+    {
+        return $this->hasMany(TenderPhoto::class);
     }
 
     public function announcements(): HasMany
@@ -84,5 +80,39 @@ class Tender extends Model
     public function histories(): HasMany
     {
         return $this->hasMany(TenderHistory::class);
+    }
+
+    // ─── Status Helper Methods ────────────────────────────────────────────────
+
+    /**
+     * Apakah tender ini memiliki setidaknya 1 peserta (vendor yang join)?
+     */
+    public function hasParticipants(): bool
+    {
+        return $this->participants()->exists();
+    }
+
+    /**
+     * Apakah tender ini memiliki setidaknya 1 bid masuk?
+     */
+    public function hasBids(): bool
+    {
+        return $this->bids()->exists();
+    }
+
+    /**
+     * Apakah tender ini sudah memiliki pemenang (TenderResult)?
+     */
+    public function hasWinner(): bool
+    {
+        return $this->result()->exists();
+    }
+
+    /**
+     * Apakah aanwijzing di-skip? (aanwijzing_date null)
+     */
+    public function isAanwijzingSkipped(): bool
+    {
+        return is_null($this->aanwijzing_date);
     }
 }

@@ -87,29 +87,56 @@
         @error('open_bidding_price')<p class="mt-1.5 text-xs text-red-300">{{ $message }}</p>@enderror
     </div>
 
-    {{-- Photo --}}
+    {{-- Photos --}}
     <div>
-        <label for="photo" class="mb-2 block text-sm font-bold text-white">
+        <label for="photos" class="mb-2 block text-sm font-bold text-white">
             Foto Barang / Jasa
-            <span class="text-xs font-normal text-indigo-200">(opsional · maks. 3 MB · JPG / PNG)</span>
+            <span class="text-xs font-normal text-indigo-200">(opsional · maks. 3 foto · maks. 3 MB/foto · JPG / PNG)</span>
         </label>
 
         {{-- Preview foto yang sudah ada (saat edit) --}}
-        @if ($tender?->photo_url)
-            <div class="mb-3">
-                <img src="{{ $tender->photo_url }}" alt="Foto tender"
-                     class="h-40 w-full rounded-lg object-cover border border-[#4A6BCC]">
-                <p class="mt-1 text-xs text-indigo-200">Foto saat ini. Upload foto baru untuk mengganti.</p>
+        @if ($tender && $tender->photos->isNotEmpty())
+            <div class="mb-4">
+                <p class="mb-2 text-xs text-indigo-200">Foto tersimpan ({{ $tender->photos->count() }}/3):</p>
+                <div class="grid grid-cols-2 gap-4 sm:grid-cols-3">
+                    @foreach ($tender->photos as $photo)
+                        <div class="group relative overflow-hidden rounded-lg border border-[#4A6BCC] bg-[#2B438A] aspect-square block">
+                            <img src="{{ $photo->photo_url }}" alt="Foto tender"
+                                 class="h-full w-full object-cover">
+                            
+                            {{-- Tombol Hapus (Overlay) --}}
+                            <div class="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-150 bg-black/40">
+                                <button type="button" 
+                                        onclick="if(confirm('Yakin ingin menghapus foto ini?')) document.getElementById('delete-photo-{{ $photo->id }}').submit();"
+                                        class="inline-flex items-center gap-1 rounded-md bg-red-500 px-3 py-1.5 text-xs font-bold text-white hover:bg-red-600">
+                                    <svg class="h-4 w-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
+                                        <path stroke-linecap="round" stroke-linejoin="round" d="M14.74 9l-.346 9m-4.788 0L9.26 9m9.968-3.21c.342.052.682.107 1.022.166m-1.022-.165L18.16 19.673a2.25 2.25 0 01-2.244 2.077H8.084a2.25 2.25 0 01-2.244-2.077L4.772 5.79m14.456 0a48.108 48.108 0 00-3.478-.397m-12 .562c.34-.059.68-.114 1.022-.165m0 0a48.11 48.11 0 013.478-.397m7.5 0v-.916c0-1.18-.91-2.164-2.09-2.201a51.964 51.964 0 00-3.32 0c-1.18.037-2.09 1.022-2.09 2.201v.916m7.5 0a48.667 48.667 0 00-7.5 0"/>
+                                    </svg>
+                                    Hapus
+                                </button>
+                            </div>
+                        </div>
+                    @endforeach
+                </div>
             </div>
         @endif
 
-        <input id="photo" type="file" name="photo" accept="image/jpeg,image/png"
-               class="block w-full rounded-md border border-[#4A6BCC] bg-[#2B438A] px-3 py-2 text-sm
-                      text-indigo-100 file:mr-4 file:rounded file:border-0
-                      file:bg-[#4A6BCC] file:px-3 file:py-1.5 file:text-sm file:text-white
-                      file:cursor-pointer hover:file:bg-[#5A7BE0]
-                      @error('photo') border-red-400 @enderror">
-        @error('photo')<p class="mt-1.5 text-xs text-red-300">{{ $message }}</p>@enderror
+        @if (!$tender || $tender->photos->count() < 3)
+            <input id="photos" type="file" name="photos[]" accept="image/jpeg,image/png" multiple
+                   class="block w-full rounded-md border border-[#4A6BCC] bg-[#2B438A] px-3 py-2 text-sm
+                          text-indigo-100 file:mr-4 file:rounded file:border-0
+                          file:bg-[#4A6BCC] file:px-3 file:py-1.5 file:text-sm file:text-white
+                          file:cursor-pointer hover:file:bg-[#5A7BE0]
+                          @error('photos') border-red-400 @enderror
+                          @error('photos.*') border-red-400 @enderror">
+            @error('photos')<p class="mt-1.5 text-xs text-red-300">{{ $message }}</p>@enderror
+            @error('photos.*')<p class="mt-1.5 text-xs text-red-300">{{ $message }}</p>@enderror
+            <p class="mt-2 text-xs text-indigo-200">Anda dapat memilih beberapa file sekaligus.</p>
+        @else
+            <p class="text-sm text-yellow-400 bg-yellow-400/10 p-3 rounded-md border border-yellow-400/30">
+                Batas maksimal 3 foto telah tercapai. Hapus salah satu foto di atas untuk menambahkan yang baru.
+            </p>
+        @endif
     </div>
 
     {{-- Status — read-only, diubah via menu Ubah Status di halaman detail --}}

@@ -18,7 +18,8 @@ class TenderRequest extends FormRequest
             'description'         => ['required', 'string'],
             'specification'       => ['required', 'string'],
             'open_bidding_price'  => ['nullable', 'numeric', 'min:0'],
-            'photo'               => ['nullable', 'image', 'mimes:jpeg,jpg,png', 'max:3072'],
+            'photos'              => ['nullable', 'array', 'max:3'],
+            'photos.*'            => ['image', 'mimes:jpeg,jpg,png', 'max:3072'],
             'start_date'          => ['required', 'date'],
             'end_date'            => ['required', 'date', 'after:start_date'],
             'aanwijzing_date'     => ['nullable', 'date'],
@@ -44,6 +45,10 @@ class TenderRequest extends FormRequest
             'bidding_end.required'         => 'Tanggal selesai bidding wajib diisi.',
             'bidding_end.after'            => 'Tanggal selesai bidding harus setelah bidding dimulai.',
             'bidding_end.before_or_equal'  => 'Bidding tidak boleh selesai setelah tender berakhir.',
+            'photos.max'                   => 'Maksimal 3 foto yang diperbolehkan.',
+            'photos.*.image'               => 'File harus berupa gambar.',
+            'photos.*.mimes'               => 'Format gambar yang didukung: jpeg, jpg, png.',
+            'photos.*.max'                 => 'Ukuran gambar maksimal 3MB.',
         ];
     }
 }

@@ -84,32 +84,139 @@
 
             {{-- Foto-Foto Pengajuan --}}
             <div class="rounded-xl bg-[#3553A8] p-6 shadow-sm">
-                <h2 class="mb-4 text-lg font-bold text-white flex items-center gap-2">
-                    Foto Pengajuan
-                    <span class="text-xs font-normal text-indigo-200">({{ $submission->photos->count() }} foto)</span>
-                </h2>
+                <div class="mb-5 flex items-center justify-between gap-4">
+                    <h2 class="text-lg font-bold text-white flex items-center gap-2">
+                        Foto Pengajuan
+                        <span class="text-xs font-normal text-indigo-200">({{ $submission->photos->count() }} foto)</span>
+                    </h2>
+
+                    {{-- Tombol Download Semua --}}
+                    @if ($submission->photos->isNotEmpty())
+                        <button id="btn-download-all"
+                                onclick="downloadAllPhotos()"
+                                class="inline-flex items-center gap-2 rounded-md bg-[#28C5D4] px-4 py-2
+                                       text-xs font-bold text-white hover:bg-teal-400 transition-colors duration-150 shrink-0">
+                            <svg class="h-3.5 w-3.5" xmlns="http://www.w3.org/2000/svg" fill="none"
+                                 viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round"
+                                      d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5M16.5 12L12 16.5m0 0L7.5 12m4.5 4.5V3"/>
+                            </svg>
+                            Download Semua
+                        </button>
+                    @endif
+                </div>
 
                 @if ($submission->photos->isEmpty())
-                    <p class="text-sm text-indigo-300 italic">Tidak ada foto yang dilampirkan.</p>
+                    <div class="flex flex-col items-center justify-center py-10 text-center">
+                        <svg class="h-12 w-12 text-indigo-400 mb-3" xmlns="http://www.w3.org/2000/svg" fill="none"
+                             viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round"
+                                  d="M2.25 15.75l5.159-5.159a2.25 2.25 0 013.182 0l5.159 5.159m-1.5-1.5l1.409-1.409a2.25 2.25 0 013.182 0l2.909 2.909M3 21h18M21 3H3M6.75 6.75h.008v.008H6.75V6.75z"/>
+                        </svg>
+                        <p class="text-sm text-indigo-300 italic">Tidak ada foto yang dilampirkan.</p>
+                    </div>
                 @else
-                    <div class="grid grid-cols-2 gap-3 sm:grid-cols-3">
-                        @foreach ($submission->photos as $photo)
-                            <a href="{{ $photo->photo_url }}" target="_blank"
-                               class="group relative overflow-hidden rounded-lg border border-[#4A6BCC] bg-[#2B438A]
-                                      aspect-square block hover:border-[#28C5D4] transition-colors duration-150">
-                                <img src="{{ $photo->photo_url }}"
-                                     alt="Foto pengajuan"
-                                     class="h-full w-full object-cover group-hover:opacity-90 transition-opacity duration-150"
-                                     onerror="this.src='https://via.placeholder.com/400x400?text=Foto+Tidak+Tersedia'">
-                                <div class="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100
-                                            transition-opacity duration-150 bg-black/40">
-                                    <svg class="h-6 w-6 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
-                                        <path stroke-linecap="round" stroke-linejoin="round" d="M2.25 15.75l5.159-5.159a2.25 2.25 0 013.182 0l5.159 5.159m-1.5-1.5l1.409-1.409a2.25 2.25 0 013.182 0l2.909 2.909M3 21h18M21 3H3"/>
-                                    </svg>
+                    <div class="grid grid-cols-2 gap-4 sm:grid-cols-3">
+                        @foreach ($submission->photos as $index => $photo)
+                            <div class="group flex flex-col overflow-hidden rounded-xl border border-[#4A6BCC]
+                                        bg-[#2B438A] hover:border-[#28C5D4] transition-colors duration-150">
+
+                                {{-- Preview Foto --}}
+                                <div class="relative aspect-square overflow-hidden cursor-pointer"
+                                     onclick="openLightbox('{{ $photo->photo_url }}', {{ $index + 1 }}, {{ $submission->photos->count() }})">
+                                    <img src="{{ $photo->photo_url }}"
+                                         alt="Foto pengajuan {{ $index + 1 }}"
+                                         class="h-full w-full object-cover transition-transform duration-200 group-hover:scale-105"
+                                         onerror="this.parentElement.innerHTML='<div class=\'flex h-full w-full items-center justify-center bg-[#1E3066]\'><p class=\'text-xs text-indigo-300 text-center px-2\'>Foto tidak tersedia</p></div>'">
+
+                                    {{-- Overlay Zoom --}}
+                                    <div class="absolute inset-0 flex items-center justify-center opacity-0
+                                                group-hover:opacity-100 transition-opacity duration-200 bg-black/40">
+                                        <svg class="h-8 w-8 text-white drop-shadow" xmlns="http://www.w3.org/2000/svg"
+                                             fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
+                                            <path stroke-linecap="round" stroke-linejoin="round"
+                                                  d="M21 21l-5.197-5.197m0 0A7.5 7.5 0 105.196 5.196a7.5 7.5 0 0010.607 10.607zM10.5 7.5v6m3-3h-6"/>
+                                        </svg>
+                                    </div>
+
+                                    {{-- Badge Nomor --}}
+                                    <span class="absolute top-2 left-2 rounded-full bg-black/50 px-2 py-0.5
+                                                 text-[10px] font-bold text-white">
+                                        {{ $index + 1 }}
+                                    </span>
                                 </div>
-                            </a>
+
+                                {{-- Tombol Download Individual --}}
+                                <div class="flex items-center justify-between gap-2 px-3 py-2 border-t border-[#4A6BCC]">
+                                    <span class="text-[11px] text-indigo-300 truncate">
+                                        Foto {{ $index + 1 }}
+                                    </span>
+                                    <a href="{{ $photo->photo_url }}"
+                                       download="pengajuan-{{ $submission->id }}-foto-{{ $index + 1 }}.jpg"
+                                       class="inline-flex items-center gap-1 rounded-md bg-[#3553A8] border border-[#4A6BCC]
+                                              px-2.5 py-1 text-[11px] font-semibold text-white shrink-0
+                                              hover:bg-[#28C5D4] hover:border-[#28C5D4] transition-colors duration-150"
+                                       title="Download foto {{ $index + 1 }}">
+                                        <svg class="h-3 w-3" xmlns="http://www.w3.org/2000/svg" fill="none"
+                                             viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor">
+                                            <path stroke-linecap="round" stroke-linejoin="round"
+                                                  d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5M16.5 12L12 16.5m0 0L7.5 12m4.5 4.5V3"/>
+                                        </svg>
+                                        Download
+                                    </a>
+                                </div>
+                            </div>
                         @endforeach
                     </div>
+
+                    {{-- Data foto untuk JavaScript download semua --}}
+                    @php
+                        $photoData = $submission->photos->map(function($p, $i) use ($submission) {
+                            return [
+                                'url'      => $p->photo_url,
+                                'filename' => 'pengajuan-' . $submission->id . '-foto-' . ($i + 1) . '.jpg',
+                            ];
+                        })->values();
+                    @endphp
+                    <script>
+                        var submissionPhotos = @json($photoData);
+
+                        function downloadAllPhotos() {
+                            var btn = document.getElementById('btn-download-all');
+                            btn.disabled = true;
+                            btn.textContent = 'Mengunduh...';
+
+                            var delay = 0;
+                            submissionPhotos.forEach(function(photo) {
+                                setTimeout(function() {
+                                    var a = document.createElement('a');
+                                    a.href = photo.url;
+                                    a.download = photo.filename;
+                                    document.body.appendChild(a);
+                                    a.click();
+                                    document.body.removeChild(a);
+                                }, delay);
+                                delay += 500; // jeda 500ms antar download agar browser tidak blokir
+                            });
+
+                            setTimeout(function() {
+                                btn.disabled = false;
+                                btn.innerHTML = '<svg class="h-3.5 w-3.5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5M16.5 12L12 16.5m0 0L7.5 12m4.5 4.5V3"/></svg> Download Semua';
+                            }, delay + 500);
+                        }
+
+                        function openLightbox(url, num, total) {
+                            var overlay = document.createElement('div');
+                            overlay.id = 'lightbox-overlay';
+                            overlay.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.85);z-index:9999;display:flex;align-items:center;justify-content:center;padding:1rem;cursor:pointer;';
+                            overlay.innerHTML = '<div style="position:relative;max-width:90vw;max-height:90vh;">'
+                                + '<img src="' + url + '" style="max-width:100%;max-height:85vh;object-fit:contain;border-radius:0.75rem;box-shadow:0 25px 50px rgba(0,0,0,0.5);">'
+                                + '<div style="position:absolute;bottom:-2rem;left:50%;transform:translateX(-50%);color:rgba(255,255,255,0.7);font-size:0.75rem;white-space:nowrap;">Foto ' + num + ' dari ' + total + ' — Klik di luar untuk tutup</div>'
+                                + '</div>';
+                            overlay.onclick = function(e) { if (e.target === overlay || e.target.tagName !== 'IMG') document.body.removeChild(overlay); };
+                            document.body.appendChild(overlay);
+                        }
+                    </script>
                 @endif
             </div>
 
@@ -238,6 +345,7 @@
                                 Alasan Penolakan <span class="text-red-500">*</span>
                             </label>
                             <textarea id="catatan_admin" name="catatan_admin" rows="3"
+                                      required minlength="10"
                                       placeholder="Tuliskan alasan penolakan pengajuan ini (min. 10 karakter)..."
                                       class="w-full rounded-md border border-gray-200 bg-gray-50 px-3 py-2 text-sm
                                              text-gray-900 placeholder-gray-400 outline-none
