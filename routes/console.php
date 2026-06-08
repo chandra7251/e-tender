@@ -14,8 +14,9 @@ Artisan::command('inspire', function () {
 //
 // Jalankan setiap 5 menit. Pastikan cron sudah dikonfigurasi di server:
 //   * * * * * cd /path/to/project && php artisan schedule:run >> /dev/null 2>&1
+// Catatan Lokal (Windows/Herd): withoutOverlapping() & runInBackground() dihapus
+// karena tidak kompatibel dengan Windows dan rawan stale-mutex saat command crash.
+// Untuk produksi (Linux/aaPanel), kedua flag ini aman ditambahkan kembali.
 Schedule::command(UpdateTenderStatuses::class)
     ->everyFiveMinutes()
-    ->withoutOverlapping()
-    ->runInBackground()
     ->appendOutputTo(storage_path('logs/update-tender-statuses.log'));

@@ -168,6 +168,7 @@ class TenderController extends Controller
     {
         $oldStatus = $tender->status;
         $newStatus = $request->status;
+        $description = $request->description ?? "Status tender diubah dari {$oldStatus} menjadi {$newStatus}.";
 
         $tender->update(['status' => $newStatus]);
 
@@ -177,10 +178,27 @@ class TenderController extends Controller
             'action'      => 'status_changed',
             'old_status'  => $oldStatus,
             'new_status'  => $newStatus,
-            'description' => $request->description
-                ?? "Status tender diubah dari {$oldStatus} menjadi {$newStatus}.",
+            'description' => $description,
             'created_at'  => now(),
         ]);
+
+        // Send Notification
+        $usersToNotify = collect();
+
+        if ($oldStatus === 'draft' && $newStatus === 'open') {
+            // Send to all vendors
+            $usersToNotify = \App\Models\User::where('role', 'vendor')->get();
+        } else {
+            // Send only to participating vendors
+            $usersToNotify = $tender->participants()->with('vendor.user')->get()->pluck('vendor.user')->filter();
+        }
+
+        if ($usersToNotify->isNotEmpty()) {
+            \Illuminate\Support\Facades\Notification::send(
+                $usersToNotify,
+                new \App\Notifications\TenderStatusChanged($tender, $oldStatus, $newStatus, $description)
+            );
+        }
 
         return redirect()
             ->route('admin.tenders.show', $tender)

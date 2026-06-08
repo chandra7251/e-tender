@@ -44,6 +44,10 @@ Route::middleware('auth:api')->group(function () {
     Route::get('auth/me',              [AuthController::class, 'me'])->name('api.auth.me');
     Route::put('auth/change-password', [AuthController::class, 'changePassword'])->name('api.auth.change-password');
 
+    // Notifications
+    Route::get('notifications', [\App\Http\Controllers\Api\NotificationController::class, 'index'])->name('api.notifications.index');
+    Route::patch('notifications/{id}/read', [\App\Http\Controllers\Api\NotificationController::class, 'markAsRead'])->name('api.notifications.read');
+
     // Vendor Profile (semua vendor bisa akses, termasuk pending)
     Route::get('vendors/me',     [VendorProfileController::class, 'show'])->name('api.vendors.me');
     Route::put('vendors/me',     [VendorProfileController::class, 'update'])->name('api.vendors.me.update');
