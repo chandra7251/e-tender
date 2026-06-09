@@ -40,3 +40,4 @@ class NotificationController extends Controller
 
         return response()->json(['status' => 'error', 'message' => 'Notification not found'], 404);
     }
+}

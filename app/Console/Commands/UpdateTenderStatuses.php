@@ -70,7 +70,7 @@ class UpdateTenderStatuses extends Command
 
             if (!$dryRun) {
                 $this->applyTransition($tender, 'draft', 'open',
-                    "Tender otomatis dibuka karena start_date sudah tercapai (auto by scheduler)."
+                    "Tender telah dibuka (Open). Silakan ikuti dan ajukan penawaran Anda."
                 );
             }
         }
@@ -98,7 +98,7 @@ class UpdateTenderStatuses extends Command
 
             if (!$dryRun) {
                 $this->applyTransition($tender, 'open', 'aanwijzing',
-                    "Tender otomatis masuk fase aanwijzing (auto by scheduler)."
+                    "Tender memasuki fase Aanwijzing. Silakan perhatikan pengumuman terbaru."
                 );
             }
         }
@@ -139,7 +139,7 @@ class UpdateTenderStatuses extends Command
             if (!$dryRun) {
                 $skipNote = $fromStatus === 'open' ? ' (fase aanwijzing di-skip karena aanwijzing_date null)' : '';
                 $this->applyTransition($tender, $fromStatus, 'bidding',
-                    "Tender otomatis masuk fase bidding{$skipNote} (auto by scheduler)."
+                    "Fase Bidding telah dimulai{$skipNote}. Silakan ajukan penawaran (bid) terbaik Anda sekarang."
                 );
             }
         }
@@ -174,7 +174,7 @@ class UpdateTenderStatuses extends Command
 
                 if (!$dryRun) {
                     $this->applyTransition($tender, 'bidding', 'closed',
-                        "Tender otomatis ditutup (closed) karena tidak ada bid masuk saat bidding selesai (auto by scheduler)."
+                        "Tender telah ditutup (Closed) karena tidak ada penawaran yang masuk selama masa bidding."
                     );
                 }
             } else {
@@ -202,8 +202,8 @@ class UpdateTenderStatuses extends Command
                     }
 
                     $this->applyTransition($tender, 'bidding', 'finished',
-                        "Tender otomatis selesai (finished). Pemenang bid tertinggi Rp " .
-                        number_format($winningBid->bid_amount, 0, ',', '.') . " (auto by scheduler)."
+                        "Tender telah selesai (Finished). Pemenang telah ditentukan dengan penawaran tertinggi Rp " .
+                        number_format($winningBid->bid_amount, 0, ',', '.') . "."
                     );
                 }
             }

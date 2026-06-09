@@ -13,6 +13,14 @@ return Application::configure(basePath: dirname(__DIR__))
         health: '/up',
     )
     ->withMiddleware(function (Middleware $middleware): void {
+        // Mencegah redirect ke 'login' web untuk request API
+        $middleware->redirectGuestsTo(function (\Illuminate\Http\Request $request) {
+            if ($request->is('api/*')) {
+                return null;
+            }
+            return route('login');
+        });
+
         // Pastikan CORS middleware aktif untuk semua request (termasuk OPTIONS preflight dari Capacitor)
         $middleware->prepend(\Illuminate\Http\Middleware\HandleCors::class);
 
@@ -25,6 +33,15 @@ return Application::configure(basePath: dirname(__DIR__))
         // Semua unhandled exception di API route → return JSON, bukan HTML
         $exceptions->render(function (\Throwable $e, \Illuminate\Http\Request $request): ?JsonResponse {
             if ($request->is('api/*') || $request->expectsJson()) {
+                
+                // Jika error karena belum login, kembalikan 401 Unauthorized
+                if ($e instanceof \Illuminate\Auth\AuthenticationException) {
+                    return response()->json([
+                        'status'  => false,
+                        'message' => 'Unauthenticated.',
+                        'data'    => null,
+                    ], 401);
+                }
                 $status = method_exists($e, 'getStatusCode') ? $e->getStatusCode() : 500;
 
                 // Jangan expose pesan internal di production
