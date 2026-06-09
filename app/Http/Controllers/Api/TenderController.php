@@ -19,6 +19,7 @@ class TenderController extends Controller
         $allowedStatuses = ['open', 'aanwijzing', 'bidding', 'closed', 'finished'];
 
         $query = Tender::query()
+            ->with('photos')
             ->whereIn('status', $allowedStatuses)
             ->when($request->input('status'), function ($q, $s) use ($allowedStatuses) {
                 if (in_array($s, $allowedStatuses)) {
@@ -55,6 +56,6 @@ class TenderController extends Controller
             return $this->error('Tender tidak ditemukan.', null, 404);
         }
 
-        return $this->success(new TenderResource($tender));
+        return $this->success(new TenderResource($tender->load('photos')));
     }
 }
