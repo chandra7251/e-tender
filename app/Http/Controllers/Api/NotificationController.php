@@ -16,10 +16,15 @@ class NotificationController extends Controller
         }
 
         $notifications = $user->notifications()->paginate(15);
+        $unreadCount = $user->unreadNotifications()->count();
+
+        // Convert the paginated response to an array so we can append unread_count to the 'data' payload
+        $paginatedData = $notifications->toArray();
+        $paginatedData['unread_count'] = $unreadCount;
 
         return response()->json([
             'status' => 'success',
-            'data'   => $notifications,
+            'data'   => $paginatedData,
         ]);
     }
 
@@ -39,5 +44,21 @@ class NotificationController extends Controller
         }
 
         return response()->json(['status' => 'error', 'message' => 'Notification not found'], 404);
+    }
+
+    public function markAllAsRead(Request $request)
+    {
+        $user = $request->user();
+
+        if (!$user) {
+            return response()->json(['message' => 'Unauthorized'], 401);
+        }
+
+        $user->unreadNotifications->markAsRead();
+
+        return response()->json([
+            'status' => 'success',
+            'message' => 'All notifications marked as read'
+        ]);
     }
 }

@@ -46,6 +46,7 @@ Route::middleware('auth:api')->group(function () {
 
     // Notifications
     Route::get('notifications', [\App\Http\Controllers\Api\NotificationController::class, 'index'])->name('api.notifications.index');
+    Route::patch('notifications/read-all', [\App\Http\Controllers\Api\NotificationController::class, 'markAllAsRead'])->name('api.notifications.readAll');
     Route::patch('notifications/{id}/read', [\App\Http\Controllers\Api\NotificationController::class, 'markAsRead'])->name('api.notifications.read');
 
     // Vendor Profile (semua vendor bisa akses, termasuk pending)
