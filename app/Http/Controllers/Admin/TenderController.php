@@ -14,7 +14,7 @@ use Illuminate\View\View;
 
 class TenderController extends Controller
 {
-    // Status yang masih boleh diedit datanya (sebelum bidding aktif)
+    // Status yang bisa diedit
     private const EDITABLE_STATUSES = ['draft', 'open', 'aanwijzing'];
 
     private const VALID_STATUSES = ['draft', 'open', 'aanwijzing', 'bidding', 'closed', 'finished'];
@@ -56,7 +56,7 @@ class TenderController extends Controller
 
         // tidak ada kolom 'photo' lagi di validasi, dihapus
 
-        // FIX MED-04: Paksa status draft saat create
+        // Status awal draft
         $tender = Tender::create([
             ...$data,
             'created_by' => auth()->id(),
@@ -97,7 +97,6 @@ class TenderController extends Controller
 
     /**
      * Show edit tender form.
-     * FIX BUG-02: Larang akses form edit jika tender sudah live.
      */
     public function edit(Tender $tender): View|RedirectResponse
     {
@@ -113,11 +112,10 @@ class TenderController extends Controller
 
     /**
      * Update an existing tender.
-     * FIX BUG-02: Guard — tidak bisa edit data saat tender sedang aktif (bidding/closed/finished).
      */
     public function update(TenderRequest $request, Tender $tender): RedirectResponse
     {
-        // Guard: data tender tidak boleh diubah saat sudah live
+        // Validasi status untuk update
         if (!in_array($tender->status, self::EDITABLE_STATUSES)) {
             return redirect()
                 ->route('admin.tenders.show', $tender)
@@ -161,8 +159,7 @@ class TenderController extends Controller
     }
 
     /**
-     * Update tender status menggunakan state machine.
-     * FIX HIGH-01: Transisi status divalidasi oleh TenderStatusRequest.
+     * Update tender status.
      */
     public function updateStatus(TenderStatusRequest $request, Tender $tender): RedirectResponse
     {

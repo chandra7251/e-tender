@@ -12,25 +12,25 @@ class VendorProfileController extends Controller
 {
     use ApiResponse;
 
-    /** GET /api/vendors/me */
+    /** Get my profile */
     public function show(): JsonResponse
     {
         $vendor = auth()->user()->vendor()->with('user')->first();
         return $this->success(new VendorResource($vendor));
     }
 
-    /** PUT /api/vendors/me */
+    /** Update my profile */
     public function update(VendorProfileRequest $request): JsonResponse
     {
         $user   = auth()->user();
         $vendor = $user->vendor;
 
-        // Update nama PIC di tabel users (jika dikirim)
+        // Update user
         if ($request->filled('name')) {
             $user->update(['name' => $request->input('name')]);
         }
 
-        // Update data perusahaan di tabel vendors
+        // Update vendor
         $vendor->update([
             'company_name' => $request->input('company_name'),
             'phone'        => $request->input('phone'),
@@ -43,7 +43,7 @@ class VendorProfileController extends Controller
         );
     }
 
-    /** GET /api/vendors/status */
+    /** Get my status */
     public function status(): JsonResponse
     {
         $vendor = auth()->user()->vendor;

@@ -23,21 +23,20 @@ class TenderResultController extends Controller
 
     /**
      * Mark tender as finished.
-     * FIX HIGH-04: Tender hanya bisa di-finish setelah winner dipilih DAN PO sudah dibuat.
      */
     public function finish(Tender $tender): RedirectResponse
     {
-        // Guard: tender harus dalam status closed
+        // Validasi status tender
         abort_if(
             $tender->status !== 'closed',
             422,
             "Tender hanya bisa diselesaikan dari status 'closed'. Status saat ini: '{$tender->status}'."
         );
 
-        // Guard: pemenang harus sudah dipilih
+        // Validasi pemenang
         abort_if(is_null($tender->result), 422, 'Pilih pemenang terlebih dahulu sebelum menyelesaikan tender.');
 
-        // Guard: PO harus sudah dibuat sebelum tender dinyatakan finished
+        // Validasi PO
         abort_if(
             !$tender->purchaseOrder()->exists(),
             422,

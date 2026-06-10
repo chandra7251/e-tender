@@ -14,8 +14,7 @@ class VendorSubmissionController extends Controller
     use ApiResponse;
 
     /**
-     * GET /api/vendor/submissions
-     * Riwayat pengajuan milik vendor yang sedang login.
+     * List my submissions
      */
     public function index(): JsonResponse
     {
@@ -31,8 +30,7 @@ class VendorSubmissionController extends Controller
     }
 
     /**
-     * GET /api/vendor/submissions/{id}
-     * Detail pengajuan milik vendor yang sedang login.
+     * Show my submission
      */
     public function show(int $id): JsonResponse
     {
@@ -45,13 +43,11 @@ class VendorSubmissionController extends Controller
     }
 
     /**
-     * POST /api/vendor/submissions
-     * Buat pengajuan baru. Hanya vendor approved yang bisa submit.
-     * Foto (opsional) dikirim sebagai multipart/form-data photos[].
+     * Create submission
      */
     public function store(Request $request): JsonResponse
     {
-        // Guard: hanya vendor approved
+        // Validasi approval vendor
         $vendor = auth()->user()->vendor;
         if ($vendor->verification_status !== 'approved') {
             return $this->error(
@@ -84,7 +80,7 @@ class VendorSubmissionController extends Controller
             'status'         => 'pending',
         ]);
 
-        // Handle upload foto (opsional)
+        // Upload foto
         if ($request->hasFile('photos')) {
             foreach ($request->file('photos') as $photo) {
                 $filename = $photo->hashName();
@@ -104,7 +100,7 @@ class VendorSubmissionController extends Controller
         );
     }
 
-    // ─── Private Helpers ──────────────────────────────────────────────────────
+    // Private Helpers
 
     private function formatSubmission(VendorSubmission $s): array
     {

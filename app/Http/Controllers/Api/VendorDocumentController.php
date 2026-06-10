@@ -15,7 +15,7 @@ class VendorDocumentController extends Controller
 {
     use ApiResponse;
 
-    /** GET /api/vendors/documents */
+    /** List documents */
     public function index(): JsonResponse
     {
         $vendor    = auth()->user()->vendor;
@@ -23,7 +23,7 @@ class VendorDocumentController extends Controller
             ->map(fn ($d) => [
                 'id'            => $d->id,
                 'document_type' => $d->document_type,
-                'file_name'     => $d->file_name,       // original name untuk display
+                'file_name'     => $d->file_name,
                 'mime_type'     => $d->mime_type,
                 'file_size'     => $d->file_size,
                 'uploaded_at'   => $d->uploaded_at?->toIso8601String(),
@@ -32,21 +32,20 @@ class VendorDocumentController extends Controller
         return $this->success($documents);
     }
 
-    /** POST /api/vendors/documents */
+    /** Upload document */
     public function store(VendorDocumentRequest $request): JsonResponse
     {
         $vendor = auth()->user()->vendor;
         $file   = $request->file('file');
 
-        // Gunakan hashName() — nama acak aman, bukan nama dari client
-        // Disk 'local' = private, tidak bisa diakses via URL publik
+        // Simpan file ke local disk
         $hashedName = $file->hashName();
         $path       = $file->storeAs("vendor-documents/{$vendor->id}", $hashedName, 'local');
 
         $document = VendorDocument::create([
             'vendor_id'     => $vendor->id,
             'document_type' => $request->input('document_type'),
-            'file_name'     => $file->getClientOriginalName(), // hanya untuk display
+            'file_name'     => $file->getClientOriginalName(),
             'file_path'     => $path,
             'mime_type'     => $file->getMimeType(),
             'file_size'     => $file->getSize(),
@@ -62,12 +61,12 @@ class VendorDocumentController extends Controller
         ], 'Dokumen berhasil diupload.');
     }
 
-    /** GET /api/vendors/documents/{document}/download — Vendor download dokumennya sendiri */
+    /** Download document */
     public function download(VendorDocument $document): StreamedResponse|JsonResponse
     {
         $vendor = auth()->user()->vendor;
 
-        // Guard: vendor hanya bisa download dokumen miliknya sendiri
+        // Validasi kepemilikan
         if ($document->vendor_id !== $vendor->id) {
             return $this->error('Dokumen tidak ditemukan.', null, 404);
         }
@@ -78,7 +77,7 @@ class VendorDocumentController extends Controller
 
         return Storage::disk('local')->download(
             $document->file_path,
-            $document->file_name  // nama asli saat didownload
+            $document->file_name
         );
     }
 }

@@ -12,14 +12,13 @@ class EnsureVendorApproved
     use ApiResponse;
 
     /**
-     * Tolak request jika vendor belum diverifikasi admin.
-     * Gunakan pada route yang memerlukan vendor berstatus 'approved'.
+     * Verifikasi status approval vendor.
      */
     public function handle(Request $request, Closure $next): Response
     {
         $user = auth('api')->user();
 
-        // Pastikan user adalah vendor dan sudah login
+        // Validasi akses vendor
         if (!$user || !$user->vendor) {
             return response()->json([
                 'status'  => 'error',

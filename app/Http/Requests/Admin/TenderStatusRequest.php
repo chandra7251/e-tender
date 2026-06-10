@@ -6,10 +6,7 @@ use Illuminate\Foundation\Http\FormRequest;
 
 class TenderStatusRequest extends FormRequest
 {
-    // Peta transisi status yang diizinkan — state machine ketat.
-    // CATATAN: 'finished' TIDAK bisa dicapai dari sini.
-    // Satu-satunya jalur ke 'finished' adalah via TenderResultController::finish()
-    // yang memiliki guard: pemenang harus dipilih + PO harus sudah dibuat.
+    // Peta transisi status yang diizinkan (kecuali 'finished').
     private const ALLOWED_TRANSITIONS = [
         'draft'      => ['open'],
         'open'       => ['aanwijzing', 'bidding', 'closed'],
@@ -27,7 +24,7 @@ class TenderStatusRequest extends FormRequest
     public function rules(): array
     {
         return [
-            // 'finished' tidak termasuk — tidak bisa diubah ke finished via form ubah status
+            // 'finished' tidak bisa diatur via form
             'status'      => ['required', 'in:draft,open,aanwijzing,bidding,closed'],
             'description' => ['nullable', 'string', 'max:500'],
         ];

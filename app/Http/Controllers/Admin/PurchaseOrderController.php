@@ -14,11 +14,10 @@ class PurchaseOrderController extends Controller
 {
     /**
      * Show the create PO form.
-     * FIX HIGH-02: PO hanya bisa dibuat setelah tender berstatus 'finished'.
      */
     public function create(Tender $tender): View
     {
-        // Guard: tender harus finished
+        // Validasi status tender
         abort_if(
             $tender->status !== 'finished',
             422,
@@ -38,11 +37,10 @@ class PurchaseOrderController extends Controller
 
     /**
      * Store a new Purchase Order.
-     * FIX HIGH-02: Guard status finished + idempotency check.
      */
     public function store(PurchaseOrderRequest $request, Tender $tender): RedirectResponse
     {
-        // Guard: tender harus finished
+        // Validasi status tender
         abort_if(
             $tender->status !== 'finished',
             422,

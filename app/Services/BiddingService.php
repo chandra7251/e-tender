@@ -57,13 +57,12 @@ class BiddingService
 
     /**
      * Submit a new bid.
-     * FIX HIGH-03: Gunakan lockForUpdate di dalam transaction untuk mencegah race condition
-     * saat dua request paralel dari vendor yang sama mencoba submit bid bersamaan.
+     * Menggunakan transaction & pessimistic lock untuk mencegah race condition.
      */
     public function submitBid(Vendor $vendor, Tender $tender, float $amount, ?string $notes = null): Bid
     {
         return DB::transaction(function () use ($vendor, $tender, $amount, $notes) {
-            // Cek duplikat dengan pessimistic lock agar atomik
+            // Cek duplikat
             $exists = Bid::where('tender_id', $tender->id)
                 ->where('vendor_id', $vendor->id)
                 ->lockForUpdate()

@@ -11,12 +11,12 @@ class VendorController extends Controller
 {
     use ApiResponse;
 
-    /** GET /api/vendors/tenders — List tender yang vendor ikuti */
+    /** List my tenders */
     public function myTenders(): JsonResponse
     {
         $vendor = auth()->user()->vendor;
 
-        // Ambil tender melalui relasi participants, exclude draft
+        // Ambil tender peserta
         $tenders = \App\Models\Tender::whereHas('participants', function ($q) use ($vendor) {
                 $q->where('vendor_id', $vendor->id);
             })
@@ -27,7 +27,7 @@ class VendorController extends Controller
             ->orderByDesc('created_at')
             ->get();
 
-        // Inject joined_at ke setiap item resource
+        // Inject joined_at
         $data = $tenders->map(function ($tender) {
             $resource = (new TenderResource($tender))->toArray(request());
             $resource['joined_at'] = $tender->participants->first()?->joined_at?->toIso8601String();
@@ -37,12 +37,12 @@ class VendorController extends Controller
         return $this->success($data, 'Daftar tender yang diikuti berhasil dimuat.');
     }
 
-    /** GET /api/vendors/results — Hasil tender yang vendor ikuti */
+    /** List my results */
     public function myResults(): JsonResponse
     {
         $vendor = auth()->user()->vendor;
 
-        // Ambil tender yang vendor ikuti dan statusnya closed/finished
+        // Ambil hasil tender
         $tenders = \App\Models\Tender::whereHas('participants', function ($q) use ($vendor) {
                 $q->where('vendor_id', $vendor->id);
             })

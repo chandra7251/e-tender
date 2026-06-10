@@ -17,7 +17,7 @@ class BidController extends Controller
 
     public function __construct(protected BiddingService $biddingService) {}
 
-    /** GET /api/tenders/{tender}/bids/me */
+    /** Get my bid */
     public function myBid(Tender $tender): JsonResponse
     {
         $vendor = auth()->user()->vendor;
@@ -33,14 +33,13 @@ class BidController extends Controller
         return $this->success(new BidResource($bid));
     }
 
-    /** POST /api/tenders/{tender}/bids */
+    /** Submit bid */
     public function store(BidRequest $request, Tender $tender): JsonResponse
     {
         $vendor = auth()->user()->vendor;
 
         try {
-            // FIX HIGH-03: pre-check dihapus dari sini karena sudah di-handle
-            // secara atomik dengan lockForUpdate di dalam BiddingService::submitBid().
+            // Validasi kelayakan vendor
             $this->biddingService->assertVendorCanBid($vendor, $tender);
             $this->biddingService->assertBiddingOpen($tender);
         } catch (\RuntimeException $e) {
@@ -57,19 +56,18 @@ class BidController extends Controller
         return $this->created(new BidResource($bid), 'Bid berhasil diajukan.');
     }
 
-    /** PUT /api/tenders/{tender}/bids/{bid} */
+    /** Update bid */
     public function update(BidRequest $request, Tender $tender, Bid $bid): JsonResponse
     {
         $vendor = auth()->user()->vendor;
 
-        // Guard: vendor hanya bisa update bid miliknya sendiri
+        // Validasi kepemilikan bid
         if ($bid->vendor_id !== $vendor->id || $bid->tender_id !== $tender->id) {
             return $this->error('Bid tidak ditemukan.', null, 404);
         }
 
         try {
-            // FIX MED-02: tambah assertVendorCanBid agar vendor yang di-reject
-            // tidak bisa update bid yang sudah ada.
+            // Validasi status vendor
             $this->biddingService->assertVendorCanBid($vendor, $tender);
             $this->biddingService->assertBiddingOpen($tender);
         } catch (\RuntimeException $e) {

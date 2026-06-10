@@ -9,7 +9,7 @@ class TenderResource extends JsonResource
 {
     public function toArray(Request $request): array
     {
-        // Cek apakah vendor yang login adalah peserta tender ini
+        // Cek status peserta
         $vendor        = $request->user()?->vendor;
         $isParticipant = false;
 

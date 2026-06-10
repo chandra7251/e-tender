@@ -15,7 +15,7 @@ class TenderParticipantController extends Controller
 
     public function __construct(protected TenderHistoryService $historyService) {}
 
-    /** GET /api/tenders/{tender}/participants/check */
+    /** Cek status peserta */
     public function check(Tender $tender): JsonResponse
     {
         $vendor = auth()->user()->vendor;
@@ -30,13 +30,13 @@ class TenderParticipantController extends Controller
         ]);
     }
 
-    /** POST /api/tenders/{tender}/participants */
+    /** Daftar tender */
     public function store(Tender $tender): JsonResponse
     {
         $user   = auth()->user();
         $vendor = $user->vendor;
 
-        // Guard: only approved vendors can join
+        // Validasi status vendor
         if ($vendor->verification_status !== 'approved') {
             return $this->error(
                 'Vendor belum diverifikasi. Tunggu persetujuan admin.',
@@ -44,7 +44,7 @@ class TenderParticipantController extends Controller
             );
         }
 
-        // Guard: tender must be joinable
+        // Validasi status tender
         if (!in_array($tender->status, ['open', 'aanwijzing'])) {
             return $this->error(
                 'Tender tidak dalam status yang dapat diikuti.',
@@ -52,9 +52,7 @@ class TenderParticipantController extends Controller
             );
         }
 
-        // Guard: no duplicate join
-        // FIX BUG-03: withTrashed() agar konsisten dengan DB unique constraint
-        // yang tidak mengabaikan soft-deleted rows — mencegah 500 error dari constraint violation.
+        // Validasi duplikasi pendaftaran
         $alreadyJoined = TenderParticipant::withTrashed()
             ->where('tender_id', $tender->id)
             ->where('vendor_id', $vendor->id)
