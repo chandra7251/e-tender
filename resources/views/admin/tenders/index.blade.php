@@ -7,11 +7,11 @@
 <div class="space-y-4">
 
     {{-- ── Header ─────────────────────────────────────────────────────────── --}}
-    <div class="flex items-center justify-between mb-4">
+    <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-4">
         <p class="text-sm font-bold text-gray-600">{{ $tenders->total() }} Tender ditemukan</p>
         <a href="{{ route('admin.tenders.create') }}"
            class="inline-flex items-center gap-2 rounded-md bg-[#28C5D4] px-4 py-2.5 text-sm font-bold
-                  text-white hover:bg-teal-400 transition-colors duration-150">
+                  text-white hover:bg-teal-400 transition-colors duration-150 self-start sm:self-auto">
             <svg class="h-4 w-4 stroke-2" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"
                  stroke="currentColor">
                 <path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15"/>
@@ -56,7 +56,7 @@
 
         {{-- Table --}}
         <div class="overflow-x-auto">
-            <table class="w-full text-sm text-white">
+            <table class="w-full text-sm text-white" style="min-width: 680px;">
                 <thead>
                     <tr class="border-b border-[#4A6BCC] text-left text-xs font-bold uppercase tracking-wider text-indigo-100">
                         <th class="px-2 py-4">Perusahaan</th>
