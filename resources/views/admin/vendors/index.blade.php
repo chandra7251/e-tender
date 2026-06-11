@@ -38,9 +38,9 @@
             @endif
         </form>
 
-        {{-- ── Table ──────────────────────────────────────────────────────────── --}}
+        {{-- ── Table ─────────────────────────────────────────────── --}}
         <div class="overflow-x-auto">
-            <table class="w-full text-sm text-white">
+            <table class="w-full text-sm text-white" style="min-width: 580px;">
                 <thead>
                     <tr class="border-b border-[#4A6BCC] text-left text-xs font-bold uppercase tracking-wider text-indigo-100">
                         <th class="px-2 py-4">Perusahaan</th>
@@ -54,13 +54,13 @@
                 <tbody class="divide-y divide-[#4A6BCC]">
                     @forelse ($vendors as $vendor)
                         <tr class="hover:bg-[#2B438A] transition-colors duration-150">
-                            <td class="px-2 py-4 font-semibold tracking-wide">
+                            <td class="px-2 py-4 font-semibold tracking-wide whitespace-nowrap">
                                 {{ $vendor->company_name }}
                             </td>
-                            <td class="px-2 py-4 text-indigo-50">
+                            <td class="px-2 py-4 text-indigo-50 text-xs">
                                 {{ $vendor->user->email ?? '-' }}
                             </td>
-                            <td class="px-2 py-4 text-indigo-50">
+                            <td class="px-2 py-4 text-indigo-50 whitespace-nowrap">
                                 {{ $vendor->phone ?? '-' }}
                             </td>
                             <td class="px-2 py-4">
@@ -75,13 +75,13 @@
                                     {{ ucfirst($vendor->verification_status) }}
                                 </span>
                             </td>
-                            <td class="px-2 py-4 text-indigo-50">
+                            <td class="px-2 py-4 text-indigo-50 whitespace-nowrap">
                                 {{ $vendor->created_at->format('d M Y') }}
                             </td>
                             <td class="px-2 py-4 text-right">
                                 <a href="{{ route('admin.vendors.show', $vendor) }}"
                                    class="rounded-md bg-[#2B438A] border border-[#4A6BCC] px-4 py-1.5 text-xs font-semibold text-white
-                                          hover:bg-[#1E3066] transition-colors duration-150">
+                                          hover:bg-[#1E3066] transition-colors duration-150 whitespace-nowrap">
                                     Detail
                                 </a>
                             </td>

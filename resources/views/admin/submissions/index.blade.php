@@ -79,7 +79,7 @@
 
         {{-- ── Table ──────────────────────────────────────────────────────── --}}
         <div class="overflow-x-auto">
-            <table class="w-full text-sm text-white">
+            <table class="w-full text-sm text-white" style="min-width: 700px;">
                 <thead>
                     <tr class="border-b border-[#4A6BCC] text-left text-xs font-bold uppercase tracking-wider text-indigo-100">
                         <th class="px-2 py-4">Barang / Jasa</th>

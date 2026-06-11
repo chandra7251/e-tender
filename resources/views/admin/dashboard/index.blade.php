@@ -130,26 +130,14 @@
             </div>
 
             {{-- Legend --}}
-            <table class="w-full text-[10px] font-semibold text-gray-800 border-separate" style="border-spacing: 0 4px;">
-                <tr>
-                    <td class="flex items-center gap-1.5"><div class="h-2.5 w-2.5 rounded-full bg-[#2AC6D6]"></div> Tender Open</td>
-                    <td>: {{ $tenderOpen }}</td>
-                    <td class="pl-2 flex items-center gap-1.5"><div class="h-2.5 w-2.5 rounded-full" style="background-color: #F6F6F6; border: 1px solid rgba(0,0,0,0.30);"></div> Tender Finished</td>
-                    <td>: {{ $tenderFinished }}</td>
-                </tr>
-                <tr>
-                    <td class="flex items-center gap-1.5"><div class="h-2.5 w-2.5 rounded-full bg-[#FCE300]"></div> Tender Bidding</td>
-                    <td>: {{ $tenderBidding }}</td>
-                    <td class="pl-2 flex items-center gap-1.5"><div class="h-2.5 w-2.5 rounded-full bg-[#A22020]"></div> Tender closed</td>
-                    <td>: {{ $tenderClosed }}</td>
-                </tr>
-                <tr>
-                    <td class="flex items-center gap-1.5"><div class="h-2.5 w-2.5 rounded-full bg-[#E06BE8]"></div> Tender Aanwijzing</td>
-                    <td>: {{ $tenderAanwijzing }}</td>
-                    <td class="pl-2 flex items-center gap-1.5"><div class="h-2.5 w-2.5 rounded-full bg-[#6B7280]"></div> Tender Draft</td>
-                    <td>: {{ $tenderDraft }}</td>
-                </tr>
-            </table>
+            <div class="flex flex-wrap gap-x-3 gap-y-1.5 text-[10px] font-semibold text-gray-800">
+                <div class="flex items-center gap-1.5"><div class="h-2.5 w-2.5 rounded-full bg-[#2AC6D6] shrink-0"></div> Tender Open: {{ $tenderOpen }}</div>
+                <div class="flex items-center gap-1.5"><div class="h-2.5 w-2.5 rounded-full" style="background-color: #F6F6F6; border: 1px solid rgba(0,0,0,0.30);" ></div> Finished: {{ $tenderFinished }}</div>
+                <div class="flex items-center gap-1.5"><div class="h-2.5 w-2.5 rounded-full bg-[#FCE300] shrink-0"></div> Bidding: {{ $tenderBidding }}</div>
+                <div class="flex items-center gap-1.5"><div class="h-2.5 w-2.5 rounded-full bg-[#A22020] shrink-0"></div> Closed: {{ $tenderClosed }}</div>
+                <div class="flex items-center gap-1.5"><div class="h-2.5 w-2.5 rounded-full bg-[#E06BE8] shrink-0"></div> Aanwijzing: {{ $tenderAanwijzing }}</div>
+                <div class="flex items-center gap-1.5"><div class="h-2.5 w-2.5 rounded-full bg-[#6B7280] shrink-0"></div> Draft: {{ $tenderDraft }}</div>
+            </div>
         </div>
 
         {{-- 3. BIDDING & PESERTA CARD --}}
@@ -436,17 +424,17 @@
         @endphp
 
         {{-- ── Header: Title + Tabs + Navigator ─────────────────────── --}}
-        <div class="flex flex-wrap items-start justify-between gap-4 mb-6">
-            <h3 class="text-lg font-bold text-gray-800">Recent Tender & Bidding Activity</h3>
+        <div class="flex flex-col sm:flex-row sm:flex-wrap sm:items-start sm:justify-between gap-3 mb-6">
+            <h3 class="text-base md:text-lg font-bold text-gray-800">Recent Tender & Bidding Activity</h3>
 
-            <div class="flex flex-wrap items-center gap-2">
+            <div class="flex flex-col sm:flex-row sm:flex-wrap items-start sm:items-center gap-2">
                 {{-- Period Tabs --}}
-                <div class="flex items-center gap-0.5 bg-gray-100 rounded-xl p-1">
-                    @foreach(['week'=>'1 Minggu','month'=>'1 Bulan','quarter'=>'3 Bulan','halfYear'=>'6 Bulan','year'=>'1 Tahun'] as $pKey => $pLbl)
+                <div class="flex items-center gap-0.5 bg-gray-100 rounded-xl p-1 overflow-x-auto max-w-full">
+                    @foreach(['week'=>'1 Mgg','month'=>'1 Bln','quarter'=>'3 Bln','halfYear'=>'6 Bln','year'=>'1 Thn'] as $pKey => $pLbl)
                     <button type="button"
                             id="tab-{{ $pKey }}"
                             onclick="setChartPeriod('{{ $pKey }}')"
-                            class="chart-period-tab px-3 py-1.5 rounded-lg text-xs font-bold transition-all duration-200 text-gray-500">
+                            class="chart-period-tab px-2.5 py-1.5 rounded-lg text-xs font-bold transition-all duration-200 text-gray-500 whitespace-nowrap">
                         {{ $pLbl }}
                     </button>
                     @endforeach
@@ -461,7 +449,7 @@
                             <path stroke-linecap="round" stroke-linejoin="round" d="M15.75 19.5L8.25 12l7.5-7.5" />
                         </svg>
                     </a>
-                    <div class="px-2 text-center select-none" style="min-width: 130px;">
+                    <div class="px-1 text-center select-none" style="min-width: 110px;">
                         <p id="chartNavLabel" class="text-[11px] font-bold text-[#3553A8] leading-tight capitalize"></p>
                         <p id="chartNavSub"   class="text-[9px] text-gray-500 font-medium leading-tight mt-0.5 whitespace-nowrap"></p>
                     </div>
@@ -477,20 +465,22 @@
         </div>
 
         {{-- Legend --}}
-        <div class="flex flex-wrap items-center justify-center gap-6 mb-12 text-sm font-semibold text-gray-500">
-            <div class="flex items-center gap-2"><div class="h-5 w-5 rounded-full bg-[#2AC6D6]"></div><span>Tender Open</span></div>
-            <div class="flex items-center gap-2"><div class="h-5 w-5 rounded-full bg-[#FCE300]"></div><span>Tender Bidding</span></div>
-            <div class="flex items-center gap-2"><div class="h-5 w-5 rounded-full bg-[#E06BE8]"></div><span>Tender Aanwijzing</span></div>
-            <div class="flex items-center gap-2"><div class="h-5 w-5 rounded-full" style="background-color:#F6F6F6;border:1px solid rgba(0,0,0,0.30);"></div><span>Tender Finished</span></div>
-            <div class="flex items-center gap-2"><div class="h-5 w-5 rounded-full bg-[#A22020]"></div><span>Tender Closed</span></div>
-            <div class="flex items-center gap-2"><div class="h-5 w-5 rounded-full bg-[#6B7280]"></div><span>Tender Draft</span></div>
+        <div class="flex flex-wrap items-center justify-center gap-3 md:gap-6 mb-8 md:mb-12 text-xs md:text-sm font-semibold text-gray-500">
+            <div class="flex items-center gap-1.5"><div class="h-3.5 w-3.5 md:h-5 md:w-5 rounded-full bg-[#2AC6D6] shrink-0"></div><span>Tender Open</span></div>
+            <div class="flex items-center gap-1.5"><div class="h-3.5 w-3.5 md:h-5 md:w-5 rounded-full bg-[#FCE300] shrink-0"></div><span>Bidding</span></div>
+            <div class="flex items-center gap-1.5"><div class="h-3.5 w-3.5 md:h-5 md:w-5 rounded-full bg-[#E06BE8] shrink-0"></div><span>Aanwijzing</span></div>
+            <div class="flex items-center gap-1.5"><div class="h-3.5 w-3.5 md:h-5 md:w-5 rounded-full shrink-0" style="background-color:#F6F6F6;border:1px solid rgba(0,0,0,0.30);"></div><span>Finished</span></div>
+            <div class="flex items-center gap-1.5"><div class="h-3.5 w-3.5 md:h-5 md:w-5 rounded-full bg-[#A22020] shrink-0"></div><span>Closed</span></div>
+            <div class="flex items-center gap-1.5"><div class="h-3.5 w-3.5 md:h-5 md:w-5 rounded-full bg-[#6B7280] shrink-0"></div><span>Draft</span></div>
         </div>
 
-        {{-- Chart Area (JS-rendered) --}}
-        <div class="relative w-full h-[320px] mt-4">
-            <div id="chartYAxis"    class="absolute top-0 right-0 left-0 bottom-[60px] z-0"></div>
-            <div id="chartBarsArea" class="absolute top-0 right-0 left-8 bottom-[60px] flex justify-around items-end z-10 px-2"></div>
-            <div id="chartXLabels"  class="absolute bottom-0 right-0 left-8 h-[60px] flex justify-around items-center z-10 text-xs text-gray-500 text-center px-2"></div>
+        {{-- Chart Area (JS-rendered) — scrollable on mobile --}}
+        <div class="overflow-x-auto -mx-2">
+            <div id="chartContainer" class="relative h-[280px] md:h-[320px] mt-4">
+                <div id="chartYAxis"    class="absolute top-0 right-0 left-0 bottom-[60px] z-0"></div>
+                <div id="chartBarsArea" class="absolute top-0 right-0 left-8 bottom-[60px] flex justify-around items-end z-10 px-2"></div>
+                <div id="chartXLabels"  class="absolute bottom-0 right-0 left-8 h-[60px] flex justify-around items-center z-10 text-xs text-gray-500 text-center px-2"></div>
+            </div>
         </div>
     </div>
 
@@ -559,6 +549,20 @@
 
         // ── Render Chart ────────────────────────────────────────────────
         function renderChart(data) {
+            // ── Dynamic width for mobile: 100px per data point ───────
+            var chartContainer = document.getElementById('chartContainer');
+            if (chartContainer) {
+                var isMobile = window.innerWidth < 768;
+                if (isMobile) {
+                    // Give each data point 115px of space, minimum 460px
+                    var calcWidth = Math.max(460, data.length * 115);
+                    chartContainer.style.minWidth = calcWidth + 'px';
+                } else {
+                    // Desktop: fill container naturally, no forced min-width
+                    chartContainer.style.minWidth = '';
+                }
+            }
+
             var yAxisEl  = document.getElementById('chartYAxis');
             var barsEl   = document.getElementById('chartBarsArea');
             var xlabEl   = document.getElementById('chartXLabels');

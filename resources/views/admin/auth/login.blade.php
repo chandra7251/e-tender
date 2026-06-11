@@ -22,7 +22,7 @@
         }
         .left-section {
             width: 45%;
-            background-color: #3553A8; /* Adjusted blue to better match the image */
+            background-color: #3553A8;
             position: relative;
             overflow: hidden;
             display: flex;
@@ -39,6 +39,43 @@
             align-items: center;
             padding: 2rem;
             position: relative;
+        }
+
+        /* ── Mobile Responsive ─────────────────────────────── */
+        @media (max-width: 767px) {
+            .login-container {
+                flex-direction: column;
+                background-color: #ffffff;
+            }
+            .left-section {
+                display: none;
+            }
+            .right-section {
+                width: 100%;
+                min-height: 100vh;
+                padding: 0;
+                justify-content: flex-start;
+            }
+            .right-section > div.w-full {
+                max-width: 100%;
+                padding: 0;
+                display: flex;
+                flex-direction: column;
+                align-items: center;
+            }
+            .mobile-logo {
+                display: flex !important;
+                width: 100%;
+                background-color: #3553A8;
+                padding: 3.5rem 1.5rem 2.5rem;
+                justify-content: center;
+                margin-bottom: 2rem;
+            }
+            .mobile-form-content {
+                width: 100%;
+                max-width: 400px;
+                padding: 0 1.5rem 2rem;
+            }
         }
         .wave-divider {
             position: absolute;
@@ -115,7 +152,7 @@
 
     <div class="login-container">
         
-        <!-- Left Section (Blue) -->
+        <!-- Left Section (Blue) — hidden on mobile via CSS -->
         <div class="left-section">
             <!-- Wavy background divider (S-Curve matching Gambar 1) -->
             <svg class="wave-divider" preserveAspectRatio="none" viewBox="0 0 100 100" fill="currentColor">
@@ -136,13 +173,19 @@
         <!-- Right Section (White Form) -->
         <div class="right-section z-20">
             <div class="w-full max-w-md px-6">
-                
-                <div class="text-center mb-8">
-                    <h1 class="text-3xl font-bold text-gray-900 mb-3 tracking-wide">Admin Login</h1>
-                    <p class="text-gray-400 text-[15px] leading-relaxed">
-                        Selamat datang di Sistem Admin. Masuk<br>untuk mengelola pelelangan.
-                    </p>
+
+                <!-- Mobile Logo — only shown on small screens -->
+                <div class="mobile-logo hidden justify-center mb-8">
+                    <img src="{{ asset('images/auth/logo.png') }}" alt="E-Tender Logo" class="h-20 w-auto drop-shadow-md">
                 </div>
+                
+                <div class="mobile-form-content w-full">
+                    <div class="text-center mb-8">
+                        <h1 class="text-3xl font-bold text-gray-900 mb-3 tracking-wide">Admin Login</h1>
+                        <p class="text-gray-400 text-[15px] leading-relaxed">
+                            Selamat datang di Sistem Admin. Masuk<br>untuk mengelola pelelangan.
+                        </p>
+                    </div>
 
                 @if ($errors->any())
                     <div class="mb-5 rounded-xl bg-red-50 border border-red-100 px-4 py-3 text-sm text-red-500 text-center">
@@ -214,6 +257,7 @@
                         </a>
                     </div>
                 </form>
+                </div>
 
             </div>
         </div>
