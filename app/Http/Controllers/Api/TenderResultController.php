@@ -13,7 +13,7 @@ class TenderResultController extends Controller
 {
     use ApiResponse;
 
-    /** GET /api/tenders/{tender}/result */
+    // Ngambil detail hasil tender (biasanya ada data pemenang dsb)
     public function show(Tender $tender): JsonResponse
     {
         $result = $tender->result()->with(['winner'])->first();
@@ -25,7 +25,7 @@ class TenderResultController extends Controller
         return $this->success(new TenderResultResource($result));
     }
 
-    /** GET /api/tenders/{tender}/winner */
+    // Buat ngecek spesifik info pemenangnya sapa dan si vendor ini menang apa ngga
     public function winner(Tender $tender): JsonResponse
     {
         $result = $tender->result()->with(['winner'])->first();
@@ -37,7 +37,7 @@ class TenderResultController extends Controller
         $vendor    = auth()->user()->vendor;
         $isWinner  = $result->winner_vendor_id === $vendor->id;
 
-        // Get own bid for reference
+        // Ambil data bid sendiri buat dibandingin sama bid pemenang (biar ga kepo banget wkwk)
         $myBid = Bid::where('tender_id', $tender->id)
             ->where('vendor_id', $vendor->id)
             ->first();

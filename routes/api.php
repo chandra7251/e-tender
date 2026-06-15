@@ -32,6 +32,10 @@ Route::prefix('auth')->name('api.auth.')->group(function () {
     Route::post('refresh',         [AuthController::class, 'refresh'])->name('refresh')->middleware('throttle:10,1');
 });
 
+// ── Public: Email Verification ────────────────────────────────────────────────
+Route::get('email/verify/{id}/{hash}', [AuthController::class, 'verifyEmail'])->name('verification.verify');
+Route::post('email/resend', [AuthController::class, 'resendVerificationEmail'])->name('verification.resend')->middleware('throttle:3,1');
+
 // ── Public: Tender listing (vendor can browse without login) ──────────────────
 Route::get('tenders',        [TenderController::class, 'index'])->name('api.tenders.index');
 Route::get('tenders/{tender}', [TenderController::class, 'show'])->name('api.tenders.show');

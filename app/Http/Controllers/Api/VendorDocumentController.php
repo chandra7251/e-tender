@@ -15,7 +15,7 @@ class VendorDocumentController extends Controller
 {
     use ApiResponse;
 
-    /** List documents */
+    // Fungsi buat ngelist semua file dokumen yang udah diupload si vendor
     public function index(): JsonResponse
     {
         $vendor    = auth()->user()->vendor;
@@ -32,13 +32,13 @@ class VendorDocumentController extends Controller
         return $this->success($documents);
     }
 
-    /** Upload document */
+    // Fungsi buat ngupload file dokumen baru (misal KTP, NPWP, dll)
     public function store(VendorDocumentRequest $request): JsonResponse
     {
         $vendor = auth()->user()->vendor;
         $file   = $request->file('file');
 
-        // Simpan file ke local disk
+        // Simpen filenya di local storage server ya, jangan dilempar ke S3 dulu kalo belum perlu
         $hashedName = $file->hashName();
         $path       = $file->storeAs("vendor-documents/{$vendor->id}", $hashedName, 'local');
 
@@ -61,12 +61,12 @@ class VendorDocumentController extends Controller
         ], 'Dokumen berhasil diupload.');
     }
 
-    /** Download document */
+    // Fungsi buat vendor kalo mau ngedownload dokumen yang pernah dia upload sendiri
     public function download(VendorDocument $document): StreamedResponse|JsonResponse
     {
         $vendor = auth()->user()->vendor;
 
-        // Validasi kepemilikan
+        // Pastiin dokumennya emang beneran punya dia, ga boleh nyomot punya vendor sebelah
         if ($document->vendor_id !== $vendor->id) {
             return $this->error('Dokumen tidak ditemukan.', null, 404);
         }

@@ -7,6 +7,7 @@ use Illuminate\Http\Request;
 
 class NotificationController extends Controller
 {
+    // Fungsi buat nampilin daftar notifnya si user yang lagi login
     public function index(Request $request)
     {
         $user = $request->user();
@@ -18,7 +19,7 @@ class NotificationController extends Controller
         $notifications = $user->notifications()->paginate(15);
         $unreadCount = $user->unreadNotifications()->count();
 
-        // Convert the paginated response to an array so we can append unread_count to the 'data' payload
+        // Di-convert jadi array dulu biar kita bisa nyelipin data 'unread_count' ke dalem responsenya
         $paginatedData = $notifications->toArray();
         $paginatedData['unread_count'] = $unreadCount;
 
@@ -28,6 +29,7 @@ class NotificationController extends Controller
         ]);
     }
 
+    // Fungsi buat nandain satu notif doang kalo udah dibaca
     public function markAsRead(Request $request, $id)
     {
         $user = $request->user();
@@ -46,6 +48,7 @@ class NotificationController extends Controller
         return response()->json(['status' => 'error', 'message' => 'Notification not found'], 404);
     }
 
+    // Fungsi sapu jagat buat nandain semua notif udah dibaca
     public function markAllAsRead(Request $request)
     {
         $user = $request->user();

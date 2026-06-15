@@ -13,7 +13,8 @@ class TenderController extends Controller
 {
     use ApiResponse;
 
-    /** GET /api/tenders */
+    // Fungsi buat nampilin semua daftar tender yang ada
+    // Difilter juga biar tender yang masih 'draft' ga keliatan sama vendor
     public function index(Request $request): JsonResponse
     {
         $allowedStatuses = ['open', 'aanwijzing', 'bidding', 'closed', 'finished'];
@@ -49,7 +50,8 @@ class TenderController extends Controller
         ]);
     }
 
-    /** GET /api/tenders/{tender} */
+    // Fungsi buat ngambil detail spesifik satu tender
+    // Sama, kalo statusnya draft mending kita bilang 404 Not Found aja biar aman
     public function show(Tender $tender): JsonResponse
     {
         if ($tender->status === 'draft') {

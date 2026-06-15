@@ -30,3 +30,7 @@ Thumbs.db
 /storage/framework/views/*
 npm-debug.log
 yarn-error.log
+
+*.md
+!README.md
+!readme.md

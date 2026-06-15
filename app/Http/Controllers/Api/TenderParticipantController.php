@@ -15,7 +15,7 @@ class TenderParticipantController extends Controller
 
     public function __construct(protected TenderHistoryService $historyService) {}
 
-    /** Cek status peserta */
+    // Cek si vendor ini udah ikutan tender ini belom
     public function check(Tender $tender): JsonResponse
     {
         $vendor = auth()->user()->vendor;
@@ -30,13 +30,13 @@ class TenderParticipantController extends Controller
         ]);
     }
 
-    /** Daftar tender */
+    // Fungsi pas vendor mau daftar ikut tender
     public function store(Tender $tender): JsonResponse
     {
         $user   = auth()->user();
         $vendor = $user->vendor;
 
-        // Validasi status vendor
+        // Pastiin vendornya emang udah diapprove admin, jangan sampe vendor bodong ikut lelang
         if ($vendor->verification_status !== 'approved') {
             return $this->error(
                 'Vendor belum diverifikasi. Tunggu persetujuan admin.',
@@ -44,7 +44,7 @@ class TenderParticipantController extends Controller
             );
         }
 
-        // Validasi status tender
+        // Pastiin juga tendernya emang lagi buka (open/aanwijzing)
         if (!in_array($tender->status, ['open', 'aanwijzing'])) {
             return $this->error(
                 'Tender tidak dalam status yang dapat diikuti.',
@@ -52,7 +52,7 @@ class TenderParticipantController extends Controller
             );
         }
 
-        // Validasi duplikasi pendaftaran
+        // Cek jangan sampe dia dobel daftar (termasuk ngecek yang udah ke-soft delete kalo ada)
         $alreadyJoined = TenderParticipant::withTrashed()
             ->where('tender_id', $tender->id)
             ->where('vendor_id', $vendor->id)

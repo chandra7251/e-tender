@@ -11,12 +11,12 @@ class VendorController extends Controller
 {
     use ApiResponse;
 
-    /** List my tenders */
+    // Fungsi buat nampilin tender apa aja yang diikutin sama si vendor ini
     public function myTenders(): JsonResponse
     {
         $vendor = auth()->user()->vendor;
 
-        // Ambil tender peserta
+        // Query buat nyari tender yang ada id vendor ini di tabel partisipannya
         $tenders = \App\Models\Tender::whereHas('participants', function ($q) use ($vendor) {
                 $q->where('vendor_id', $vendor->id);
             })
@@ -27,7 +27,7 @@ class VendorController extends Controller
             ->orderByDesc('created_at')
             ->get();
 
-        // Inject joined_at
+        // Kita tambahin data 'joined_at' manual ke response JSON-nya
         $data = $tenders->map(function ($tender) {
             $resource = (new TenderResource($tender))->toArray(request());
             $resource['joined_at'] = $tender->participants->first()?->joined_at?->toIso8601String();
@@ -37,12 +37,12 @@ class VendorController extends Controller
         return $this->success($data, 'Daftar tender yang diikuti berhasil dimuat.');
     }
 
-    /** List my results */
+    // Fungsi buat liat hasil pengumuman menang/kalah di tender yang diikutin
     public function myResults(): JsonResponse
     {
         $vendor = auth()->user()->vendor;
 
-        // Ambil hasil tender
+        // Cuma ambil tender yang udah kelar (closed/finished)
         $tenders = \App\Models\Tender::whereHas('participants', function ($q) use ($vendor) {
                 $q->where('vendor_id', $vendor->id);
             })

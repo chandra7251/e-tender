@@ -12,10 +12,7 @@ class AdminSubmissionController extends Controller
 {
     use ApiResponse;
 
-    /**
-     * GET /api/admin/submissions
-     * Daftar semua pengajuan vendor. Bisa filter by status: ?status=pending|approved|rejected
-     */
+    // Fungsi buat narik semua data pengajuan dari vendor. Bisa difilter pake query string 'status' (pending/approved/rejected)
     public function index(Request $request): JsonResponse
     {
         $query = VendorSubmission::with(['vendor.user', 'photos', 'reviewer'])
@@ -30,10 +27,7 @@ class AdminSubmissionController extends Controller
         return $this->success($submissions, 'Daftar pengajuan vendor berhasil dimuat.');
     }
 
-    /**
-     * GET /api/admin/submissions/{id}
-     * Detail pengajuan.
-     */
+    // Fungsi buat ngeliat detail pengajuan spesifik dari vendor
     public function show(int $id): JsonResponse
     {
         $submission = VendorSubmission::with(['vendor.user', 'photos', 'reviewer'])
@@ -42,10 +36,7 @@ class AdminSubmissionController extends Controller
         return $this->success($this->formatForAdmin($submission));
     }
 
-    /**
-     * PATCH /api/admin/submissions/{id}/approve
-     * Admin menyetujui pengajuan.
-     */
+    // Fungsi aksi dari admin buat nyetujuin (approve) pengajuan dari vendor
     public function approve(int $id): JsonResponse
     {
         $submission = VendorSubmission::findOrFail($id);
@@ -66,10 +57,8 @@ class AdminSubmissionController extends Controller
         );
     }
 
-    /**
-     * PATCH /api/admin/submissions/{id}/reject
-     * Admin menolak pengajuan. Wajib sertakan catatan_admin.
-     */
+    // Fungsi aksi dari admin buat nolak (reject) pengajuan dari vendor.
+    // Syaratnya wajib banget ngisi alasan (catatan_admin) biar vendornya tau kenapa ditolak.
     public function reject(Request $request, int $id): JsonResponse
     {
         $request->validate([
@@ -95,7 +84,7 @@ class AdminSubmissionController extends Controller
         );
     }
 
-    // ─── Private Helpers ──────────────────────────────────────────────────────
+    // Kumpulan fungsi helper privat
 
     private function formatForAdmin(VendorSubmission $s): array
     {

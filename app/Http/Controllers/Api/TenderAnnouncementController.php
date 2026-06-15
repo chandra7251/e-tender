@@ -11,7 +11,8 @@ class TenderAnnouncementController extends Controller
 {
     use ApiResponse;
 
-    /** GET /api/tenders/{tender}/announcements */
+    // Narik semua data pengumuman buat tender tertentu.
+    // Misal admin ngasih update info tender, munculnya di sini.
     public function index(Tender $tender): JsonResponse
     {
         if ($tender->status === 'draft') {

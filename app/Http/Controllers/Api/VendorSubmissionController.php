@@ -13,9 +13,7 @@ class VendorSubmissionController extends Controller
 {
     use ApiResponse;
 
-    /**
-     * List my submissions
-     */
+    // Nampilin semua histori pengajuan barang dari vendor ini
     public function index(): JsonResponse
     {
         $vendor = auth()->user()->vendor;
@@ -29,9 +27,7 @@ class VendorSubmissionController extends Controller
         return $this->success($submissions, 'Riwayat pengajuan berhasil dimuat.');
     }
 
-    /**
-     * Show my submission
-     */
+    // Liat detail satu pengajuan barang tertentu
     public function show(int $id): JsonResponse
     {
         $vendor     = auth()->user()->vendor;
@@ -42,12 +38,10 @@ class VendorSubmissionController extends Controller
         return $this->success($this->formatSubmission($submission));
     }
 
-    /**
-     * Create submission
-     */
+    // Bikin form pengajuan barang baru beserta upload foto (maksimal 3 foto)
     public function store(Request $request): JsonResponse
     {
-        // Validasi approval vendor
+        // Pastiin dulu nih akun vendornya udah di-approve admin, kalo belom ya ga boleh ngajuin
         $vendor = auth()->user()->vendor;
         if ($vendor->verification_status !== 'approved') {
             return $this->error(
@@ -68,7 +62,7 @@ class VendorSubmissionController extends Controller
             'photos.*'       => 'nullable|image|mimes:jpeg,jpg,png|max:2048',
         ]);
 
-        // Simpan submission
+        // Masukin datanya ke database dengan status awal 'pending'
         $submission = VendorSubmission::create([
             'vendor_id'      => $vendor->id,
             'nama_barang'    => $validated['nama_barang'],
@@ -80,7 +74,7 @@ class VendorSubmissionController extends Controller
             'status'         => 'pending',
         ]);
 
-        // Upload foto
+        // Kalo dia upload foto, kita simpen ke folder public/submission-photos
         if ($request->hasFile('photos')) {
             foreach ($request->file('photos') as $photo) {
                 $filename = $photo->hashName();

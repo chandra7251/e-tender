@@ -20,7 +20,7 @@ class AuthController extends Controller
 {
     use ApiResponse;
 
-    /** POST /api/auth/register */
+    // Fungsi buat daftar akun vendor baru, sekalian otomatis bikinin profil vendor yang statusnya masih 'pending'
     public function register(RegisterRequest $request): JsonResponse
     {
         $user = User::create([
@@ -33,27 +33,16 @@ class AuthController extends Controller
         Vendor::create([
             'user_id'             => $user->id,
             'company_name'        => $request->input('company_name'),
-            'phone'               => $request->input('phone'),
             'address'             => $request->input('address'),
             'verification_status' => 'pending',
         ]);
 
-        $token = JWTAuth::fromUser($user);
+        $user->sendEmailVerificationNotification();
 
-        return $this->created([
-            'token'      => $token,
-            'token_type' => 'bearer',
-            'expires_in' => config('jwt.ttl') * 60,
-            'user'       => [
-                'id'    => $user->id,
-                'name'  => $user->name,
-                'email' => $user->email,
-                'role'  => $user->role,
-            ],
-        ], 'Registrasi berhasil. Akun Anda menunggu verifikasi admin.');
+        return $this->created(null, 'Registrasi berhasil. Silakan cek kotak masuk email Anda untuk verifikasi akun sebelum login.');
     }
 
-    /** POST /api/auth/login */
+    // Fungsi buat login, ngecek password sama ngecek emailnya udah diverifikasi atau belum
     public function login(LoginRequest $request): JsonResponse
     {
         $user = User::where('email', $request->input('email'))->first();
@@ -64,6 +53,10 @@ class AuthController extends Controller
 
         if ($user->role !== 'vendor') {
             return $this->error('Akun ini bukan akun vendor.', null, 403);
+        }
+
+        if (!$user->hasVerifiedEmail()) {
+            return $this->error('Email belum diverifikasi. Silakan cek kotak masuk email Anda.', null, 403);
         }
 
         $token = JWTAuth::fromUser($user);
@@ -81,7 +74,7 @@ class AuthController extends Controller
         ], 'Login berhasil.');
     }
 
-    /** POST /api/auth/logout */
+    // Fungsi buat logout, hapus token biar ga bisa dipake lagi
     public function logout(Request $request): JsonResponse
     {
         JWTAuth::invalidate(JWTAuth::getToken());
@@ -89,7 +82,7 @@ class AuthController extends Controller
         return $this->success(null, 'Logout berhasil.');
     }
 
-    /** POST /api/auth/refresh */
+    // Fungsi buat perpanjang token kalo masa berlakunya udah mau abis
     public function refresh(): JsonResponse
     {
         try {
@@ -108,7 +101,7 @@ class AuthController extends Controller
         }
     }
 
-    /** GET /api/auth/me */
+    // Fungsi buat ngambil data profil user yang lagi login sekarang
     public function me(Request $request): JsonResponse
     {
         $vendor = auth('api')->user()->vendor()->with('user')->first();
@@ -116,7 +109,7 @@ class AuthController extends Controller
         return $this->success(new VendorResource($vendor));
     }
 
-    /** POST /api/auth/forgot-password */
+    // Fungsi pas user lupa password, kita kirimin email isinya token reset
     public function forgotPassword(Request $request): JsonResponse
     {
         $validator = Validator::make($request->all(), [
@@ -136,7 +129,7 @@ class AuthController extends Controller
         return $this->error('Gagal mengirim link reset password.', null, 422);
     }
 
-    /** POST /api/auth/reset-password */
+    // Fungsi eksekusi reset password setelah user masukin token dari email
     public function resetPassword(Request $request): JsonResponse
     {
         $validator = Validator::make($request->all(), [
@@ -163,7 +156,7 @@ class AuthController extends Controller
         return $this->error('Token tidak valid atau sudah kedaluwarsa.', null, 422);
     }
 
-    /** PUT /api/auth/change-password */
+    // Fungsi buat ganti password pas lagi keadaan login (bukan lupa password)
     public function changePassword(Request $request): JsonResponse
     {
         $validator = Validator::make($request->all(), [
@@ -184,5 +177,57 @@ class AuthController extends Controller
         $user->forceFill(['password' => Hash::make($request->input('password'))])->save();
 
         return $this->success(null, 'Password berhasil diubah.');
+    }
+
+    // Fungsi yang dipanggil otomatis pas user nge-klik link verifikasi dari emailnya
+    public function verifyEmail(Request $request, $id, $hash)
+    {
+        $user = User::findOrFail($id);
+
+        if (!hash_equals((string) $hash, sha1($user->getEmailForVerification()))) {
+            return response('Link verifikasi tidak valid atau sudah kedaluwarsa.', 403);
+        }
+
+        if ($user->hasVerifiedEmail()) {
+            return response('Email Anda sudah diverifikasi sebelumnya. Silakan kembali ke aplikasi ZETA untuk Login.', 200)
+                ->header('Content-Type', 'text/html; charset=UTF-8');
+        }
+
+        if ($user->markEmailAsVerified()) {
+            event(new \Illuminate\Auth\Events\Verified($user));
+        }
+
+        return response('
+            <div style="font-family: sans-serif; text-align: center; margin-top: 50px;">
+                <h1 style="color: #4CAF50;">✅ Verifikasi Berhasil!</h1>
+                <p>Email Anda berhasil diverifikasi. Silakan kembali ke aplikasi ZETA untuk Login.</p>
+            </div>
+        ', 200)->header('Content-Type', 'text/html; charset=UTF-8');
+    }
+
+    // Fungsi buat kirim ulang email verifikasi kalo misalkan emailnya ga masuk atau kedaluwarsa
+    public function resendVerificationEmail(Request $request): JsonResponse
+    {
+        $validator = Validator::make($request->all(), [
+            'email' => ['required', 'email'],
+        ]);
+
+        if ($validator->fails()) {
+            return $this->error('Validasi gagal.', $validator->errors(), 422);
+        }
+
+        $user = User::where('email', $request->input('email'))->first();
+
+        if (!$user) {
+            return $this->error('Email tidak terdaftar.', null, 404);
+        }
+
+        if ($user->hasVerifiedEmail()) {
+            return $this->error('Email ini sudah diverifikasi.', null, 422);
+        }
+
+        $user->sendEmailVerificationNotification();
+
+        return $this->success(null, 'Link verifikasi telah dikirim ulang ke email Anda.');
     }
 }

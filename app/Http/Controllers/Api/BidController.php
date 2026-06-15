@@ -17,7 +17,7 @@ class BidController extends Controller
 
     public function __construct(protected BiddingService $biddingService) {}
 
-    /** Get my bid */
+    // Fungsi buat ngambil data bid/penawaran harga yang udah dikirim sama vendor yang lagi login
     public function myBid(Tender $tender): JsonResponse
     {
         $vendor = auth()->user()->vendor;
@@ -33,13 +33,13 @@ class BidController extends Controller
         return $this->success(new BidResource($bid));
     }
 
-    /** Submit bid */
+    // Fungsi buat ngajuin/submit penawaran harga baru ke tender tertentu
     public function store(BidRequest $request, Tender $tender): JsonResponse
     {
         $vendor = auth()->user()->vendor;
 
         try {
-            // Validasi kelayakan vendor
+            // Cek dulu vendornya boleh ikutan nge-bid ga, misal udah diapprove atau belum
             $this->biddingService->assertVendorCanBid($vendor, $tender);
             $this->biddingService->assertBiddingOpen($tender);
         } catch (\RuntimeException $e) {
@@ -56,18 +56,18 @@ class BidController extends Controller
         return $this->created(new BidResource($bid), 'Bid berhasil diajukan.');
     }
 
-    /** Update bid */
+    // Fungsi buat ngubah nilai penawaran harga (kalo misalkan salah masukin angka)
     public function update(BidRequest $request, Tender $tender, Bid $bid): JsonResponse
     {
         $vendor = auth()->user()->vendor;
 
-        // Validasi kepemilikan bid
+        // Cek dulu beneran bid punya dia apa bukan, jangan sampe ngedit bid orang lain wkwk
         if ($bid->vendor_id !== $vendor->id || $bid->tender_id !== $tender->id) {
             return $this->error('Bid tidak ditemukan.', null, 404);
         }
 
         try {
-            // Validasi status vendor
+            // Cek ulang sapa tau vendornya udah ga boleh ikutan lagi pas mau ngedit
             $this->biddingService->assertVendorCanBid($vendor, $tender);
             $this->biddingService->assertBiddingOpen($tender);
         } catch (\RuntimeException $e) {

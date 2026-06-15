@@ -12,25 +12,25 @@ class VendorProfileController extends Controller
 {
     use ApiResponse;
 
-    /** Get my profile */
+    // Fungsi ngambil data profil si vendor yang lagi login
     public function show(): JsonResponse
     {
         $vendor = auth()->user()->vendor()->with('user')->first();
         return $this->success(new VendorResource($vendor));
     }
 
-    /** Update my profile */
+    // Fungsi buat ngupdate data profilnya dia
     public function update(VendorProfileRequest $request): JsonResponse
     {
         $user   = auth()->user();
         $vendor = $user->vendor;
 
-        // Update user
+        // Kalo dia ngubah nama, kita update di tabel users
         if ($request->filled('name')) {
             $user->update(['name' => $request->input('name')]);
         }
 
-        // Update vendor
+        // Sisanya (nama perusahaan, hp, alamat) kita update di tabel vendors
         $vendor->update([
             'company_name' => $request->input('company_name'),
             'phone'        => $request->input('phone'),
@@ -43,7 +43,7 @@ class VendorProfileController extends Controller
         );
     }
 
-    /** Get my status */
+    // Fungsi ini khusus buat ngecek status verifikasinya si vendor doang
     public function status(): JsonResponse
     {
         $vendor = auth()->user()->vendor;
