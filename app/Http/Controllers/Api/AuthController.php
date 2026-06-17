@@ -33,11 +33,17 @@ class AuthController extends Controller
         Vendor::create([
             'user_id'             => $user->id,
             'company_name'        => $request->input('company_name'),
+            'phone'               => $request->input('phone'),
             'address'             => $request->input('address'),
             'verification_status' => 'pending',
         ]);
 
-        $user->sendEmailVerificationNotification();
+        // Kirim email verifikasi, tapi jangan gagalkan registrasi jika SMTP error
+        try {
+            $user->sendEmailVerificationNotification();
+        } catch (\Exception $e) {
+            \Illuminate\Support\Facades\Log::warning('Email verifikasi gagal dikirim: ' . $e->getMessage(), ['user_id' => $user->id]);
+        }
 
         return $this->created(null, 'Registrasi berhasil. Silakan cek kotak masuk email Anda untuk verifikasi akun sebelum login.');
     }
