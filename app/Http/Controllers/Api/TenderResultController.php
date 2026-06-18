@@ -34,8 +34,8 @@ class TenderResultController extends Controller
             return $this->error('Pemenang belum ditentukan.', null, 404);
         }
 
-        $vendor    = auth('api')->user()->vendor;
-        $isWinner  = $result->winner_vendor_id === $vendor->id;
+        $vendor    = auth('api')->user()?->vendor;
+        $isWinner  = $vendor ? ($result->winner_vendor_id === $vendor->id) : false;
 
         // Ambil data bid sendiri buat dibandingin sama bid pemenang (biar ga kepo banget wkwk)
         $myBid = Bid::where('tender_id', $tender->id)

@@ -18,7 +18,11 @@ class TenderParticipantController extends Controller
     // Cek si vendor ini udah ikutan tender ini belom
     public function check(Tender $tender): JsonResponse
     {
-        $vendor = auth('api')->user()->vendor;
+        $vendor = auth('api')->user()?->vendor;
+
+        if (!$vendor) {
+            return $this->success(['is_participant' => false, 'joined_at' => null]);
+        }
 
         $participant = $tender->participants()
             ->where('vendor_id', $vendor->id)

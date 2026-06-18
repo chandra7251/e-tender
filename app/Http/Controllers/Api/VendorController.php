@@ -14,7 +14,11 @@ class VendorController extends Controller
     // Fungsi buat nampilin tender apa aja yang diikutin sama si vendor ini
     public function myTenders(): JsonResponse
     {
-        $vendor = auth('api')->user()->vendor;
+        $vendor = auth('api')->user()?->vendor;
+
+        if (!$vendor) {
+            return $this->success([], 'Tidak ada tender karena profil vendor tidak ditemukan.');
+        }
 
         // Query buat nyari tender yang ada id vendor ini di tabel partisipannya
         $tenders = \App\Models\Tender::whereHas('participants', function ($q) use ($vendor) {
@@ -40,7 +44,11 @@ class VendorController extends Controller
     // Fungsi buat liat hasil pengumuman menang/kalah di tender yang diikutin
     public function myResults(): JsonResponse
     {
-        $vendor = auth('api')->user()->vendor;
+        $vendor = auth('api')->user()?->vendor;
+
+        if (!$vendor) {
+            return $this->success([], 'Tidak ada hasil karena profil vendor tidak ditemukan.');
+        }
 
         // Cuma ambil tender yang udah kelar (closed/finished)
         $tenders = \App\Models\Tender::whereHas('participants', function ($q) use ($vendor) {

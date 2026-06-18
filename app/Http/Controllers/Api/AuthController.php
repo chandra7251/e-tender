@@ -110,7 +110,11 @@ class AuthController extends Controller
     // Fungsi buat ngambil data profil user yang lagi login sekarang
     public function me(Request $request): JsonResponse
     {
-        $vendor = auth('api')->user()->vendor()->with('user')->first();
+        $vendor = auth('api')->user()?->vendor()->with('user')->first();
+
+        if (!$vendor) {
+            return $this->error('Profil vendor tidak ditemukan.', null, 404);
+        }
 
         return $this->success(new VendorResource($vendor));
     }
