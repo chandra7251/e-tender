@@ -15,14 +15,14 @@ class VendorProfileController extends Controller
     // Fungsi ngambil data profil si vendor yang lagi login
     public function show(): JsonResponse
     {
-        $vendor = auth()->user()->vendor()->with('user')->first();
+        $vendor = auth('api')->user()->vendor()->with('user')->first();
         return $this->success(new VendorResource($vendor));
     }
 
     // Fungsi buat ngupdate data profilnya dia
     public function update(VendorProfileRequest $request): JsonResponse
     {
-        $user   = auth()->user();
+        $user   = auth('api')->user();
         $vendor = $user->vendor;
 
         // Kalo dia ngubah nama, kita update di tabel users
@@ -46,7 +46,7 @@ class VendorProfileController extends Controller
     // Fungsi ini khusus buat ngecek status verifikasinya si vendor doang
     public function status(): JsonResponse
     {
-        $vendor = auth()->user()->vendor;
+        $vendor = auth('api')->user()->vendor;
 
         return $this->success([
             'verification_status' => $vendor->verification_status,
@@ -55,3 +55,4 @@ class VendorProfileController extends Controller
         ]);
     }
 }
+

@@ -34,7 +34,7 @@ class TenderResultController extends Controller
             return $this->error('Pemenang belum ditentukan.', null, 404);
         }
 
-        $vendor    = auth()->user()->vendor;
+        $vendor    = auth('api')->user()->vendor;
         $isWinner  = $result->winner_vendor_id === $vendor->id;
 
         // Ambil data bid sendiri buat dibandingin sama bid pemenang (biar ga kepo banget wkwk)
@@ -52,3 +52,4 @@ class TenderResultController extends Controller
         ]);
     }
 }
+

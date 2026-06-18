@@ -20,7 +20,7 @@ class BidController extends Controller
     // Fungsi buat ngambil data bid/penawaran harga yang udah dikirim sama vendor yang lagi login
     public function myBid(Tender $tender): JsonResponse
     {
-        $vendor = auth()->user()->vendor;
+        $vendor = auth('api')->user()->vendor;
 
         $bid = Bid::where('tender_id', $tender->id)
             ->where('vendor_id', $vendor->id)
@@ -36,7 +36,7 @@ class BidController extends Controller
     // Fungsi buat ngajuin/submit penawaran harga baru ke tender tertentu
     public function store(BidRequest $request, Tender $tender): JsonResponse
     {
-        $vendor = auth()->user()->vendor;
+        $vendor = auth('api')->user()->vendor;
 
         try {
             // Cek dulu vendornya boleh ikutan nge-bid ga, misal udah diapprove atau belum
@@ -59,7 +59,7 @@ class BidController extends Controller
     // Fungsi buat ngubah nilai penawaran harga (kalo misalkan salah masukin angka)
     public function update(BidRequest $request, Tender $tender, Bid $bid): JsonResponse
     {
-        $vendor = auth()->user()->vendor;
+        $vendor = auth('api')->user()->vendor;
 
         // Cek dulu beneran bid punya dia apa bukan, jangan sampe ngedit bid orang lain wkwk
         if ($bid->vendor_id !== $vendor->id || $bid->tender_id !== $tender->id) {
@@ -85,3 +85,4 @@ class BidController extends Controller
         return $this->success(new BidResource($bid), 'Bid berhasil diperbarui.');
     }
 }
+

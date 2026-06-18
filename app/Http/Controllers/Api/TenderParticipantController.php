@@ -18,7 +18,7 @@ class TenderParticipantController extends Controller
     // Cek si vendor ini udah ikutan tender ini belom
     public function check(Tender $tender): JsonResponse
     {
-        $vendor = auth()->user()->vendor;
+        $vendor = auth('api')->user()->vendor;
 
         $participant = $tender->participants()
             ->where('vendor_id', $vendor->id)
@@ -33,7 +33,7 @@ class TenderParticipantController extends Controller
     // Fungsi pas vendor mau daftar ikut tender
     public function store(Tender $tender): JsonResponse
     {
-        $user   = auth()->user();
+        $user   = auth('api')->user();
         $vendor = $user->vendor;
 
         // Pastiin vendornya emang udah diapprove admin, jangan sampe vendor bodong ikut lelang
@@ -83,3 +83,4 @@ class TenderParticipantController extends Controller
         ], 'Berhasil bergabung pada tender.');
     }
 }
+

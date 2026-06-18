@@ -16,7 +16,7 @@ class VendorSubmissionController extends Controller
     // Nampilin semua histori pengajuan barang dari vendor ini
     public function index(): JsonResponse
     {
-        $vendor = auth()->user()->vendor;
+        $vendor = auth('api')->user()->vendor;
 
         $submissions = VendorSubmission::with('photos')
             ->where('vendor_id', $vendor->id)
@@ -30,7 +30,7 @@ class VendorSubmissionController extends Controller
     // Liat detail satu pengajuan barang tertentu
     public function show(int $id): JsonResponse
     {
-        $vendor     = auth()->user()->vendor;
+        $vendor     = auth('api')->user()->vendor;
         $submission = VendorSubmission::with('photos')
             ->where('vendor_id', $vendor->id)
             ->findOrFail($id);
@@ -42,7 +42,7 @@ class VendorSubmissionController extends Controller
     public function store(Request $request): JsonResponse
     {
         // Pastiin dulu nih akun vendornya udah di-approve admin, kalo belom ya ga boleh ngajuin
-        $vendor = auth()->user()->vendor;
+        $vendor = auth('api')->user()->vendor;
         if ($vendor->verification_status !== 'approved') {
             return $this->error(
                 'Akun Anda belum diverifikasi. Hanya vendor yang sudah disetujui dapat mengajukan tender.',
@@ -117,3 +117,4 @@ class VendorSubmissionController extends Controller
         ];
     }
 }
+

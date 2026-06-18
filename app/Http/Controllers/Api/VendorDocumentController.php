@@ -18,7 +18,7 @@ class VendorDocumentController extends Controller
     // Fungsi buat ngelist semua file dokumen yang udah diupload si vendor
     public function index(): JsonResponse
     {
-        $vendor    = auth()->user()->vendor;
+        $vendor    = auth('api')->user()->vendor;
         $documents = $vendor->documents()->orderByDesc('uploaded_at')->get()
             ->map(fn ($d) => [
                 'id'            => $d->id,
@@ -35,7 +35,7 @@ class VendorDocumentController extends Controller
     // Fungsi buat ngupload file dokumen baru (misal KTP, NPWP, dll)
     public function store(VendorDocumentRequest $request): JsonResponse
     {
-        $vendor = auth()->user()->vendor;
+        $vendor = auth('api')->user()->vendor;
         $file   = $request->file('file');
 
         // Simpen filenya di local storage server ya, jangan dilempar ke S3 dulu kalo belum perlu
@@ -64,7 +64,7 @@ class VendorDocumentController extends Controller
     // Fungsi buat vendor kalo mau ngedownload dokumen yang pernah dia upload sendiri
     public function download(VendorDocument $document): StreamedResponse|JsonResponse
     {
-        $vendor = auth()->user()->vendor;
+        $vendor = auth('api')->user()->vendor;
 
         // Pastiin dokumennya emang beneran punya dia, ga boleh nyomot punya vendor sebelah
         if ($document->vendor_id !== $vendor->id) {
@@ -81,3 +81,4 @@ class VendorDocumentController extends Controller
         );
     }
 }
+
