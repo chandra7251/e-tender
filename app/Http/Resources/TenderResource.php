@@ -9,8 +9,10 @@ class TenderResource extends JsonResource
 {
     public function toArray(Request $request): array
     {
-        // Cek status peserta
-        $vendor        = $request->user()?->vendor;
+        // Gunakan auth('api') bukan $request->user() karena route GET /api/tenders/{id}
+        // adalah public route — $request->user() selalu null tanpa middleware auth:api.
+        // auth('api')->user() membaca JWT token dari header secara langsung.
+        $vendor        = auth('api')->user()?->vendor;
         $isParticipant = false;
 
         if ($vendor) {
