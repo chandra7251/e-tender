@@ -78,13 +78,13 @@ Route::middleware('auth:api')->group(function () {
 
     // Cek bid milik vendor sendiri — cukup auth, tidak perlu approved
     // (agar halaman bid form bisa terbuka untuk semua vendor yang sudah login)
-    Route::get('tenders/{tender}/bids/me', [BidController::class, 'myBid'])->name('api.tenders.bids.me');
+    Route::get('tenders/{tender}/penawaran/me', [BidController::class, 'myBid'])->name('api.tenders.bids.me');
 
     // ── Hanya vendor APPROVED yang bisa join & bid ────────────────────────────
     Route::middleware('vendor.approved')->group(function () {
         Route::post('tenders/{tender}/participants',  [TenderParticipantController::class, 'store'])->name('api.tenders.join');
-        Route::post('tenders/{tender}/bids',          [BidController::class, 'store'])->name('api.tenders.bids.store');
-        Route::put('tenders/{tender}/bids/{bid}',     [BidController::class, 'update'])->name('api.tenders.bids.update');
+        Route::post('tenders/{tender}/penawaran',          [BidController::class, 'store'])->name('api.tenders.bids.store');
+        Route::put('tenders/{tender}/penawaran/{bid}',     [BidController::class, 'update'])->name('api.tenders.bids.update');
     });
 });
 
