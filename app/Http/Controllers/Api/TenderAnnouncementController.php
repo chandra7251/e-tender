@@ -11,14 +11,16 @@ class TenderAnnouncementController extends Controller
 {
     use ApiResponse;
 
-    // Narik semua data pengumuman buat tender tertentu.
-    // Misal admin ngasih update info tender, munculnya di sini.
+    // Tampilkan semua pengumuman (aanwijzing) untuk tender tertentu
+    // Diakses vendor setelah join untuk mendapatkan info/update resmi dari admin
     public function index(Tender $tender): JsonResponse
     {
+        // Sembunyikan pengumuman untuk tender yang masih draft
         if ($tender->status === 'draft') {
             return $this->error('Tender tidak ditemukan.', null, 404);
         }
 
+        // Tampilkan dari yang terbaru — diurutkan descending berdasarkan tanggal publish
         $announcements = $tender->announcements()
             ->orderByDesc('published_at')
             ->get()

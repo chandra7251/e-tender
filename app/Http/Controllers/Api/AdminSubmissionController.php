@@ -12,22 +12,41 @@ class AdminSubmissionController extends Controller
 {
     use ApiResponse;
 
-    // Fungsi buat narik semua data pengajuan dari vendor. Bisa difilter pake query string 'status' (pending/approved/rejected)
+    // Daftar status pengajuan yang valid — dipakai untuk whitelist filter input
+    private const ALLOWED_STATUSES = ['pending', 'approved', 'rejected'];
+
+    // Tampilkan semua pengajuan vendor, opsional difilter berdasarkan status
     public function index(Request $request): JsonResponse
     {
         $query = VendorSubmission::with(['vendor.user', 'photos', 'reviewer'])
             ->orderByDesc('created_at');
 
-        if ($request->filled('status')) {
+        // Filter berdasarkan status hanya jika nilai ada di whitelist yang valid
+        // Mencegah query dengan nilai status sembarangan dari luar
+        if ($request->filled('status') && in_array($request->input('status'), self::ALLOWED_STATUSES)) {
             $query->where('status', $request->input('status'));
         }
 
-        $submissions = $query->get()->map(fn ($s) => $this->formatForAdmin($s));
+        // Pagination 20 per halaman — cegah OOM jika data submission sudah banyak
+        $paginated = $query->paginate(20);
 
-        return $this->success($submissions, 'Daftar pengajuan vendor berhasil dimuat.');
+        return response()->json([
+            'status'  => 'success',
+            'message' => 'Daftar pengajuan vendor berhasil dimuat.',
+            'data'    => $paginated->items() ? array_map(
+                fn ($s) => $this->formatForAdmin($s),
+                $paginated->items()
+            ) : [],
+            'meta'    => [
+                'current_page' => $paginated->currentPage(),
+                'last_page'    => $paginated->lastPage(),
+                'per_page'     => $paginated->perPage(),
+                'total'        => $paginated->total(),
+            ],
+        ]);
     }
 
-    // Fungsi buat ngeliat detail pengajuan spesifik dari vendor
+    // Tampilkan detail satu pengajuan spesifik
     public function show(int $id): JsonResponse
     {
         $submission = VendorSubmission::with(['vendor.user', 'photos', 'reviewer'])
@@ -36,18 +55,20 @@ class AdminSubmissionController extends Controller
         return $this->success($this->formatForAdmin($submission));
     }
 
-    // Fungsi aksi dari admin buat nyetujuin (approve) pengajuan dari vendor
+    // Setujui pengajuan vendor — ubah status ke 'approved'
     public function approve(int $id): JsonResponse
     {
         $submission = VendorSubmission::findOrFail($id);
 
+        // Hanya pengajuan berstatus 'pending' yang bisa diproses
         if ($submission->status !== 'pending') {
             return $this->error('Pengajuan sudah diproses sebelumnya.', null, 422);
         }
 
         $submission->update([
             'status'      => 'approved',
-            'reviewed_by' => auth()->id(),
+            // Gunakan auth('api') agar mengambil user dari JWT guard yang benar (bukan web guard)
+            'reviewed_by' => auth('api')->id(),
             'reviewed_at' => now(),
         ]);
 
@@ -57,16 +78,17 @@ class AdminSubmissionController extends Controller
         );
     }
 
-    // Fungsi aksi dari admin buat nolak (reject) pengajuan dari vendor.
-    // Syaratnya wajib banget ngisi alasan (catatan_admin) biar vendornya tau kenapa ditolak.
+    // Tolak pengajuan vendor — wajib sertakan alasan penolakan (catatan_admin)
     public function reject(Request $request, int $id): JsonResponse
     {
+        // Alasan penolakan wajib diisi minimal 10 karakter agar informatif
         $request->validate([
             'catatan_admin' => 'required|string|min:10',
         ]);
 
         $submission = VendorSubmission::findOrFail($id);
 
+        // Hanya pengajuan berstatus 'pending' yang bisa ditolak
         if ($submission->status !== 'pending') {
             return $this->error('Pengajuan sudah diproses sebelumnya.', null, 422);
         }
@@ -74,7 +96,8 @@ class AdminSubmissionController extends Controller
         $submission->update([
             'status'        => 'rejected',
             'catatan_admin' => $request->input('catatan_admin'),
-            'reviewed_by'   => auth()->id(),
+            // Gunakan auth('api') agar mengambil user dari JWT guard yang benar (bukan web guard)
+            'reviewed_by'   => auth('api')->id(),
             'reviewed_at'   => now(),
         ]);
 
@@ -84,8 +107,7 @@ class AdminSubmissionController extends Controller
         );
     }
 
-    // Kumpulan fungsi helper privat
-
+    // Helper privat: format data submission ke struktur yang konsisten untuk response admin
     private function formatForAdmin(VendorSubmission $s): array
     {
         return [

@@ -7,7 +7,6 @@ use App\Http\Requests\Api\VendorDocumentRequest;
 use App\Http\Traits\ApiResponse;
 use App\Models\VendorDocument;
 use Illuminate\Http\JsonResponse;
-use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
 use Symfony\Component\HttpFoundation\StreamedResponse;
 
@@ -15,11 +14,25 @@ class VendorDocumentController extends Controller
 {
     use ApiResponse;
 
-    // Fungsi buat ngelist semua file dokumen yang udah diupload si vendor
+    // Ambil profil vendor yang sedang login. Dipakai bersama oleh semua method.
+    private function resolveVendor(): ?\App\Models\Vendor
+    {
+        return auth('api')->user()?->vendor;
+    }
+
+    // Tampilkan semua dokumen milik vendor yang sedang login
     public function index(): JsonResponse
     {
-        $vendor    = auth('api')->user()->vendor;
-        $documents = $vendor->documents()->orderByDesc('uploaded_at')->get()
+        // Null guard: cegah crash jika user tidak punya vendor record
+        $vendor = $this->resolveVendor();
+        if (!$vendor) {
+            return $this->error('Profil vendor tidak ditemukan.', null, 404);
+        }
+
+        // Ambil semua dokumen, diurutkan dari yang terbaru
+        $documents = $vendor->documents()
+            ->orderByDesc('uploaded_at')
+            ->get()
             ->map(fn ($d) => [
                 'id'            => $d->id,
                 'document_type' => $d->document_type,
@@ -32,16 +45,22 @@ class VendorDocumentController extends Controller
         return $this->success($documents);
     }
 
-    // Fungsi buat ngupload file dokumen baru (misal KTP, NPWP, dll)
+    // Upload dokumen baru (KTP, NPWP, SIUP, dll)
     public function store(VendorDocumentRequest $request): JsonResponse
     {
-        $vendor = auth('api')->user()->vendor;
-        $file   = $request->file('file');
+        // Null guard: cegah crash jika user tidak punya vendor record
+        $vendor = $this->resolveVendor();
+        if (!$vendor) {
+            return $this->error('Profil vendor tidak ditemukan.', null, 404);
+        }
 
-        // Simpen filenya di local storage server ya, jangan dilempar ke S3 dulu kalo belum perlu
+        $file = $request->file('file');
+
+        // Simpan file menggunakan nama yang di-hash untuk keamanan (cegah path traversal)
         $hashedName = $file->hashName();
         $path       = $file->storeAs("vendor-documents/{$vendor->id}", $hashedName, 'local');
 
+        // Simpan metadata dokumen ke database
         $document = VendorDocument::create([
             'vendor_id'     => $vendor->id,
             'document_type' => $request->input('document_type'),
@@ -61,16 +80,21 @@ class VendorDocumentController extends Controller
         ], 'Dokumen berhasil diupload.');
     }
 
-    // Fungsi buat vendor kalo mau ngedownload dokumen yang pernah dia upload sendiri
+    // Download dokumen milik vendor yang sedang login
     public function download(VendorDocument $document): StreamedResponse|JsonResponse
     {
-        $vendor = auth('api')->user()->vendor;
+        // Null guard: cegah crash jika user tidak punya vendor record
+        $vendor = $this->resolveVendor();
+        if (!$vendor) {
+            return $this->error('Profil vendor tidak ditemukan.', null, 404);
+        }
 
-        // Pastiin dokumennya emang beneran punya dia, ga boleh nyomot punya vendor sebelah
+        // Pastikan dokumen memang milik vendor yang request — cegah akses lintas vendor
         if ($document->vendor_id !== $vendor->id) {
             return $this->error('Dokumen tidak ditemukan.', null, 404);
         }
 
+        // Pastikan file fisik masih ada di server
         if (!Storage::disk('local')->exists($document->file_path)) {
             return $this->error('File tidak ditemukan di server.', null, 404);
         }
@@ -81,4 +105,3 @@ class VendorDocumentController extends Controller
         );
     }
 }
-

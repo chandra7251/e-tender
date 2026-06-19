@@ -12,19 +12,21 @@ class VendorProfileController extends Controller
 {
     use ApiResponse;
 
-    // Fungsi ngambil data profil si vendor yang lagi login
+    // Tampilkan profil lengkap vendor yang sedang login, termasuk data user
     public function show(): JsonResponse
     {
+        // Eager-load relasi 'user' sekaligus agar tidak ada lazy-load di Resource
         $vendor = auth('api')->user()?->vendor()->with('user')->first();
 
         if (!$vendor) {
+            // User ada tapi vendor record tidak ada — kemungkinan registrasi tidak selesai
             return $this->error('Profil vendor tidak ditemukan. Silakan hubungi admin.', null, 404);
         }
 
         return $this->success(new VendorResource($vendor));
     }
 
-    // Fungsi buat ngupdate data profilnya dia
+    // Perbarui data profil vendor (nama, nama perusahaan, telepon, alamat)
     public function update(VendorProfileRequest $request): JsonResponse
     {
         $user   = auth('api')->user();
@@ -34,30 +36,33 @@ class VendorProfileController extends Controller
             return $this->error('Profil vendor tidak ditemukan. Silakan hubungi admin.', null, 404);
         }
 
-        // Kalo dia ngubah nama, kita update di tabel users
+        // Update nama di tabel 'users' jika dikirim dalam request
         if ($request->filled('name')) {
             $user->update(['name' => $request->input('name')]);
         }
 
-        // Sisanya (nama perusahaan, hp, alamat) kita update di tabel vendors
+        // Update data bisnis vendor di tabel 'vendors'
         $vendor->update([
             'company_name' => $request->input('company_name'),
             'phone'        => $request->input('phone'),
             'address'      => $request->input('address'),
         ]);
 
+        // Refresh relasi user agar response menampilkan nama terbaru
         return $this->success(
             new VendorResource($vendor->load('user')),
             'Profil berhasil diperbarui.'
         );
     }
 
-    // Fungsi ini khusus buat ngecek status verifikasinya si vendor doang
+    // Cek status verifikasi vendor tanpa harus load seluruh profil
+    // Digunakan untuk polling status dari halaman waiting screen
     public function status(): JsonResponse
     {
         $vendor = auth('api')->user()?->vendor;
 
         if (!$vendor) {
+            // Return data null daripada error agar frontend bisa handle gracefully
             return $this->success([
                 'verification_status' => null,
                 'verification_notes'  => null,
@@ -72,4 +77,3 @@ class VendorProfileController extends Controller
         ]);
     }
 }
-

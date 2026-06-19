@@ -11,7 +11,9 @@ use App\Models\User;
 use App\Models\Vendor;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Password;
 use Illuminate\Support\Facades\Validator;
 use Tymon\JWTAuth\Facades\JWTAuth;
@@ -23,20 +25,29 @@ class AuthController extends Controller
     // Fungsi buat daftar akun vendor baru, sekalian otomatis bikinin profil vendor yang statusnya masih 'pending'
     public function register(RegisterRequest $request): JsonResponse
     {
-        $user = User::create([
-            'name'     => $request->input('name'),
-            'email'    => $request->input('email'),
-            'password' => Hash::make($request->input('password')),
-            'role'     => 'vendor',
-        ]);
+        try {
+            DB::transaction(function () use ($request, &$user) {
+                $user = User::create([
+                    'name'     => $request->input('name'),
+                    'email'    => $request->input('email'),
+                    'password' => Hash::make($request->input('password')),
+                    'role'     => 'vendor',
+                ]);
 
-        Vendor::create([
-            'user_id'             => $user->id,
-            'company_name'        => $request->input('company_name'),
-            'phone'               => $request->input('phone'),
-            'address'             => $request->input('address'),
-            'verification_status' => 'pending',
-        ]);
+                Vendor::create([
+                    'user_id'             => $user->id,
+                    'company_name'        => $request->input('company_name'),
+                    'phone'               => $request->input('phone'),
+                    'address'             => $request->input('address'),
+                    'verification_status' => 'pending',
+                ]);
+            });
+        } catch (\Throwable $e) {
+            Log::error('Registrasi gagal: ' . $e->getMessage(), [
+                'email' => $request->input('email'),
+            ]);
+            return $this->error('Registrasi gagal. Silakan coba lagi atau hubungi admin.', null, 500);
+        }
 
         // Kirim email verifikasi, tapi jangan gagalkan registrasi jika SMTP error
         try {
@@ -113,7 +124,12 @@ class AuthController extends Controller
         $vendor = auth('api')->user()?->vendor()->with('user')->first();
 
         if (!$vendor) {
-            return $this->error('Profil vendor tidak ditemukan.', null, 404);
+            // User ada tapi tidak punya vendor record — kemungkinan registrasi gagal di tengah jalan
+            return $this->error(
+                'Profil vendor tidak ditemukan. Kemungkinan registrasi Anda belum selesai. Silakan hubungi admin atau daftar ulang dengan email berbeda.',
+                null,
+                404
+            );
         }
 
         return $this->success(new VendorResource($vendor));

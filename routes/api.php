@@ -46,7 +46,8 @@ Route::middleware('auth:api')->group(function () {
     // Auth actions
     Route::post('auth/logout',         [AuthController::class, 'logout'])->name('api.auth.logout');
     Route::get('auth/me',              [AuthController::class, 'me'])->name('api.auth.me');
-    Route::put('auth/change-password', [AuthController::class, 'changePassword'])->name('api.auth.change-password');
+    // Throttle 5 percobaan per menit — cegah brute-force ganti password via token yang bocor
+    Route::put('auth/change-password', [AuthController::class, 'changePassword'])->name('api.auth.change-password')->middleware('throttle:5,1');
 
     // Notifications
     Route::get('notifications', [\App\Http\Controllers\Api\NotificationController::class, 'index'])->name('api.notifications.index');

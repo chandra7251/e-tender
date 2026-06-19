@@ -13,11 +13,22 @@ class VendorSubmissionController extends Controller
 {
     use ApiResponse;
 
-    // Nampilin semua histori pengajuan barang dari vendor ini
+    // Helper privat: ambil vendor dari user yang sedang login
+    private function resolveVendor(): ?\App\Models\Vendor
+    {
+        return auth('api')->user()?->vendor;
+    }
+
+    // Tampilkan semua histori pengajuan barang milik vendor yang login
     public function index(): JsonResponse
     {
-        $vendor = auth('api')->user()->vendor;
+        // Null guard: user terdaftar tapi mungkin tidak punya vendor record
+        $vendor = $this->resolveVendor();
+        if (!$vendor) {
+            return $this->error('Profil vendor tidak ditemukan.', null, 404);
+        }
 
+        // Ambil pengajuan beserta foto, diurutkan dari terbaru
         $submissions = VendorSubmission::with('photos')
             ->where('vendor_id', $vendor->id)
             ->orderByDesc('created_at')
@@ -27,10 +38,17 @@ class VendorSubmissionController extends Controller
         return $this->success($submissions, 'Riwayat pengajuan berhasil dimuat.');
     }
 
-    // Liat detail satu pengajuan barang tertentu
+    // Tampilkan detail satu pengajuan tertentu milik vendor yang login
     public function show(int $id): JsonResponse
     {
-        $vendor     = auth('api')->user()->vendor;
+        // Null guard
+        $vendor = $this->resolveVendor();
+        if (!$vendor) {
+            return $this->error('Profil vendor tidak ditemukan.', null, 404);
+        }
+
+        // findOrFail otomatis return 404 jika tidak ditemukan
+        // Scope vendor_id memastikan vendor hanya bisa akses pengajuan miliknya sendiri
         $submission = VendorSubmission::with('photos')
             ->where('vendor_id', $vendor->id)
             ->findOrFail($id);
@@ -38,11 +56,16 @@ class VendorSubmissionController extends Controller
         return $this->success($this->formatSubmission($submission));
     }
 
-    // Bikin form pengajuan barang baru beserta upload foto (maksimal 3 foto)
+    // Kirim pengajuan barang baru beserta foto (maks 3 foto)
     public function store(Request $request): JsonResponse
     {
-        // Pastiin dulu nih akun vendornya udah di-approve admin, kalo belom ya ga boleh ngajuin
-        $vendor = auth('api')->user()->vendor;
+        // Null guard
+        $vendor = $this->resolveVendor();
+        if (!$vendor) {
+            return $this->error('Profil vendor tidak ditemukan.', null, 404);
+        }
+
+        // Hanya vendor yang sudah disetujui admin yang boleh mengajukan
         if ($vendor->verification_status !== 'approved') {
             return $this->error(
                 'Akun Anda belum diverifikasi. Hanya vendor yang sudah disetujui dapat mengajukan tender.',
@@ -51,6 +74,7 @@ class VendorSubmissionController extends Controller
             );
         }
 
+        // Validasi input dari form pengajuan
         $validated = $request->validate([
             'nama_barang'    => 'required|string|max:255',
             'deskripsi'      => 'required|string',
@@ -59,10 +83,11 @@ class VendorSubmissionController extends Controller
             'estimasi_harga' => 'nullable|numeric|min:0',
             'catatan'        => 'nullable|string',
             'photos'         => 'nullable|array|max:3',
+            // Validasi MIME dan ukuran file di sisi server
             'photos.*'       => 'nullable|image|mimes:jpeg,jpg,png|max:2048',
         ]);
 
-        // Masukin datanya ke database dengan status awal 'pending'
+        // Simpan data pengajuan dengan status awal 'pending' (menunggu review admin)
         $submission = VendorSubmission::create([
             'vendor_id'      => $vendor->id,
             'nama_barang'    => $validated['nama_barang'],
@@ -74,10 +99,10 @@ class VendorSubmissionController extends Controller
             'status'         => 'pending',
         ]);
 
-        // Kalo dia upload foto, kita simpen ke folder public/submission-photos
+        // Simpan setiap foto ke disk public dan catat path-nya di database
         if ($request->hasFile('photos')) {
             foreach ($request->file('photos') as $photo) {
-                $filename = $photo->hashName();
+                $filename = $photo->hashName(); // Nama file di-hash untuk menghindari collision
                 $path     = $photo->storeAs('submission-photos', $filename, 'public');
                 $url      = Storage::disk('public')->url($path);
 
@@ -94,8 +119,7 @@ class VendorSubmissionController extends Controller
         );
     }
 
-    // Private Helpers
-
+    // Helper privat: format data submission ke bentuk array yang konsisten untuk response
     private function formatSubmission(VendorSubmission $s): array
     {
         return [
@@ -117,4 +141,3 @@ class VendorSubmissionController extends Controller
         ];
     }
 }
-

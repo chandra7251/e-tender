@@ -13,9 +13,11 @@ class TenderResultController extends Controller
 {
     use ApiResponse;
 
-    // Ngambil detail hasil tender (biasanya ada data pemenang dsb)
+    // Tampilkan hasil tender (pemenang, metode seleksi, dll)
+    // Dapat diakses semua vendor yang sudah login — transparansi pengadaan
     public function show(Tender $tender): JsonResponse
     {
+        // Eager-load relasi winner untuk menghindari lazy-load di dalam Resource
         $result = $tender->result()->with(['winner'])->first();
 
         if (!$result) {
@@ -25,22 +27,27 @@ class TenderResultController extends Controller
         return $this->success(new TenderResultResource($result));
     }
 
-    // Buat ngecek spesifik info pemenangnya sapa dan si vendor ini menang apa ngga
+    // Tampilkan info pemenang + perbandingan bid vendor yang login
     public function winner(Tender $tender): JsonResponse
     {
+        // Eager-load winner agar tidak ada query tambahan saat akses $result->winner
         $result = $tender->result()->with(['winner'])->first();
 
         if (!$result) {
             return $this->error('Pemenang belum ditentukan.', null, 404);
         }
 
-        $vendor    = auth('api')->user()?->vendor;
-        $isWinner  = $vendor ? ($result->winner_vendor_id === $vendor->id) : false;
+        // Vendor bisa null jika token valid tapi vendor record tidak ada (edge case)
+        $vendor   = auth('api')->user()?->vendor;
+        $isWinner = $vendor && ($result->winner_vendor_id === $vendor->id);
 
-        // Ambil data bid sendiri buat dibandingin sama bid pemenang (biar ga kepo banget wkwk)
-        $myBid = Bid::where('tender_id', $tender->id)
-            ->where('vendor_id', $vendor->id)
-            ->first();
+        // Ambil bid milik vendor yang login — null jika vendor tidak ada atau belum bid
+        // Null check eksplisit untuk mencegah crash ketika $vendor null
+        $myBid = $vendor
+            ? Bid::where('tender_id', $tender->id)
+                ->where('vendor_id', $vendor->id)
+                ->first()
+            : null;
 
         return $this->success([
             'winner_company'     => $result->winner->company_name ?? null,
@@ -48,8 +55,8 @@ class TenderResultController extends Controller
             'selection_method'   => $result->selection_method,
             'decided_at'         => $result->decided_at?->toIso8601String(),
             'is_winner'          => $isWinner,
+            // Null jika vendor tidak ada atau belum pernah bid di tender ini
             'my_bid_amount'      => $myBid ? (float) $myBid->bid_amount : null,
         ]);
     }
 }
-
