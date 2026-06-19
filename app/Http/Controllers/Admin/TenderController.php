@@ -9,6 +9,7 @@ use App\Models\Tender;
 use App\Models\TenderHistory;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\View\View;
 
@@ -64,11 +65,33 @@ class TenderController extends Controller
         ]);
 
         // Handle multi-photo upload
+        // CATATAN: Jika upload gagal diam-diam (PHP post_max_size terlampaui),
+        // $request->hasFile() akan false dan section ini di-skip.
+        // Cek php.ini: upload_max_filesize dan post_max_size harus ≥ jumlah total foto.
         if ($request->hasFile('photos')) {
             foreach ($request->file('photos') as $photo) {
+                // store() mengembalikan false jika gagal simpan ke disk
                 $path = $photo->store('tenders/photos', 'public');
+
+                if ($path === false) {
+                    // Gagal simpan ke storage — log error dan lanjutkan ke foto berikutnya
+                    Log::error('Gagal simpan foto tender ke storage', [
+                        'tender_id'     => $tender->id,
+                        'original_name' => $photo->getClientOriginalName(),
+                        'size'          => $photo->getSize(),
+                    ]);
+                    continue;
+                }
+
                 $tender->photos()->create(['photo_path' => $path]);
             }
+        } else {
+            // Log untuk bantu diagnosa: cek apakah photo field ada di request
+            Log::debug('Admin store tender: tidak ada file foto di request', [
+                'tender_id'    => $tender->id,
+                'has_photos'   => $request->has('photos'),
+                'content_type' => $request->header('Content-Type'),
+            ]);
         }
 
         TenderHistory::create([
@@ -135,7 +158,17 @@ class TenderController extends Controller
             }
 
             foreach ($request->file('photos') as $photo) {
+                // store() mengembalikan false jika gagal simpan ke disk
                 $path = $photo->store('tenders/photos', 'public');
+
+                if ($path === false) {
+                    Log::error('Gagal simpan foto tender ke storage (update)', [
+                        'tender_id'     => $tender->id,
+                        'original_name' => $photo->getClientOriginalName(),
+                    ]);
+                    continue;
+                }
+
                 $tender->photos()->create(['photo_path' => $path]);
             }
         }

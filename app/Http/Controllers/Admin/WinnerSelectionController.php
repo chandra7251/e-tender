@@ -9,6 +9,8 @@ use App\Models\Tender;
 use App\Models\TenderHistory;
 use App\Models\TenderResult;
 use Illuminate\Http\RedirectResponse;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 use Illuminate\View\View;
 
 class WinnerSelectionController extends Controller
@@ -51,7 +53,9 @@ class WinnerSelectionController extends Controller
 
     /**
      * Store the selected winner.
-     * FIX BUG-01: Guard status + FIX LOW-02: eager load vendor.
+     * - Atomik dalam DB transaction
+     * - Auto-set status tender ke 'finished' setelah winner dipilih
+     * - Kirim notifikasi ke semua peserta
      */
     public function store(WinnerSelectionRequest $request, Tender $tender): RedirectResponse
     {
@@ -65,36 +69,68 @@ class WinnerSelectionController extends Controller
         // Guard: winner sudah ada
         abort_if($tender->result()->exists(), 422, 'Pemenang tender sudah dipilih.');
 
-        // FIX LOW-02: eager load vendor agar tidak N+1 saat generate description
+        // Eager load vendor agar tidak N+1 saat generate description
         $bid = Bid::with('vendor')->findOrFail($request->input('bid_id'));
 
         // Pastikan bid milik tender ini
         abort_if($bid->tender_id !== $tender->id, 422, 'Bid tidak berasal dari tender ini.');
 
-        TenderResult::create([
-            'tender_id'          => $tender->id,
-            'winner_vendor_id'   => $bid->vendor_id,
-            'winning_bid_id'     => $bid->id,
-            'winning_bid_amount' => $bid->bid_amount,
-            'selection_method'   => $request->input('selection_method'),
-            'notes'              => $request->input('notes'),
-            'decided_by'         => auth()->id(),
-            'decided_at'         => now(),
-        ]);
+        try {
+            DB::transaction(function () use ($tender, $bid, $request) {
+                // 1. Simpan hasil pemenang
+                TenderResult::create([
+                    'tender_id'          => $tender->id,
+                    'winner_vendor_id'   => $bid->vendor_id,
+                    'winning_bid_id'     => $bid->id,
+                    'winning_bid_amount' => $bid->bid_amount,
+                    'selection_method'   => $request->input('selection_method'),
+                    'notes'              => $request->input('notes'),
+                    'decided_by'         => auth()->id(),
+                    'decided_at'         => now(),
+                ]);
 
-        TenderHistory::create([
-            'tender_id'   => $tender->id,
-            'actor_id'    => auth()->id(),
-            'action'      => 'winner_selected',
-            'old_status'  => $tender->status,
-            'new_status'  => $tender->status,
-            'description' => "Pemenang dipilih: {$bid->vendor->company_name}, "
-                           . "bid Rp " . number_format($bid->bid_amount, 0, ',', '.'),
-            'created_at'  => now(),
-        ]);
+                // 2. Auto-set status ke 'finished' — tidak perlu admin ubah manual
+                $tender->update(['status' => 'finished']);
+
+                // 3. Catat di history dengan transisi status yang benar
+                TenderHistory::create([
+                    'tender_id'   => $tender->id,
+                    'actor_id'    => auth()->id(),
+                    'action'      => 'winner_selected',
+                    'old_status'  => 'closed',
+                    'new_status'  => 'finished', // status sudah otomatis berubah
+                    'description' => "Pemenang dipilih: {$bid->vendor->company_name}, "
+                                   . "bid Rp " . number_format($bid->bid_amount, 0, ',', '.')
+                                   . ". Status tender diubah ke 'finished'.",
+                    'created_at'  => now(),
+                ]);
+
+                // 4. Notifikasi ke semua peserta tender
+                $participants = $tender->participants()->with('vendor.user')->get();
+                $usersToNotify = $participants->pluck('vendor.user')->filter();
+
+                if ($usersToNotify->isNotEmpty()) {
+                    \Illuminate\Support\Facades\Notification::send(
+                        $usersToNotify,
+                        new \App\Notifications\TenderStatusChanged(
+                            $tender, 'closed', 'finished',
+                            "Pemenang tender telah dipilih: {$bid->vendor->company_name}."
+                        )
+                    );
+                }
+            });
+        } catch (\Throwable $e) {
+            Log::error('Gagal simpan winner tender', [
+                'tender_id' => $tender->id,
+                'bid_id'    => $bid->id,
+                'error'     => $e->getMessage(),
+            ]);
+
+            return back()->with('error', 'Terjadi kesalahan saat menyimpan pemenang. Silakan coba lagi.');
+        }
 
         return redirect()
             ->route('admin.tenders.result.show', $tender)
-            ->with('success', 'Pemenang tender berhasil dipilih.');
+            ->with('success', "Pemenang berhasil dipilih. Status tender diubah ke 'finished'.");
     }
 }

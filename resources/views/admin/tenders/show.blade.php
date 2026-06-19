@@ -212,16 +212,26 @@
                     @method('PATCH')
                     <div class="mb-4">
                         <label for="status" class="mb-2 block text-sm font-medium text-indigo-200">Status Baru</label>
+                        @if ($tender->status === 'finished')
+                            {{-- 'finished' hanya bisa diset otomatis saat pilih pemenang, bukan via form ini --}}
+                            <div class="flex items-center gap-2 rounded-md border border-[#4A6BCC] bg-[#2B438A] px-4 py-2.5">
+                                <span class="inline-block h-2.5 w-2.5 rounded-full bg-purple-500"></span>
+                                <span class="text-sm font-semibold text-white">Finished</span>
+                                <span class="ml-auto text-xs text-indigo-300">Status final — diubah otomatis saat pilih pemenang</span>
+                            </div>
+                        @else
                         <select id="status" name="status"
                                 class="w-full rounded-md border border-[#4A6BCC] bg-[#2B438A] px-4 py-2.5 text-sm
                                        text-white outline-none focus:border-white focus:ring-1 focus:ring-white
                                        @error('status') border-red-400 @enderror">
-                            @foreach (['draft','open','aanwijzing','bidding','closed','finished'] as $s)
+                            {{-- 'finished' tidak ada di sini — diset otomatis via WinnerSelectionController --}}
+                            @foreach (['draft','open','aanwijzing','bidding','closed'] as $s)
                                 <option value="{{ $s }}" {{ $tender->status === $s ? 'selected' : '' }}>
                                     {{ ucfirst($s) }}
                                 </option>
                             @endforeach
                         </select>
+                        @endif
                         @error('status')<p class="mt-1 text-xs text-red-300">{{ $message }}</p>@enderror
                     </div>
                     <div class="mb-6">
