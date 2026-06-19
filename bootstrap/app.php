@@ -15,10 +15,10 @@ return Application::configure(basePath: dirname(__DIR__))
     ->withMiddleware(function (Middleware $middleware): void {
         // Mencegah redirect ke 'login' web untuk request API
         $middleware->redirectGuestsTo(function (\Illuminate\Http\Request $request) {
-            if ($request->is('api/*')) {
-                return null;
+            if ($request->is('api/*') || $request->expectsJson() || $request->header('Authorization')) {
+                return null; // Return 401 JSON response
             }
-            return route('login');
+            return route('admin.login'); // Ganti 'login' jadi 'admin.login' karena route 'login' tidak ada
         });
 
         // Pastikan CORS middleware aktif untuk semua request (termasuk OPTIONS preflight dari Capacitor)
