@@ -45,6 +45,7 @@ class TenderResource extends JsonResource
             'open_bidding_price' => $this->open_bidding_price,
             // Ambil URL foto pertama saja — foto sudah di-eager load via with('photos')
             'photo_url'          => $this->photos->first()?->photo_url,
+            'photos'             => $this->photos->map(fn($photo) => $photo->photo_url)->values()->toArray(),
             'status'             => $this->status,
             'start_date'         => $this->start_date?->toIso8601String(),
             'end_date'           => $this->end_date?->toIso8601String(),
