@@ -15,16 +15,18 @@
         Kembali ke Detail Tender
     </a>
 
-    {{-- Tender title --}}
-    <div class="rounded-xl bg-[#3553A8] px-5 py-4 shadow-sm">
-        <p class="text-xs text-indigo-200">Tender</p>
-        <p class="mt-0.5 text-base font-bold text-white">{{ $tender->title }}</p>
-    </div>
-
-    <form method="POST" action="{{ route('admin.tenders.winner.store', $tender) }}" class="space-y-6">
+    <form method="POST" action="{{ route('admin.tenders.winner.store', $tender) }}" class="grid grid-cols-1 xl:grid-cols-3 gap-6">
         @csrf
 
-        @if ($errors->any())
+        {{-- Kolom Kiri --}}
+        <div class="xl:col-span-2 space-y-6">
+            {{-- Tender title --}}
+            <div class="rounded-xl bg-[#3553A8] px-5 py-4 shadow-sm">
+                <p class="text-xs text-indigo-200">Tender</p>
+                <p class="mt-0.5 text-base font-bold text-white">{{ $tender->title }}</p>
+            </div>
+
+            @if ($errors->any())
             <div class="rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
                 <ul class="list-disc list-inside space-y-0.5">
                     @foreach ($errors->all() as $error)
@@ -125,9 +127,12 @@
                 </table>
             </div>
         </div>
+        </div> {{-- End Kolom Kiri --}}
 
-        {{-- Selection method & notes --}}
-        <div class="rounded-xl bg-[#3553A8] shadow-sm p-6 space-y-4">
+        {{-- Kolom Kanan --}}
+        <div class="xl:col-span-1 space-y-6">
+            {{-- Selection method & notes --}}
+            <div class="rounded-xl bg-[#3553A8] shadow-sm p-6 space-y-4">
             <div>
                 <label for="selection_method" class="mb-1.5 block text-sm font-bold text-white">
                     Metode Seleksi <span class="text-red-300">*</span>
@@ -164,6 +169,7 @@
                 ✓ Tetapkan Pemenang
             </button>
         </div>
+        </div> {{-- End Kolom Kanan --}}
     </form>
 
 </div>
