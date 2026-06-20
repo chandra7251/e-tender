@@ -62,7 +62,7 @@ class TenderController extends Controller
     {
         // Draft tidak boleh diakses vendor — return 404 agar tidak bocor info draft
         if ($tender->status === 'draft') {
-            return $this->error('Tender tidak ditemukan.', null, 404);
+            return $this->error('Tender tidak ditemukan.', null, 200);
         }
 
         // Untuk detail individual, is_participant di-query langsung di Resource (1 tender = 1 query)

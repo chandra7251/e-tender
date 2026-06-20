@@ -40,7 +40,6 @@ Route::post('email/resend', [AuthController::class, 'resendVerificationEmail'])-
 Route::get('tenders',        [TenderController::class, 'index'])->name('api.tenders.index');
 Route::get('tenders/{tender}', [TenderController::class, 'show'])->name('api.tenders.show');
 
-// ── Protected: Require vendor JWT token ─────────────────────────────────────────
 Route::middleware('auth:api')->group(function () {
 
     // Auth actions

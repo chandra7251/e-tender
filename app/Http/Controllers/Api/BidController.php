@@ -47,7 +47,7 @@ class BidController extends Controller
             ->first();
 
         if (!$bid) {
-            return $this->error('Anda belum mengajukan bid pada tender ini.', null, 404);
+            return $this->error('Anda belum mengajukan bid pada tender ini.', null, 200);
         }
 
         return $this->success(new BidResource($bid));
@@ -88,7 +88,7 @@ class BidController extends Controller
 
         // Pastikan bid memang milik vendor ini di tender yang benar — cegah edit bid orang lain
         if ($bid->vendor_id !== $vendor->id || $bid->tender_id !== $tender->id) {
-            return $this->error('Bid tidak ditemukan.', null, 404);
+            return $this->error('Bid tidak ditemukan.', null, 200);
         }
 
         try {
