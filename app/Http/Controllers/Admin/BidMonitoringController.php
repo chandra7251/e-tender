@@ -9,9 +9,6 @@ use Illuminate\View\View;
 
 class BidMonitoringController extends Controller
 {
-    /**
-     * Show all bids for a specific tender, sorted by bid_amount ascending.
-     */
     public function index(Tender $tender): View
     {
         $bids = $tender->bids()
@@ -19,18 +16,13 @@ class BidMonitoringController extends Controller
             ->orderBy('bid_amount', 'asc')
             ->get();
 
-        // The lowest bid is the first item (since sorted asc), if any bids exist.
         $lowestBidId = $bids->first()?->id;
 
         return view('admin.bids.index', compact('tender', 'bids', 'lowestBidId'));
     }
 
-    /**
-     * Show the history of a specific bid.
-     */
     public function histories(Tender $tender, Bid $bid): View
     {
-        // Ensure the bid belongs to this tender.
         abort_if($bid->tender_id !== $tender->id, 404);
 
         $histories = $bid->histories()

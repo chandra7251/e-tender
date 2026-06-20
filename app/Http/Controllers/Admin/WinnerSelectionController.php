@@ -21,26 +21,24 @@ class WinnerSelectionController extends Controller
      */
     public function create(Tender $tender): View
     {
-        // Guard: hanya bisa pilih winner saat tender sudah closed
-        abort_if(
-            $tender->status !== 'closed',
-            422,
-            "Pemenang hanya bisa dipilih saat tender berstatus 'closed'. Status saat ini: '{$tender->status}'."
-        );
+        // hanya bisa pilih winner saat tender sudah closed
+        if ($tender->status !== 'closed') {
+            return redirect()->route('admin.tenders.show', $tender)
+                ->with('error', "Pemenang hanya bisa dipilih saat tender berstatus 'closed'. Status saat ini: '{$tender->status}'.");
+        }
 
-        // Guard: winner sudah pernah dipilih
-        abort_if($tender->result()->exists(), 422, 'Pemenang tender sudah dipilih sebelumnya.');
+        // winner sudah pernah dipilih
+        if ($tender->result()->exists()) {
+            return redirect()->route('admin.tenders.show', $tender)
+                ->with('error', 'Pemenang tender sudah dipilih sebelumnya.');
+        }
 
-        // Guard: tidak ada bid
-        abort_if($tender->bids()->count() === 0, 422, 'Tender belum memiliki bid.');
+        // tidak ada bid
+        if ($tender->bids()->count() === 0) {
+            return redirect()->back()
+                ->with('error', 'Tender belum memiliki bid.');
+        }
 
-        // ─── Tie-breaker Order ─────────────────────────────────────────────────
-        // Jika dua vendor punya bid_amount yang sama:
-        //   1. submitted_at ASC  → siapa yang submit duluan (presisi microsecond)
-        //   2. ulid ASC          → tie-breaker akhir (ULID encode timestamp milidetik + random)
-        //
-        // Bid di posisi [0] pada $bids adalah pemenang "natural" jika admin memilih
-        // berdasarkan nilai terendah + waktu tercepat.
         $bids = $tender->bids()
             ->with(['vendor.user'])
             ->orderBy('bid_amount', 'asc')
@@ -51,33 +49,31 @@ class WinnerSelectionController extends Controller
         return view('admin.winners.create', compact('tender', 'bids'));
     }
 
-    /**
-     * Store the selected winner.
-     * - Atomik dalam DB transaction
-     * - Auto-set status tender ke 'finished' setelah winner dipilih
-     * - Kirim notifikasi ke semua peserta
-     */
+
     public function store(WinnerSelectionRequest $request, Tender $tender): RedirectResponse
     {
-        // Guard: status harus closed
-        abort_if(
-            $tender->status !== 'closed',
-            422,
-            "Pemenang hanya bisa dipilih saat tender berstatus 'closed'."
-        );
+        // status harus closed
+        if ($tender->status !== 'closed') {
+            return redirect()->route('admin.tenders.show', $tender)
+                ->with('error', "Pemenang hanya bisa dipilih saat tender berstatus 'closed'.");
+        }
 
-        // Guard: winner sudah ada
-        abort_if($tender->result()->exists(), 422, 'Pemenang tender sudah dipilih.');
+        // winner sudah ada
+        if ($tender->result()->exists()) {
+            return redirect()->route('admin.tenders.show', $tender)
+                ->with('error', 'Pemenang tender sudah dipilih.');
+        }
 
-        // Eager load vendor agar tidak N+1 saat generate description
         $bid = Bid::with('vendor')->findOrFail($request->input('bid_id'));
 
         // Pastikan bid milik tender ini
-        abort_if($bid->tender_id !== $tender->id, 422, 'Bid tidak berasal dari tender ini.');
+        if ($bid->tender_id !== $tender->id) {
+            return redirect()->back()->with('error', 'Bid tidak berasal dari tender ini.');
+        }
 
         try {
             DB::transaction(function () use ($tender, $bid, $request) {
-                // 1. Simpan hasil pemenang
+                // Simpan hasil pemenang
                 TenderResult::create([
                     'tender_id'          => $tender->id,
                     'winner_vendor_id'   => $bid->vendor_id,
@@ -89,23 +85,23 @@ class WinnerSelectionController extends Controller
                     'decided_at'         => now(),
                 ]);
 
-                // 2. Auto-set status ke 'finished' — tidak perlu admin ubah manual
+                // Auto-set status ke finished
                 $tender->update(['status' => 'finished']);
 
-                // 3. Catat di history dengan transisi status yang benar
+                // Catat di history
                 TenderHistory::create([
                     'tender_id'   => $tender->id,
                     'actor_id'    => auth()->id(),
                     'action'      => 'winner_selected',
                     'old_status'  => 'closed',
-                    'new_status'  => 'finished', // status sudah otomatis berubah
+                    'new_status'  => 'finished',
                     'description' => "Pemenang dipilih: {$bid->vendor->company_name}, "
                                    . "bid Rp " . number_format($bid->bid_amount, 0, ',', '.')
                                    . ". Status tender diubah ke 'finished'.",
                     'created_at'  => now(),
                 ]);
 
-                // 4. Notifikasi ke semua peserta tender
+                // Notifikasi ke semua peserta tender
                 $participants = $tender->participants()->with('vendor.user')->get();
                 $usersToNotify = $participants->pluck('vendor.user')->filter();
 

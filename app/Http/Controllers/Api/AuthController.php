@@ -49,7 +49,6 @@ class AuthController extends Controller
             return $this->error('Registrasi gagal. Silakan coba lagi atau hubungi admin.', null, 500);
         }
 
-        // Kirim email verifikasi, tapi jangan gagalkan registrasi jika SMTP error
         try {
             $user->sendEmailVerificationNotification();
         } catch (\Exception $e) {

@@ -65,7 +65,6 @@ class BidController extends Controller
             // Validasi: tender harus sedang dalam periode bidding aktif
             $this->biddingService->assertBiddingOpen($tender);
         } catch (\RuntimeException $e) {
-            // RuntimeException dari BiddingService sudah berisi kode HTTP yang sesuai
             return $this->error($e->getMessage(), null, $e->getCode() ?: 422);
         }
 

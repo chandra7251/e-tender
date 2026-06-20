@@ -55,26 +55,17 @@ class TenderController extends Controller
     {
         $data = $request->validated();
 
-        // tidak ada kolom 'photo' lagi di validasi, dihapus
-
-        // Status awal draft
         $tender = Tender::create([
             ...$data,
             'created_by' => auth()->id(),
             'status'     => 'draft',
         ]);
 
-        // Handle multi-photo upload
-        // CATATAN: Jika upload gagal diam-diam (PHP post_max_size terlampaui),
-        // $request->hasFile() akan false dan section ini di-skip.
-        // Cek php.ini: upload_max_filesize dan post_max_size harus ≥ jumlah total foto.
         if ($request->hasFile('photos')) {
             foreach ($request->file('photos') as $photo) {
-                // store() mengembalikan false jika gagal simpan ke disk
                 $path = $photo->store('tenders/photos', 'public');
 
                 if ($path === false) {
-                    // Gagal simpan ke storage — log error dan lanjutkan ke foto berikutnya
                     Log::error('Gagal simpan foto tender ke storage', [
                         'tender_id'     => $tender->id,
                         'original_name' => $photo->getClientOriginalName(),
@@ -86,7 +77,6 @@ class TenderController extends Controller
                 $tender->photos()->create(['photo_path' => $path]);
             }
         } else {
-            // Log untuk bantu diagnosa: cek apakah photo field ada di request
             Log::debug('Admin store tender: tidak ada file foto di request', [
                 'tender_id'    => $tender->id,
                 'has_photos'   => $request->has('photos'),

@@ -40,13 +40,11 @@ class TenderParticipantController extends Controller
     {
         $user   = auth('api')->user();
 
-        // Null guard: pastikan user punya vendor record sebelum lanjut
         $vendor = $user?->vendor;
         if (!$vendor) {
             return $this->error('Profil vendor tidak ditemukan. Silakan hubungi admin.', null, 403);
         }
 
-        // Hanya vendor yang sudah diverifikasi admin yang boleh ikut tender
         if ($vendor->verification_status !== 'approved') {
             return $this->error(
                 'Vendor belum diverifikasi. Tunggu persetujuan admin.',

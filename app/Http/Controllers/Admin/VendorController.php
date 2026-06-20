@@ -48,9 +48,6 @@ class VendorController extends Controller
         return view('admin.vendors.show', compact('vendor'));
     }
 
-    /**
-     * Approve a vendor.
-     */
     public function approve(VendorVerificationRequest $request, Vendor $vendor): RedirectResponse
     {
         $vendor->update([
@@ -60,7 +57,6 @@ class VendorController extends Controller
             'verified_at'         => now(),
         ]);
 
-        // Log vendor_approved
         $this->logVendorEvent($vendor, 'vendor_approved',
             "Vendor {$vendor->company_name} diapprove oleh admin."
         );
@@ -70,9 +66,7 @@ class VendorController extends Controller
             ->with('success', "Vendor {$vendor->company_name} berhasil diapprove.");
     }
 
-    /**
-     * Reject a vendor.
-     */
+
     public function reject(VendorVerificationRequest $request, Vendor $vendor): RedirectResponse
     {
         $vendor->update([
@@ -82,7 +76,6 @@ class VendorController extends Controller
             'verified_at'         => now(),
         ]);
 
-        // Log vendor_rejected
         $this->logVendorEvent($vendor, 'vendor_rejected',
             "Vendor {$vendor->company_name} direject oleh admin." .
             ($request->notes ? " Alasan: {$request->notes}" : '')

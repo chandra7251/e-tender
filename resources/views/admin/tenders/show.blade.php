@@ -46,7 +46,7 @@
                           hover:bg-indigo-50 transition-colors duration-150">
                     ★ Hasil
                 </a>
-            @else
+            @elseif ($tender->status === 'closed')
                 <a href="{{ route('admin.tenders.winner.create', $tender) }}"
                    class="inline-flex items-center gap-2 rounded-md bg-white border border-[#3553A8] px-4 py-2 text-sm font-bold text-[#3553A8]
                           hover:bg-indigo-50 transition-colors duration-150">

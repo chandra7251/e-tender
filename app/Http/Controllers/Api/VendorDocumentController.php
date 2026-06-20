@@ -45,10 +45,9 @@ class VendorDocumentController extends Controller
         return $this->success($documents);
     }
 
-    // Upload dokumen baru (KTP, NPWP, SIUP, dll)
+    // Upload dokumen
     public function store(VendorDocumentRequest $request): JsonResponse
     {
-        // Null guard: cegah crash jika user tidak punya vendor record
         $vendor = $this->resolveVendor();
         if (!$vendor) {
             return $this->error('Profil vendor tidak ditemukan.', null, 404);
@@ -56,11 +55,9 @@ class VendorDocumentController extends Controller
 
         $file = $request->file('file');
 
-        // Simpan file menggunakan nama yang di-hash untuk keamanan (cegah path traversal)
         $hashedName = $file->hashName();
         $path       = $file->storeAs("vendor-documents/{$vendor->id}", $hashedName, 'local');
 
-        // Simpan metadata dokumen ke database
         $document = VendorDocument::create([
             'vendor_id'     => $vendor->id,
             'document_type' => $request->input('document_type'),

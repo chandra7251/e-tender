@@ -18,16 +18,19 @@ class PurchaseOrderController extends Controller
     public function create(Tender $tender): View
     {
         // Validasi status tender
-        abort_if(
-            $tender->status !== 'finished',
-            422,
-            "PO hanya bisa dibuat setelah tender berstatus 'finished'. Status saat ini: '{$tender->status}'."
-        );
+        if ($tender->status !== 'finished') {
+            return redirect()->back()->with('error', "PO hanya bisa dibuat setelah tender berstatus 'finished'. Status saat ini: '{$tender->status}'.");
+        }
 
         $result = $tender->result()->with(['winner'])->first();
 
-        abort_if(is_null($result), 422, 'Pilih pemenang tender terlebih dahulu sebelum membuat PO.');
-        abort_if($tender->purchaseOrder()->exists(), 422, 'PO untuk tender ini sudah dibuat.');
+        if (is_null($result)) {
+            return redirect()->back()->with('error', 'Pilih pemenang tender terlebih dahulu sebelum membuat PO.');
+        }
+        
+        if ($tender->purchaseOrder()->exists()) {
+            return redirect()->back()->with('error', 'PO untuk tender ini sudah dibuat.');
+        }
 
         // Suggest a PO number
         $suggestedPoNumber = 'PO-' . strtoupper(substr(md5($tender->id . now()), 0, 8));
@@ -41,16 +44,19 @@ class PurchaseOrderController extends Controller
     public function store(PurchaseOrderRequest $request, Tender $tender): RedirectResponse
     {
         // Validasi status tender
-        abort_if(
-            $tender->status !== 'finished',
-            422,
-            "PO hanya bisa dibuat setelah tender berstatus 'finished'."
-        );
+        if ($tender->status !== 'finished') {
+            return redirect()->back()->with('error', "PO hanya bisa dibuat setelah tender berstatus 'finished'.");
+        }
 
         $result = $tender->result()->with(['winner'])->first();
 
-        abort_if(is_null($result), 422, 'Pilih pemenang tender terlebih dahulu.');
-        abort_if($tender->purchaseOrder()->exists(), 422, 'PO untuk tender ini sudah ada.');
+        if (is_null($result)) {
+            return redirect()->back()->with('error', 'Pilih pemenang tender terlebih dahulu.');
+        }
+        
+        if ($tender->purchaseOrder()->exists()) {
+            return redirect()->back()->with('error', 'PO untuk tender ini sudah ada.');
+        }
 
         PurchaseOrder::create([
             'tender_result_id' => $result->id,
@@ -97,13 +103,25 @@ class PurchaseOrderController extends Controller
     {
         $po = $tender->purchaseOrder()->with(['vendor.user', 'tender', 'generator'])->first();
 
-        abort_if(is_null($po), 404, 'PO belum dibuat untuk tender ini.');
+        if (is_null($po)) {
+            return redirect()->back()->with('error', 'PO belum dibuat untuk tender ini.');
+        }
 
-        $pdf = \Barryvdh\DomPDF\Facade\Pdf::loadView('admin.purchase-orders.pdf', compact('tender', 'po'));
+        try {
+            $pdf = \Barryvdh\DomPDF\Facade\Pdf::loadView('admin.purchase-orders.pdf', compact('tender', 'po'));
 
-        // Output configuration
-        $pdf->setPaper('A4', 'portrait');
+            // Output configuration
+            $pdf->setPaper('A4', 'portrait');
 
-        return $pdf->download("PO-{$po->po_number}.pdf");
+            return $pdf->download("PO-{$po->po_number}.pdf");
+        } catch (\Throwable $e) {
+            \Illuminate\Support\Facades\Log::error('Gagal generate PDF PO', [
+                'tender_id' => $tender->id,
+                'po_id'     => $po->id,
+                'error'     => $e->getMessage(),
+            ]);
+
+            return redirect()->back()->with('error', 'Gagal mengunduh PDF. Pastikan ekstensi server mendukung atau coba beberapa saat lagi.');
+        }
     }
 }
