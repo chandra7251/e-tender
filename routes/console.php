@@ -18,5 +18,5 @@ Artisan::command('inspire', function () {
 // karena tidak kompatibel dengan Windows dan rawan stale-mutex saat command crash.
 // Untuk produksi (Linux/aaPanel), kedua flag ini aman ditambahkan kembali.
 Schedule::command(UpdateTenderStatuses::class)
-    ->everyFiveMinutes()
+    ->everyMinute()
     ->appendOutputTo(storage_path('logs/update-tender-statuses.log'));
