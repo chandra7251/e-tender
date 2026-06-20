@@ -87,6 +87,8 @@ Route::prefix('admin')->name('admin.')->group(function () {
             ->name('tenders.purchase-order.store');
         Route::get('tenders/{tender}/purchase-order', [PurchaseOrderController::class, 'show'])
             ->name('tenders.purchase-order.show');
+        Route::get('tenders/{tender}/purchase-order/pdf', [PurchaseOrderController::class, 'downloadPdf'])
+            ->name('tenders.purchase-order.pdf');
 
         // ── Tender History ───────────────────────────────────────────────────
         Route::get('tenders/{tender}/histories', [TenderHistoryController::class, 'index'])

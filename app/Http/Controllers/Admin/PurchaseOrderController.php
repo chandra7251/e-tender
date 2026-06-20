@@ -89,4 +89,21 @@ class PurchaseOrderController extends Controller
 
         return view('admin.purchase-orders.show', compact('tender', 'po'));
     }
+
+    /**
+     * Download the Purchase Order as PDF.
+     */
+    public function downloadPdf(Tender $tender)
+    {
+        $po = $tender->purchaseOrder()->with(['vendor.user', 'tender', 'generator'])->first();
+
+        abort_if(is_null($po), 404, 'PO belum dibuat untuk tender ini.');
+
+        $pdf = \Barryvdh\DomPDF\Facade\Pdf::loadView('admin.purchase-orders.pdf', compact('tender', 'po'));
+
+        // Output configuration
+        $pdf->setPaper('A4', 'portrait');
+
+        return $pdf->download("PO-{$po->po_number}.pdf");
+    }
 }
