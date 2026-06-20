@@ -47,11 +47,19 @@
                     ★ Hasil
                 </a>
             @elseif ($tender->status === 'closed')
-                <a href="{{ route('admin.tenders.winner.create', $tender) }}"
-                   class="inline-flex items-center gap-2 rounded-md bg-white border border-[#3553A8] px-4 py-2 text-sm font-bold text-[#3553A8]
-                          hover:bg-indigo-50 transition-colors duration-150">
-                    Pilih Winner
-                </a>
+                @if ($tender->bids->count() > 0)
+                    <a href="{{ route('admin.tenders.winner.create', $tender) }}"
+                       class="inline-flex items-center gap-2 rounded-md bg-white border border-[#3553A8] px-4 py-2 text-sm font-bold text-[#3553A8]
+                              hover:bg-indigo-50 transition-colors duration-150">
+                        Pilih Winner
+                    </a>
+                @else
+                    <button type="button" disabled
+                       class="inline-flex items-center gap-2 rounded-md bg-gray-200 border border-gray-300 px-4 py-2 text-sm font-bold text-gray-500 cursor-not-allowed"
+                       title="Tender belum memiliki bid, tidak bisa pilih pemenang">
+                        Pilih Winner (Tidak ada Bid)
+                    </button>
+                @endif
             @endif
 
             <a href="{{ route('admin.tenders.histories.index', $tender) }}"

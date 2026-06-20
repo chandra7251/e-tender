@@ -19,7 +19,7 @@ class WinnerSelectionController extends Controller
      * Show the winner selection form.
      * FIX BUG-01: Tender harus berstatus 'closed' sebelum winner bisa dipilih.
      */
-    public function create(Tender $tender): View
+    public function create(Tender $tender): View|RedirectResponse
     {
         // hanya bisa pilih winner saat tender sudah closed
         if ($tender->status !== 'closed') {
