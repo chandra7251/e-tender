@@ -4,7 +4,7 @@
 @section('page-title', 'Pilih Pemenang Tender')
 
 @section('content')
-<div class="max-w-3xl space-y-6">
+<div class="w-full space-y-6">
 
     <a href="{{ route('admin.tenders.show', $tender) }}"
        class="inline-flex items-center gap-1.5 text-sm text-gray-500 hover:text-gray-800 transition-colors font-medium">
