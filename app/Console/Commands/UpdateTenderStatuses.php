@@ -147,7 +147,7 @@ class UpdateTenderStatuses extends Command
         return $dryRun ? 0 : $tenders->count();
     }
 
-    // ─── Fase 4: bidding → finished | closed ─────────────────────────────────
+    // ─── Fase 4: bidding → closed ────────────────────────────────────────────
 
     private function closeBiddingTenders(bool $dryRun): int
     {
@@ -161,49 +161,23 @@ class UpdateTenderStatuses extends Command
             return 0;
         }
 
-        $this->info("📋 [bidding → finished|closed] Ditemukan {$tenders->count()} tender:");
+        $this->info("📋 [bidding → closed] Ditemukan {$tenders->count()} tender:");
 
         $changed = 0;
 
         foreach ($tenders as $tender) {
             $hasBids = $tender->bids->isNotEmpty();
 
-            if (!$hasBids) {
-                // Tidak ada bid sama sekali → closed
-                $this->line("   • #{$tender->id} \"{$tender->title}\" → closed (tidak ada bid)");
+            $this->line("   • #{$tender->id} \"{$tender->title}\" → closed (" . ($hasBids ? "ada bid, menunggu pilihan admin" : "tidak ada bid") . ")");
 
-                if (!$dryRun) {
+            if (!$dryRun) {
+                if (!$hasBids) {
                     $this->applyTransition($tender, 'bidding', 'closed',
                         "Tender telah ditutup (Closed) karena tidak ada penawaran yang masuk selama masa bidding."
                     );
-                }
-            } else {
-                // Ada bid → pilih pemenang (tertinggi), lalu finished
-                $winningBid = $tender->bids
-                    ->sortByDesc('bid_amount')
-                    ->sortBy('submitted_at') // tie-breaker: submitted lebih awal menang jika amount sama
-                    ->first();
-
-                $this->line("   • #{$tender->id} \"{$tender->title}\" → finished (pemenang: vendor #{$winningBid->vendor_id}, Rp " . number_format($winningBid->bid_amount, 0, ',', '.') . ")");
-
-                if (!$dryRun) {
-                    // Buat TenderResult jika belum ada (admin belum pilih manual)
-                    if (!$tender->result) {
-                        TenderResult::create([
-                            'tender_id'          => $tender->id,
-                            'winner_vendor_id'   => $winningBid->vendor_id,
-                            'winning_bid_id'     => $winningBid->id,
-                            'winning_bid_amount' => $winningBid->bid_amount,
-                            'selection_method'   => 'auto',
-                            'notes'              => 'Pemenang dipilih otomatis oleh sistem berdasarkan bid tertinggi.',
-                            'decided_at'         => now(),
-                            'decided_by'         => null,
-                        ]);
-                    }
-
-                    $this->applyTransition($tender, 'bidding', 'finished',
-                        "Tender telah selesai (Finished). Pemenang telah ditentukan dengan penawaran tertinggi Rp " .
-                        number_format($winningBid->bid_amount, 0, ',', '.') . "."
+                } else {
+                    $this->applyTransition($tender, 'bidding', 'closed',
+                        "Masa Bidding telah berakhir. Tender ditutup (Closed) dan menunggu evaluasi/pemilihan pemenang oleh panitia."
                     );
                 }
             }
