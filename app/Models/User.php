@@ -12,7 +12,6 @@ use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Tymon\JWTAuth\Contracts\JWTSubject;
 use App\Notifications\CustomResetPasswordNotification;
-use App\Notifications\CustomVerifyEmailNotification;
 
 class User extends Authenticatable implements JWTSubject, MustVerifyEmail
 {
@@ -96,11 +95,5 @@ class User extends Authenticatable implements JWTSubject, MustVerifyEmail
     public function sendPasswordResetNotification($token)
     {
         $this->notify(new CustomResetPasswordNotification($token));
-    }
-
-    // Override fungsi verifikasi email biar pake notifikasi yang udah di-queue
-    public function sendEmailVerificationNotification()
-    {
-        $this->notify(new CustomVerifyEmailNotification);
     }
 }
