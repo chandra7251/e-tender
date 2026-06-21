@@ -1,34 +1,25 @@
 <?php
-
 namespace App\Http\Resources;
-
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
-
 class TenderResource extends JsonResource
 {
-
     public ?bool $isParticipantOverride = null;
-
-    // Factory method untuk set flag dari luar tanpa query ke DB
     public function withParticipantStatus(bool $value): static
     {
         $this->isParticipantOverride = $value;
         return $this;
     }
-
     public function toArray(Request $request): array
     {
         if ($this->isParticipantOverride !== null) {
             $isParticipant = $this->isParticipantOverride;
         } else {
-
             $vendor        = auth('api')->user()?->vendor;
             $isParticipant = $vendor
                 ? $this->participants()->where('vendor_id', $vendor->id)->exists()
                 : false;
         }
-
         return [
             'id'                 => $this->id,
             'title'              => $this->title,

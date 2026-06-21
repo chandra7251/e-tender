@@ -6,7 +6,6 @@
 @section('content')
 <div class="space-y-4">
 
-    {{-- ── Header ─────────────────────────────────────────────────────────── --}}
     <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-4">
         <p class="text-sm font-bold text-gray-600">{{ $tenders->total() }} Tender ditemukan</p>
         <a href="{{ route('admin.tenders.create') }}"
@@ -20,14 +19,11 @@
         </a>
     </div>
 
-    {{-- ── Main Blue Card ─────────────────────────────────────────────────── --}}
     <div class="rounded-xl bg-[#3553A8] p-6 shadow-sm">
-        
-        {{-- Filter & Search --}}
+
         <form method="GET" action="{{ route('admin.tenders.index') }}"
               class="flex flex-col gap-3 sm:flex-row sm:items-center mb-6">
 
-            {{-- Status filter --}}
             <select name="status"
                     class="rounded-md border-0 bg-white px-4 py-2.5 text-sm font-medium
                            text-gray-700 outline-none focus:ring-2 focus:ring-[#2B438A]">
@@ -54,7 +50,6 @@
             @endif
         </form>
 
-        {{-- Table --}}
         <div class="overflow-x-auto">
             <table class="w-full text-sm text-white" style="min-width: 680px;">
                 <thead>
@@ -128,7 +123,6 @@
         </div>
     </div>
 
-    {{-- Pagination --}}
     @if ($tenders->hasPages())
         <div class="mt-4">
             {{ $tenders->links() }}

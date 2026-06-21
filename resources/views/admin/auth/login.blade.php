@@ -88,7 +88,7 @@
             color: #ffffff;
             z-index: 10;
         }
-        
+
         /* Illustration CSS */
         .illustration-wrapper {
             position: relative;
@@ -98,14 +98,14 @@
             z-index: 5;
             margin-right: 40px;
         }
-        
+
         .card-bg {
             position: absolute;
             background: white;
             border-radius: 12px;
             box-shadow: 0 10px 25px rgba(0,0,0,0.1);
         }
-        
+
         /* Form Styles */
         .form-input {
             width: 100%;
@@ -139,7 +139,7 @@
         .submit-btn:hover {
             background-color: #22B2C0;
         }
-        
+
         /* Hide native password toggle in browsers like Edge/Chrome */
         input[type="password"]::-ms-reveal,
         input[type="password"]::-ms-clear,
@@ -152,34 +152,29 @@
 <body>
 
     <div class="login-container">
-        
-        <!-- Left Section (Blue) — hidden on mobile via CSS -->
+
         <div class="left-section">
-            <!-- Wavy background divider (S-Curve matching Gambar 1) -->
+
             <svg class="wave-divider" preserveAspectRatio="none" viewBox="0 0 100 100" fill="currentColor">
                 <path d="M100,0 L100,100 L60,100 C 150,70 -50,30 100,0 Z" />
             </svg>
 
-            <!-- Logo -->
             <div class="absolute top-12 left-12 z-20">
                 <img src="{{ asset('images/auth/logo.png') }}" alt="E-Tender Logo" class="h-20 w-auto">
             </div>
 
-            <!-- Dashboard Illustration -->
             <div class="relative z-10 w-full max-w-[55%] flex justify-start items-center self-start ml-12 mt-32">
                 <img src="{{ asset('images/auth/illustration.png') }}" alt="Dashboard Illustration" class="w-full h-auto object-contain rounded-xl">
             </div>
         </div>
 
-        <!-- Right Section (White Form) -->
         <div class="right-section z-20">
             <div class="w-full max-w-md px-6">
 
-                <!-- Mobile Logo — only shown on small screens -->
                 <div class="mobile-logo hidden justify-center mb-8">
                     <img src="{{ asset('images/auth/logo.png') }}" alt="E-Tender Logo" class="h-20 w-auto drop-shadow-md">
                 </div>
-                
+
                 <div class="mobile-form-content w-full">
                     <div class="text-center mb-8">
                         <h1 class="text-3xl font-bold text-gray-900 mb-3 tracking-wide">Admin Login</h1>
@@ -196,8 +191,7 @@
 
                 <form method="POST" action="{{ route('admin.login.post') }}" novalidate class="space-y-5">
                     @csrf
-                    
-                    <!-- Email Input -->
+
                     <div>
                         <input 
                             id="email" 
@@ -214,7 +208,6 @@
                         @enderror
                     </div>
 
-                    <!-- Password Input -->
                     <div>
                         <div class="relative flex items-center">
                             <input 
@@ -226,12 +219,12 @@
                                 class="form-input pr-12 @error('password') border-red-400 @enderror"
                             >
                             <button type="button" onclick="togglePassword()" class="absolute right-4 text-gray-300 hover:text-gray-500 focus:outline-none transition-colors">
-                                <!-- Eye Icon (Open) -->
+
                                 <svg id="eye-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="w-6 h-6">
                                     <path d="M12 15a3 3 0 100-6 3 3 0 000 6z" />
                                     <path fill-rule="evenodd" d="M1.323 11.447C2.811 6.976 7.028 3.75 12.001 3.75c4.97 0 9.185 3.223 10.675 7.69.12.362.12.752 0 1.113-1.487 4.471-5.705 7.697-10.677 7.697-4.97 0-9.186-3.223-10.675-7.69a1.762 1.762 0 010-1.113zM17.25 12a5.25 5.25 0 11-10.5 0 5.25 5.25 0 0110.5 0z" clip-rule="evenodd" />
                                 </svg>
-                                <!-- Eye Icon (Closed) -->
+
                                 <svg id="eye-slash-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="w-6 h-6 hidden">
                                     <path d="M3.53 2.47a.75.75 0 00-1.06 1.06l18 18a.75.75 0 101.06-1.06l-18-18zM22.676 12.553a11.249 11.249 0 01-2.631 4.31l-3.099-3.099a5.25 5.25 0 00-6.71-6.71L7.759 4.577a11.217 11.217 0 014.242-.827c4.97 0 9.185 3.223 10.675 7.69.12.362.12.752 0 1.113z" />
                                     <path d="M15.75 12c0 .18-.013.357-.037.53l-4.244-4.243A3.75 3.75 0 0115.75 12zM12.53 15.713l-4.243-4.244a3.75 3.75 0 004.243 4.243z" />
@@ -244,7 +237,6 @@
                         @enderror
                     </div>
 
-                    <!-- Submit Button -->
                     <div class="pt-2">
                         <button type="submit" class="submit-btn">
                             Masuk
@@ -256,7 +248,7 @@
 
             </div>
         </div>
-        
+
     </div>
 
     <script>

@@ -1,15 +1,11 @@
 <?php
-
 namespace App\Http\Requests\Api;
-
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Contracts\Validation\Validator;
 use Illuminate\Http\Exceptions\HttpResponseException;
-
 class VendorDocumentRequest extends FormRequest
 {
     public function authorize(): bool { return true; }
-
     public function rules(): array
     {
         return [
@@ -17,7 +13,6 @@ class VendorDocumentRequest extends FormRequest
             'file'          => ['required', 'file', 'mimes:pdf,jpg,jpeg,png', 'max:5120'],
         ];
     }
-
     public function messages(): array
     {
         return [
@@ -26,7 +21,6 @@ class VendorDocumentRequest extends FormRequest
             'file.max'         => 'Ukuran file maksimal 5MB.',
         ];
     }
-
     protected function failedValidation(Validator $validator): never
     {
         throw new HttpResponseException(response()->json([

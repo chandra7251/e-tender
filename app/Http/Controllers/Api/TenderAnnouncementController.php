@@ -1,26 +1,17 @@
 <?php
-
 namespace App\Http\Controllers\Api;
-
 use App\Http\Controllers\Controller;
 use App\Http\Traits\ApiResponse;
 use App\Models\Tender;
 use Illuminate\Http\JsonResponse;
-
 class TenderAnnouncementController extends Controller
 {
     use ApiResponse;
-
-    // Tampilkan semua pengumuman (aanwijzing) untuk tender tertentu
-    // Diakses vendor setelah join untuk mendapatkan info/update resmi dari admin
     public function index(Tender $tender): JsonResponse
     {
-        // Sembunyikan pengumuman untuk tender yang masih draft
         if ($tender->status === 'draft') {
             return $this->error('Tender tidak ditemukan.', null, 404);
         }
-
-        // Tampilkan dari yang terbaru — diurutkan descending berdasarkan tanggal publish
         $announcements = $tender->announcements()
             ->orderByDesc('published_at')
             ->get()
@@ -30,7 +21,6 @@ class TenderAnnouncementController extends Controller
                 'content'      => $a->content,
                 'published_at' => $a->published_at?->toIso8601String(),
             ]);
-
         return $this->success($announcements);
     }
 }

@@ -23,9 +23,8 @@ class DatabaseSeeder extends Seeder
 
     public function run(): void
     {
-        // BAGIAN 1 — USERS & VENDORS
 
-        // ─── 1. Admin ─────────────────────────────────────────────────────────
+
         $admin = User::firstOrCreate(
             ['email' => 'admin@vandrafcy.my.id'],
             [
@@ -35,7 +34,6 @@ class DatabaseSeeder extends Seeder
             ]
         );
 
-        // ─── 2. Vendor Pending ────────────────────────────────────────────────
         $userPending = User::firstOrCreate(
             ['email' => 'vendor.pending@example.com'],
             [
@@ -55,7 +53,6 @@ class DatabaseSeeder extends Seeder
             ]
         );
 
-        // ─── 3. Vendor Approved Pertama ───────────────────────────────────────
         $userApproved = User::firstOrCreate(
             ['email' => 'vendor.approved@example.com'],
             [
@@ -77,7 +74,6 @@ class DatabaseSeeder extends Seeder
             ]
         );
 
-        // ─── 4. Dokumen Vendor Pertama ────────────────────────────────────────
         VendorDocument::firstOrCreate(
             ['vendor_id' => $vendorApproved->id, 'document_type' => 'legalitas'],
             [
@@ -100,7 +96,6 @@ class DatabaseSeeder extends Seeder
             ]
         );
 
-        // ─── 5. Vendor Approved Kedua ─────────────────────────────────────────
         $userApproved2 = User::firstOrCreate(
             ['email' => 'vendor.kedua@example.com'],
             [
@@ -122,7 +117,6 @@ class DatabaseSeeder extends Seeder
             ]
         );
 
-        // ─── 6. Dokumen Vendor Kedua ──────────────────────────────────────────
         VendorDocument::firstOrCreate(
             ['vendor_id' => $vendorApproved2->id, 'document_type' => 'legalitas'],
             [
@@ -145,7 +139,6 @@ class DatabaseSeeder extends Seeder
             ]
         );
 
-        // ─── 7. Vendor Rejected (skenario demo penolakan) ─────────────────────
         $userRejected = User::firstOrCreate(
             ['email' => 'vendor.rejected@example.com'],
             [
@@ -168,7 +161,6 @@ class DatabaseSeeder extends Seeder
             ]
         );
 
-        // BAGIAN 2 — TENDER DRAFT (tidak tampil di public API)
 
         $tenderDraft = Tender::firstOrCreate(
             ['title' => 'Penyediaan Lisensi Perangkat Lunak Keamanan Siber (Endpoint Protection) TA 2026'],
@@ -195,7 +187,6 @@ class DatabaseSeeder extends Seeder
             ]
         );
 
-        // BAGIAN 3 — TENDER OPEN (untuk demo vendor join baru
 
         $tenderOpen = Tender::firstOrCreate(
             ['title' => 'Pengadaan Kendaraan Operasional Lapangan 4x4 (Double Cabin) Batch I'],
@@ -233,7 +224,7 @@ class DatabaseSeeder extends Seeder
             ]
         );
 
-        // BAGIAN 4 — [A] TENDER BIDDING AKTIF (untuk demo join & bidding)
+
         $tenderBidding = Tender::firstOrCreate(
             ['title' => 'Pembangunan Infrastruktur Jaringan Fiber Optic dan Integrasi Data Center'],
             [
@@ -243,8 +234,8 @@ class DatabaseSeeder extends Seeder
                 'start_date'      => now()->subDays(12),
                 'end_date'        => now()->addDays(18),
                 'aanwijzing_date' => now()->subDays(7),
-                'bidding_start'   => now()->subDays(3),  // sudah dimulai 3 hari lalu
-                'bidding_end'     => now()->addDays(7),  // masih buka 7 hari ke depan
+                'bidding_start'   => now()->subDays(3),
+                'bidding_end'     => now()->addDays(7),  
                 'status'          => 'bidding',
             ]
         );
@@ -270,7 +261,6 @@ class DatabaseSeeder extends Seeder
             ]
         );
 
-        // Aanwijzing announcement untuk tender bidding
         TenderAnnouncement::firstOrCreate(
             ['tender_id' => $tenderBidding->id, 'title' => 'Aanwijzing Pengadaan Laptop 2026'],
             [
@@ -280,7 +270,6 @@ class DatabaseSeeder extends Seeder
             ]
         );
 
-        // Vendor pertama join tender bidding
         $pBidding1 = TenderParticipant::firstOrCreate(
             ['tender_id' => $tenderBidding->id, 'vendor_id' => $vendorApproved->id],
             ['joined_at' => now()->subDays(10)]
@@ -294,7 +283,6 @@ class DatabaseSeeder extends Seeder
             ]
         );
 
-        // Vendor kedua join tender bidding
         $pBidding2 = TenderParticipant::firstOrCreate(
             ['tender_id' => $tenderBidding->id, 'vendor_id' => $vendorApproved2->id],
             ['joined_at' => now()->subDays(9)]
@@ -308,9 +296,6 @@ class DatabaseSeeder extends Seeder
             ]
         );
 
-
-        // BAGIAN 5 — [B] TENDER FINISHED (untuk demo result / winner / PO)
-        // Skenario: Kedua vendor sudah join + bid. PT Approved Maju menang.
 
         $tenderFinished = Tender::firstOrCreate(
             ['title' => 'Pengadaan Perangkat Komputasi Workstation untuk Divisi Riset & Pengembangan'],
@@ -347,7 +332,6 @@ class DatabaseSeeder extends Seeder
             ]
         );
 
-        // Aanwijzing announcement
         TenderAnnouncement::firstOrCreate(
             ['tender_id' => $tenderFinished->id, 'title' => 'Aanwijzing Pengadaan Komputer IT 2026'],
             [
@@ -357,7 +341,6 @@ class DatabaseSeeder extends Seeder
             ]
         );
 
-        // Vendor pertama join tender finished
         $pFinished1 = TenderParticipant::firstOrCreate(
             ['tender_id' => $tenderFinished->id, 'vendor_id' => $vendorApproved->id],
             ['joined_at' => now()->subDays(28)]
@@ -371,7 +354,6 @@ class DatabaseSeeder extends Seeder
             ]
         );
 
-        // Vendor kedua join tender finished
         $pFinished2 = TenderParticipant::firstOrCreate(
             ['tender_id' => $tenderFinished->id, 'vendor_id' => $vendorApproved2->id],
             ['joined_at' => now()->subDays(27)]
@@ -385,7 +367,6 @@ class DatabaseSeeder extends Seeder
             ]
         );
 
-        // Bid vendor pertama (PT Approved Maju) — MENANG
         $bidF1 = Bid::firstOrCreate(
             ['tender_id' => $tenderFinished->id, 'vendor_id' => $vendorApproved->id],
             [
@@ -416,7 +397,6 @@ class DatabaseSeeder extends Seeder
             ]
         );
 
-        // Bid vendor kedua (CV Karya Prima) — KALAH
         $bidF2 = Bid::firstOrCreate(
             ['tender_id' => $tenderFinished->id, 'vendor_id' => $vendorApproved2->id],
             [
@@ -447,7 +427,6 @@ class DatabaseSeeder extends Seeder
             ]
         );
 
-        // Tender result — PT Approved Maju menang (harga terendah)
         $result = TenderResult::firstOrCreate(
             ['tender_id' => $tenderFinished->id],
             [
@@ -476,7 +455,6 @@ class DatabaseSeeder extends Seeder
             ]
         );
 
-        // Purchase Order
         $po = PurchaseOrder::firstOrCreate(
             ['tender_id' => $tenderFinished->id],
             [
@@ -500,7 +478,6 @@ class DatabaseSeeder extends Seeder
             ]
         );
 
-        // 6 TENDER DUMMY UNTUK DEMO
 
         $tender5 = Tender::firstOrCreate(
             ['title' => 'Pembangunan Fasilitas Pengolahan Air Bersih (Water Treatment Plant) Area Pabrik'],

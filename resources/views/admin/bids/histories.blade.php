@@ -6,7 +6,6 @@
 @section('content')
 <div class="space-y-6">
 
-    {{-- Breadcrumb --}}
     <div class="flex items-center gap-2 text-sm text-[#3553A8] font-semibold">
         <a href="{{ route('admin.tenders.show', $tender) }}"
            class="hover:text-[#2B438A] transition-colors">{{ Str::limit($tender->title, 40) }}</a>
@@ -17,7 +16,6 @@
         <span class="text-gray-700">Histori</span>
     </div>
 
-    {{-- Bid summary card --}}
     <div class="rounded-lg bg-[#3553A8] p-6 shadow-md text-white">
         <p class="text-xs font-semibold text-indigo-200 uppercase tracking-wider mb-1">Vendor</p>
         <p class="text-xl font-bold mb-6">{{ $bid->vendor->company_name ?? '-' }}</p>
@@ -43,7 +41,6 @@
         </div>
     </div>
 
-    {{-- History timeline --}}
     <div class="rounded-lg bg-white border border-gray-200 shadow-md p-6 sm:p-8">
         <h2 class="mb-6 text-lg font-bold text-[#3553A8] border-b border-gray-200 pb-4">
             Riwayat Perubahan

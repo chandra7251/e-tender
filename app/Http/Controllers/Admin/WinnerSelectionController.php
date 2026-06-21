@@ -1,7 +1,5 @@
 <?php
-
 namespace App\Http\Controllers\Admin;
-
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Admin\WinnerSelectionRequest;
 use App\Models\Bid;
@@ -12,68 +10,46 @@ use Illuminate\Http\RedirectResponse;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Illuminate\View\View;
-
 class WinnerSelectionController extends Controller
 {
-    /**
-     * Show the winner selection form.
-     * FIX BUG-01: Tender harus berstatus 'closed' sebelum winner bisa dipilih.
-     */
     public function create(Tender $tender): View|RedirectResponse
     {
-        // hanya bisa pilih winner saat tender sudah closed
         if ($tender->status !== 'closed') {
             return redirect()->route('admin.tenders.show', $tender)
                 ->with('error', "Pemenang hanya bisa dipilih saat tender berstatus 'closed'. Status saat ini: '{$tender->status}'.");
         }
-
-        // winner sudah pernah dipilih
         if ($tender->result()->exists()) {
             return redirect()->route('admin.tenders.show', $tender)
                 ->with('error', 'Pemenang tender sudah dipilih sebelumnya.');
         }
-
-        // tidak ada bid
         if ($tender->bids()->count() === 0) {
             return redirect()->back()
                 ->with('error', 'Tender belum memiliki bid.');
         }
-
         $bids = $tender->bids()
             ->with(['vendor.user'])
             ->orderBy('bid_amount', 'asc')
             ->orderBy('submitted_at', 'asc')
             ->orderBy('ulid', 'asc')
             ->get();
-
         return view('admin.winners.create', compact('tender', 'bids'));
     }
-
-
     public function store(WinnerSelectionRequest $request, Tender $tender): RedirectResponse
     {
-        // status harus closed
         if ($tender->status !== 'closed') {
             return redirect()->route('admin.tenders.show', $tender)
                 ->with('error', "Pemenang hanya bisa dipilih saat tender berstatus 'closed'.");
         }
-
-        // winner sudah ada
         if ($tender->result()->exists()) {
             return redirect()->route('admin.tenders.show', $tender)
                 ->with('error', 'Pemenang tender sudah dipilih.');
         }
-
         $bid = Bid::with('vendor')->findOrFail($request->input('bid_id'));
-
-        // Pastikan bid milik tender ini
         if ($bid->tender_id !== $tender->id) {
             return redirect()->back()->with('error', 'Bid tidak berasal dari tender ini.');
         }
-
         try {
             DB::transaction(function () use ($tender, $bid, $request) {
-                // Simpan hasil pemenang
                 TenderResult::create([
                     'tender_id'          => $tender->id,
                     'winner_vendor_id'   => $bid->vendor_id,
@@ -84,11 +60,7 @@ class WinnerSelectionController extends Controller
                     'decided_by'         => auth()->id(),
                     'decided_at'         => now(),
                 ]);
-
-                // Auto-set status ke finished
                 $tender->update(['status' => 'finished']);
-
-                // Catat di history
                 TenderHistory::create([
                     'tender_id'   => $tender->id,
                     'actor_id'    => auth()->id(),
@@ -100,11 +72,8 @@ class WinnerSelectionController extends Controller
                                    . ". Status tender diubah ke 'finished'.",
                     'created_at'  => now(),
                 ]);
-
-                // Notifikasi ke semua peserta tender
                 $participants = $tender->participants()->with('vendor.user')->get();
                 $usersToNotify = $participants->pluck('vendor.user')->filter();
-
                 if ($usersToNotify->isNotEmpty()) {
                     \Illuminate\Support\Facades\Notification::send(
                         $usersToNotify,
@@ -121,10 +90,8 @@ class WinnerSelectionController extends Controller
                 'bid_id'    => $bid->id,
                 'error'     => $e->getMessage(),
             ]);
-
             return back()->with('error', 'Terjadi kesalahan saat menyimpan pemenang. Silakan coba lagi.');
         }
-
         return redirect()
             ->route('admin.tenders.result.show', $tender)
             ->with('success', "Pemenang berhasil dipilih. Status tender diubah ke 'finished'.");

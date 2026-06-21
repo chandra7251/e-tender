@@ -6,7 +6,6 @@
 @section('content')
 <div class="mx-auto max-w-4xl space-y-6">
 
-    {{-- Toolbar --}}
     <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <a href="{{ route('admin.tenders.result.show', $tender) }}"
            class="inline-flex items-center gap-1.5 text-sm font-semibold text-[#3553A8] hover:text-[#2B438A] transition-colors">
@@ -15,7 +14,7 @@
             </svg>
             Kembali ke Hasil Tender
         </a>
-        
+
         <div class="flex gap-3">
             <a href="{{ route('admin.tenders.histories.index', $tender) }}"
                class="rounded-lg bg-white border border-gray-300 px-4 py-2 text-sm font-semibold text-gray-700 hover:bg-gray-50 shadow-sm transition-colors flex items-center gap-2">
@@ -34,14 +33,12 @@
         </div>
     </div>
 
-    {{-- Kertas A4 Document Style --}}
     <div class="bg-white rounded-xl shadow-md border border-gray-200 overflow-hidden relative">
-        
-        {{-- Decorative Top Line --}}
+
         <div class="absolute top-0 left-0 right-0 h-2 bg-[#3553A8]"></div>
 
         <div class="p-6 sm:p-10 md:p-12">
-            {{-- Header (Kop Surat) --}}
+
             <div class="text-center border-b-[2px] border-gray-700 pb-3 mb-6">
                 <h1 class="text-xl font-bold text-gray-800 uppercase tracking-widest">{{ config('app.name', 'ZETA') }}</h1>
                 <p class="text-[13px] text-gray-500 mt-1">Dokumen Surat Pemesanan / Purchase Order (PO) Resmi</p>
@@ -53,7 +50,6 @@
                 <p class="text-[13px] font-bold text-gray-800">Tanggal: {{ $po->issued_date ? $po->issued_date->format('d M Y') : date('d M Y') }}</p>
             </div>
 
-            {{-- Info Vendor & Tender (2 Kolom) --}}
             <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
                 <div class="border border-gray-200 bg-gray-50/50 p-4 rounded-sm">
                     <p class="text-[12px] font-bold text-[#2c3e50] uppercase mb-3 border-b border-gray-200 pb-2">KEPADA VENDOR:</p>
@@ -71,7 +67,6 @@
                 </div>
             </div>
 
-            {{-- Table --}}
             <div class="mb-6 overflow-hidden border border-gray-200 rounded-sm">
                 <table class="w-full text-left border-collapse">
                     <thead>
@@ -103,7 +98,6 @@
                 </table>
             </div>
 
-            {{-- Notes --}}
             @if ($po->notes)
             <div class="mb-4 bg-gray-50/50 p-3 rounded-sm">
                 <p class="text-[13px] font-bold text-gray-800 mb-1">Catatan Tambahan:</p>
@@ -120,7 +114,6 @@
                 </ol>
             </div>
 
-            {{-- Signatures --}}
             <div class="grid grid-cols-2 gap-8 mt-12 mb-8">
                 <div class="text-center">
                     <p class="text-[12px] text-gray-800 mb-16">Disetujui Oleh,</p>

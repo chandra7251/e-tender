@@ -6,7 +6,6 @@
 @section('content')
 <div class="space-y-6">
 
-    {{-- Back + action buttons --}}
     <div class="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <a href="{{ route('admin.tenders.index') }}"
            class="inline-flex items-center gap-2 text-sm font-bold text-gray-700 hover:text-gray-900 transition-colors">
@@ -17,7 +16,7 @@
             Kembali Ke Daftar Tender
         </a>
         <div class="flex flex-wrap items-center gap-3">
-            {{-- Peserta Button --}}
+
             <a href="{{ route('admin.tenders.participants.index', $tender) }}"
                class="inline-flex items-center gap-2 rounded-md bg-[#2B438A] border border-[#4A6BCC] px-4 py-2 text-sm font-bold text-white
                       hover:bg-[#1E3066] transition-colors duration-150">
@@ -28,7 +27,7 @@
                 </svg>
                 Peserta <span class="rounded bg-[#5578D0] px-2 py-0.5 text-xs">{{ $tender->participants->count() }}</span>
             </a>
-            {{-- Bid Button --}}
+
             <a href="{{ route('admin.tenders.bids.index', $tender) }}"
                class="inline-flex items-center gap-2 rounded-md bg-[#2B438A] border border-[#4A6BCC] px-4 py-2 text-sm font-bold text-white
                       hover:bg-[#1E3066] transition-colors duration-150">
@@ -77,10 +76,8 @@
 
     <div class="grid grid-cols-1 gap-6 lg:grid-cols-3">
 
-        {{-- ── Left: Detail + Timeline + Announcements ─────────────────────── --}}
         <div class="lg:col-span-2 space-y-6">
 
-            {{-- Tender Info --}}
             <div class="rounded-xl bg-[#3553A8] p-6 shadow-sm">
                 <div class="mb-6 flex items-start justify-between">
                     <h2 class="text-xl font-bold text-white">{{ $tender->title }}</h2>
@@ -117,7 +114,6 @@
                     </div>
                     @endif
 
-                    {{-- Foto Barang / Jasa --}}
                     @if ($tender->photos->isNotEmpty())
                     <div>
                         <p class="text-xs font-bold uppercase tracking-wide text-indigo-200 mb-3">Foto Barang / Jasa</p>
@@ -130,8 +126,7 @@
                                              class="h-full w-full object-cover transition-transform duration-300 group-hover:scale-105"
                                              onerror="this.closest('div').innerHTML='<p class=\'text-xs text-indigo-300 italic p-3\'>Foto tidak dapat ditampilkan.</p>'">
                                     </a>
-                                    
-                                    {{-- Overlay download per foto --}}
+
                                     <div class="absolute inset-0 pointer-events-none flex items-end justify-center p-3 opacity-0 group-hover:opacity-100 transition-opacity duration-200 bg-gradient-to-t from-black/60 to-transparent">
                                         <a href="{{ $photo->photo_url }}" download="foto-tender-{{ $tender->id }}-{{ $i+1 }}.jpg"
                                            class="pointer-events-auto inline-flex items-center gap-1.5 rounded-md bg-white/90 px-3 py-1.5 text-xs font-bold text-[#3553A8] hover:bg-white transition-colors duration-150 shadow-sm"
@@ -154,7 +149,6 @@
                 </div>
             </div>
 
-            {{-- Timeline --}}
             <div class="rounded-xl bg-[#3553A8] p-6 shadow-sm">
                 <h2 class="mb-6 text-lg font-bold text-white">Timeline</h2>
                 <div class="grid grid-cols-1 gap-4 sm:grid-cols-2 text-sm">
@@ -178,7 +172,6 @@
                 </div>
             </div>
 
-            {{-- Announcements list --}}
             <div class="rounded-xl bg-[#3553A8] p-6 shadow-sm">
                 <h2 class="mb-6 text-lg font-bold text-white flex items-center">
                     Aanwijzing / Pengumuman
@@ -209,10 +202,8 @@
 
         </div>
 
-        {{-- ── Right: Update Status + Add Announcement ──────────────────────── --}}
         <div class="space-y-6">
 
-            {{-- Update Status --}}
             <div class="rounded-xl bg-[#3553A8] p-6 shadow-sm">
                 <h2 class="mb-4 text-base font-bold text-white">Ubah Status</h2>
                 <form method="POST" action="{{ route('admin.tenders.status', $tender) }}">
@@ -221,7 +212,7 @@
                     <div class="mb-4">
                         <label for="status" class="mb-2 block text-sm font-medium text-indigo-200">Status Baru</label>
                         @if ($tender->status === 'finished')
-                            {{-- 'finished' hanya bisa diset otomatis saat pilih pemenang, bukan via form ini --}}
+
                             <div class="flex items-center gap-2 rounded-md border border-[#4A6BCC] bg-[#2B438A] px-4 py-2.5">
                                 <span class="inline-block h-2.5 w-2.5 rounded-full bg-purple-500"></span>
                                 <span class="text-sm font-semibold text-white">Finished</span>
@@ -232,7 +223,7 @@
                                 class="w-full rounded-md border border-[#4A6BCC] bg-[#2B438A] px-4 py-2.5 text-sm
                                        text-white outline-none focus:border-white focus:ring-1 focus:ring-white
                                        @error('status') border-red-400 @enderror">
-                            {{-- 'finished' tidak ada di sini — diset otomatis via WinnerSelectionController --}}
+
                             @foreach (['draft','open','aanwijzing','bidding','closed'] as $s)
                                 <option value="{{ $s }}" {{ $tender->status === $s ? 'selected' : '' }}>
                                     {{ ucfirst($s) }}
@@ -260,7 +251,6 @@
                 </form>
             </div>
 
-            {{-- Add Announcement --}}
             <div class="rounded-xl bg-[#3553A8] p-6 shadow-sm">
                 <h2 class="mb-4 text-base font-bold text-white">Tambah Aanwijzing</h2>
                 <form method="POST" action="{{ route('admin.tenders.announcements.store', $tender) }}">
@@ -309,7 +299,6 @@
                 </form>
             </div>
 
-            {{-- History log --}}
             @if ($tender->histories->count())
             <div class="rounded-xl bg-[#3553A8] p-6 shadow-sm">
                 <h2 class="mb-6 text-base font-bold text-white">Riwayat Aktivitas</h2>

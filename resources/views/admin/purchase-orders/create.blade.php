@@ -6,7 +6,6 @@
 @section('content')
 <div class="mx-auto max-w-5xl space-y-6">
 
-    {{-- Breadcrumb / Back --}}
     <div class="flex items-center justify-between">
         <a href="{{ route('admin.tenders.result.show', $tender) }}"
            class="inline-flex items-center gap-1.5 text-sm font-semibold text-[#3553A8] hover:text-[#2B438A] transition-colors">
@@ -35,8 +34,7 @@
     @endif
 
     <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        
-        {{-- Left: Vendor Info / Summary --}}
+
         <div class="lg:col-span-1 space-y-6">
             <div class="rounded-xl border border-gray-200 bg-white p-6 shadow-sm">
                 <div class="flex items-center gap-3 mb-4 border-b border-gray-100 pb-4">
@@ -79,7 +77,6 @@
             </div>
         </div>
 
-        {{-- Right: Form Input --}}
         <div class="lg:col-span-2">
             <form method="POST" action="{{ route('admin.tenders.purchase-order.store', $tender) }}" class="rounded-xl border border-gray-200 bg-white shadow-sm overflow-hidden h-full flex flex-col">
                 @csrf
@@ -87,10 +84,10 @@
                     <h2 class="text-lg font-bold text-gray-800">Detail Purchase Order</h2>
                     <p class="text-sm text-gray-500 mt-0.5">Lengkapi form di bawah ini untuk menerbitkan surat pemesanan</p>
                 </div>
-                
+
                 <div class="p-6 space-y-6 flex-1">
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                        {{-- PO Number --}}
+
                         <div>
                             <label for="po_number" class="mb-1.5 block text-sm font-semibold text-gray-700">
                                 Nomor PO <span class="text-red-500">*</span>
@@ -102,7 +99,6 @@
                                           @error('po_number') border-red-500 focus:border-red-500 focus:ring-red-500/20 @enderror">
                         </div>
 
-                        {{-- Issued Date --}}
                         <div>
                             <label for="issued_date" class="mb-1.5 block text-sm font-semibold text-gray-700">
                                 Tanggal Terbit <span class="text-red-500">*</span>
@@ -115,7 +111,6 @@
                         </div>
                     </div>
 
-                    {{-- Amount --}}
                     <div>
                         <label for="amount" class="mb-1.5 block text-sm font-semibold text-gray-700">
                             Total Nilai PO (Rp) <span class="text-red-500">*</span>
@@ -133,7 +128,6 @@
                         <p class="mt-1.5 text-xs text-gray-500">Otomatis diisi dengan nilai bid pemenang. Dapat disesuaikan jika ada negosiasi final.</p>
                     </div>
 
-                    {{-- Notes --}}
                     <div>
                         <label for="notes" class="mb-1.5 block text-sm font-semibold text-gray-700">
                             Catatan Tambahan <span class="text-xs text-gray-400 font-normal">(opsional)</span>

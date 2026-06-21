@@ -35,7 +35,6 @@
         </div>
     </form>
 
-    {{-- Hidden forms untuk menghapus foto --}}
     @if ($tender && $tender->photos->isNotEmpty())
         @foreach ($tender->photos as $photo)
             <form id="delete-photo-{{ $photo->id }}" method="POST" action="{{ route('admin.tenders.photos.destroy', [$tender, $photo]) }}" class="hidden">

@@ -18,9 +18,8 @@
     <form method="POST" action="{{ route('admin.tenders.winner.store', $tender) }}" class="grid grid-cols-1 xl:grid-cols-3 gap-6">
         @csrf
 
-        {{-- Kolom Kiri --}}
         <div class="xl:col-span-2 space-y-6">
-            {{-- Tender title --}}
+
             <div class="rounded-xl bg-[#3553A8] px-5 py-4 shadow-sm">
                 <p class="text-xs text-indigo-200">Tender</p>
                 <p class="mt-0.5 text-base font-bold text-white">{{ $tender->title }}</p>
@@ -36,7 +35,6 @@
             </div>
         @endif
 
-        {{-- Bid selection table --}}
         <div class="rounded-xl bg-[#3553A8] overflow-hidden shadow-sm">
             <div class="border-b border-[#4A6BCC] px-5 py-4">
                 <h2 class="text-sm font-bold text-white">Pilih Bid Pemenang</h2>
@@ -67,7 +65,7 @@
                     <tbody class="divide-y divide-[#4A6BCC]">
                         @foreach ($bids as $i => $bid)
                         @php
-                            // Deteksi tie: cek apakah ada bid lain dengan amount yang sama
+
                             $isTie = $bids->where('bid_amount', $bid->bid_amount)->count() > 1;
                         @endphp
                         <tr class="hover:bg-[#2B438A] transition-colors duration-150 cursor-pointer"
@@ -84,7 +82,7 @@
                                         ★ Terendah
                                     </span>
                                     @if ($isTie)
-                                        {{-- Ada bid lain dengan amount sama — tie-breaker aktif --}}
+
                                         <span class="ml-1 rounded-full bg-blue-500/80 px-2 py-0.5 text-xs font-bold text-white"
                                               title="Tie-breaker: dipilih karena submit lebih awal">
                                             ⚡ Tie-winner
@@ -107,7 +105,7 @@
                                 Rp {{ number_format($bid->bid_amount, 0, ',', '.') }}
                             </td>
                             <td class="px-5 py-3 whitespace-nowrap">
-                                {{-- Waktu submit dengan presisi microsecond --}}
+
                                 <span class="font-mono text-xs {{ $i === 0 ? 'text-indigo-100 font-medium' : 'text-indigo-200' }}">
                                     {{ $bid->submitted_at->format('d/m/Y H:i:s') }}<span class="text-indigo-300/50">.{{ $bid->submitted_at->format('u') }}</span>
                                 </span>
@@ -127,11 +125,10 @@
                 </table>
             </div>
         </div>
-        </div> {{-- End Kolom Kiri --}}
+        </div> 
 
-        {{-- Kolom Kanan --}}
         <div class="xl:col-span-1 space-y-6">
-            {{-- Selection method & notes --}}
+
             <div class="rounded-xl bg-[#3553A8] shadow-sm p-6 space-y-4">
             <div>
                 <label for="selection_method" class="mb-1.5 block text-sm font-bold text-white">
@@ -169,7 +166,7 @@
                 ✓ Tetapkan Pemenang
             </button>
         </div>
-        </div> {{-- End Kolom Kanan --}}
+        </div> 
     </form>
 
 </div>

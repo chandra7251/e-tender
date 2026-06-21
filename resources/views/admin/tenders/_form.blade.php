@@ -1,5 +1,3 @@
-{{-- Shared form partial for create and edit tender --}}
-{{-- Usage: @include('admin.tenders._form', ['tender' => $tender|null]) --}}
 
 @php
     $val = fn($field, $default = '') => old($field, $tender?->{$field} ?? $default);
@@ -10,7 +8,6 @@
     };
 @endphp
 
-{{-- Error summary --}}
 @if ($errors->any())
     <div class="rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-600 mb-6">
         <p class="font-bold mb-1">Terdapat kesalahan input:</p>
@@ -24,7 +21,6 @@
 
 <div class="rounded-xl bg-[#3553A8] p-6 space-y-6 shadow-sm">
 
-    {{-- Title --}}
     <div>
         <label for="title" class="mb-2 block text-sm font-bold text-white">
             Judul Tender <span class="text-red-500">*</span>
@@ -38,7 +34,6 @@
         @error('title')<p class="mt-1.5 text-xs text-red-300">{{ $message }}</p>@enderror
     </div>
 
-    {{-- Description --}}
     <div>
         <label for="description" class="mb-2 block text-sm font-bold text-white">
             Deskripsi <span class="text-red-500">*</span>
@@ -52,7 +47,6 @@
         @error('description')<p class="mt-1.5 text-xs text-red-300">{{ $message }}</p>@enderror
     </div>
 
-    {{-- Specification --}}
     <div>
         <label for="specification" class="mb-2 block text-sm font-bold text-white">
             Spesifikasi <span class="text-red-500">*</span>
@@ -66,7 +60,6 @@
         @error('specification')<p class="mt-1.5 text-xs text-red-300">{{ $message }}</p>@enderror
     </div>
 
-    {{-- Open Bidding Price (HPS) --}}
     <div>
         <label for="open_bidding_price" class="mb-2 block text-sm font-bold text-white">
             Harga Pembukaan Bidding (HPS)
@@ -87,14 +80,12 @@
         @error('open_bidding_price')<p class="mt-1.5 text-xs text-red-300">{{ $message }}</p>@enderror
     </div>
 
-    {{-- Photos --}}
     <div>
         <label for="photos" class="mb-2 block text-sm font-bold text-white">
             Foto Barang / Jasa
             <span class="text-xs font-normal text-indigo-200">(opsional · maks. 3 foto · maks. 3 MB/foto · JPG / PNG)</span>
         </label>
 
-        {{-- Preview foto yang sudah ada (saat edit) --}}
         @if ($tender && $tender->photos->isNotEmpty())
             <div class="mb-4">
                 <p class="mb-2 text-xs text-indigo-200">Foto tersimpan ({{ $tender->photos->count() }}/3):</p>
@@ -103,8 +94,7 @@
                         <div class="group relative overflow-hidden rounded-lg border border-[#4A6BCC] bg-[#2B438A] aspect-square block">
                             <img src="{{ $photo->photo_url }}" alt="Foto tender"
                                  class="h-full w-full object-cover">
-                            
-                            {{-- Tombol Hapus (Overlay) --}}
+
                             <div class="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-150 bg-black/40">
                                 <button type="button" 
                                         onclick="if(confirm('Yakin ingin menghapus foto ini?')) document.getElementById('delete-photo-{{ $photo->id }}').submit();"
@@ -139,7 +129,6 @@
         @endif
     </div>
 
-    {{-- Status — read-only, diubah via menu Ubah Status di halaman detail --}}
     <div>
         <label class="mb-2 block text-sm font-bold text-white">Status</label>
         <div class="flex items-center gap-3 rounded-md border border-[#4A6BCC] bg-[#2B438A] px-4 py-2.5">
@@ -162,7 +151,6 @@
 
 </div>
 
-{{-- Timeline --}}
 <div class="rounded-xl bg-[#3553A8] p-6 shadow-sm mt-6">
     <h3 class="mb-6 text-lg font-bold text-white">Timeline Tender</h3>
     <div class="grid grid-cols-1 gap-6 sm:grid-cols-2">
@@ -205,7 +193,7 @@
                           focus:border-white focus:ring-1 focus:ring-white">
         </div>
 
-        <div></div>{{-- spacer --}}
+        <div></div>
 
         <div>
             <label for="bidding_start" class="mb-2 block text-sm font-bold text-white">

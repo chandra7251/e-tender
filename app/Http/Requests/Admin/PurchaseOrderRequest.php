@@ -1,16 +1,12 @@
 <?php
-
 namespace App\Http\Requests\Admin;
-
 use Illuminate\Foundation\Http\FormRequest;
-
 class PurchaseOrderRequest extends FormRequest
 {
     public function authorize(): bool
     {
         return auth()->check() && auth()->user()->role === 'admin';
     }
-
     public function rules(): array
     {
         return [
@@ -20,7 +16,6 @@ class PurchaseOrderRequest extends FormRequest
             'notes'       => ['nullable', 'string', 'max:1000'],
         ];
     }
-
     public function messages(): array
     {
         return [

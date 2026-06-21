@@ -35,21 +35,17 @@
 <body class="h-full">
 <div class="flex h-full min-h-screen bg-[#F0F2F5] text-gray-800">
 
-    {{-- ── Mobile Sidebar Backdrop ────────────────────────────────────── --}}
     <div id="sidebar-backdrop"
          class="fixed inset-0 z-40 bg-black/50 md:hidden"
          onclick="closeMobileSidebar()">
     </div>
 
-    {{-- ── Desktop Sidebar (unchanged) ────────────────────────────────── --}}
     <aside class="hidden md:flex w-64 flex-col bg-[#3553A8] border-r border-[#4A6BCC] flex-shrink-0">
 
-        {{-- Logo / App name --}}
         <div class="flex h-[72px] items-center px-6 border-b border-[#4A6BCC]">
             <img src="{{ asset('images/auth/logo.png') }}" alt="E-Tender Logo" class="h-14 w-auto object-contain">
         </div>
 
-        {{-- Nav links --}}
         <nav class="flex-1 space-y-2 px-4 py-6">
             <a href="{{ route('admin.dashboard') }}"
                class="flex items-center gap-3 rounded-lg px-4 py-3 text-sm font-semibold
@@ -71,7 +67,6 @@
                 Vendor
             </a>
 
-            {{-- Pengajuan Vendor (dari Mobile App) --}}
             <a href="{{ route('admin.submissions.index') }}"
                class="flex items-center gap-3 rounded-lg px-4 py-3 text-sm font-semibold
                       {{ request()->routeIs('admin.submissions*') ? 'bg-white text-[#3553A8]' : 'text-white hover:bg-[#2B438A]' }}
@@ -102,7 +97,6 @@
             </a>
         </nav>
 
-        {{-- Logout button at bottom of sidebar --}}
         <div class="border-t border-[#4A6BCC] p-4">
             <form method="POST" action="{{ route('admin.logout') }}">
                 @csrf
@@ -120,11 +114,9 @@
         </div>
     </aside>
 
-    {{-- ── Mobile Sidebar Drawer ───────────────────────────────────────── --}}
     <aside id="mobile-sidebar"
            class="fixed inset-y-0 left-0 z-50 flex w-72 flex-col bg-[#3553A8] border-r border-[#4A6BCC] md:hidden">
 
-        {{-- Header drawer: Logo + Close --}}
         <div class="flex h-[72px] items-center justify-between px-5 border-b border-[#4A6BCC]">
             <img src="{{ asset('images/auth/logo.png') }}" alt="E-Tender Logo" class="h-12 w-auto object-contain">
             <button onclick="closeMobileSidebar()"
@@ -136,7 +128,6 @@
             </button>
         </div>
 
-        {{-- Nav links --}}
         <nav class="flex-1 space-y-2 px-4 py-6">
             <a href="{{ route('admin.dashboard') }}"
                onclick="closeMobileSidebar()"
@@ -189,7 +180,6 @@
             </a>
         </nav>
 
-        {{-- Logout --}}
         <div class="border-t border-[#4A6BCC] p-4">
             <form method="POST" action="{{ route('admin.logout') }}">
                 @csrf
@@ -207,15 +197,12 @@
         </div>
     </aside>
 
-    {{-- ── Main area ────────────────────────────────────────────────────── --}}
     <div class="flex flex-1 flex-col overflow-hidden min-w-0">
 
-        {{-- Topbar --}}
         <header class="flex h-[72px] items-center justify-between border-b border-[#4A6BCC] bg-[#3553A8] px-4 md:px-8">
 
-            {{-- Left: Hamburger (mobile only) + Page title --}}
             <div class="flex items-center gap-3">
-                {{-- Hamburger button — mobile only --}}
+
                 <button onclick="openMobileSidebar()"
                         class="flex h-9 w-9 items-center justify-center rounded-lg text-white hover:bg-[#2B438A]
                                transition-colors duration-150 md:hidden flex-shrink-0">
@@ -229,7 +216,6 @@
                 </h1>
             </div>
 
-            {{-- Right: Profile --}}
             <div class="flex items-center gap-2 md:gap-8 flex-shrink-0">
                 <div class="flex items-center gap-2 md:gap-3">
                     <span class="hidden sm:block text-sm font-medium text-white truncate max-w-[120px] md:max-w-none">
@@ -242,7 +228,6 @@
             </div>
         </header>
 
-        {{-- Flash messages --}}
         @if (session('success'))
             <div class="mx-4 md:mx-8 mt-6 rounded-lg bg-emerald-50 border border-emerald-200 px-4 py-3 text-sm text-emerald-600">
                 {{ session('success') }}
@@ -254,7 +239,6 @@
             </div>
         @endif
 
-        {{-- Page content --}}
         <main class="flex-1 overflow-y-auto p-4 md:p-8">
             @yield('content')
         </main>

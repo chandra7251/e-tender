@@ -6,7 +6,6 @@
 @section('content')
 <div class="space-y-6">
 
-    {{-- ── Stats Cards ─────────────────────────────────────────────────────── --}}
     <div class="grid grid-cols-2 gap-4 sm:grid-cols-4">
         @php
             $stats = [
@@ -32,12 +31,10 @@
         @endforeach
     </div>
 
-    {{-- ── Filter & Search ─────────────────────────────────────────────────── --}}
     <div class="rounded-xl bg-[#3553A8] p-6 shadow-sm">
         <form method="GET" action="{{ route('admin.submissions.index') }}"
               class="flex flex-col gap-3 sm:flex-row sm:items-center mb-6">
 
-            {{-- Search --}}
             <div class="relative flex-1">
                 <span class="pointer-events-none absolute inset-y-0 left-3 flex items-center text-indigo-200">
                     <svg class="h-5 w-5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"
@@ -52,7 +49,6 @@
                               text-white placeholder-indigo-200 outline-none focus:ring-2 focus:ring-white">
             </div>
 
-            {{-- Status filter --}}
             <select name="status"
                     class="rounded-md border-0 bg-white px-4 py-2.5 text-sm font-medium
                            text-gray-700 outline-none focus:ring-2 focus:ring-[#2B438A]">
@@ -77,7 +73,6 @@
             @endif
         </form>
 
-        {{-- ── Table ──────────────────────────────────────────────────────── --}}
         <div class="overflow-x-auto">
             <table class="w-full text-sm text-white" style="min-width: 700px;">
                 <thead>
@@ -168,7 +163,6 @@
         </div>
     </div>
 
-    {{-- Pagination --}}
     @if ($submissions->hasPages())
         <div class="mt-4">
             {{ $submissions->links() }}

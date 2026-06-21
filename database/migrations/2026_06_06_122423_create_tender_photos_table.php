@@ -6,9 +6,7 @@ use Illuminate\Support\Facades\Schema;
 
 return new class extends Migration
 {
-    /**
-     * Run the migrations.
-     */
+
     public function up(): void
     {
         Schema::create('tender_photos', function (Blueprint $table) {
@@ -18,7 +16,6 @@ return new class extends Migration
             $table->timestamps();
         });
 
-        // Pindahkan data foto lama ke tabel baru
         $tendersWithPhotos = \Illuminate\Support\Facades\DB::table('tenders')
             ->whereNotNull('photo_path')
             ->get(['id', 'photo_path']);
@@ -32,15 +29,11 @@ return new class extends Migration
             ]);
         }
 
-        // Hapus kolom photo_path dari tabel tenders
         Schema::table('tenders', function (Blueprint $table) {
             $table->dropColumn('photo_path');
         });
     }
 
-    /**
-     * Reverse the migrations.
-     */
     public function down(): void
     {
         Schema::dropIfExists('tender_photos');

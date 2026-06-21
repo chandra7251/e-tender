@@ -13,17 +13,6 @@ use App\Http\Controllers\Api\VendorSubmissionController;
 use App\Http\Controllers\Api\AdminSubmissionController;
 use Illuminate\Support\Facades\Route;
 
-/*
-|--------------------------------------------------------------------------
-| API Routes — Vendor Mobile App
-|--------------------------------------------------------------------------
-|
-| Auth strategy: JWT Bearer token via tymon/jwt-auth.
-| Guard: auth:api (driver=jwt, defined in config/auth.php)
-|
-*/
-
-// ── Public: Auth ─────────────────────────────────────────────────────────────
 Route::prefix('auth')->name('api.auth.')->group(function () {
     Route::post('register',        [AuthController::class, 'register'])->name('register')->middleware('throttle:10,1');
     Route::post('login',           [AuthController::class, 'login'])->name('login')->middleware('throttle:5,1');
@@ -32,56 +21,44 @@ Route::prefix('auth')->name('api.auth.')->group(function () {
     Route::post('refresh',         [AuthController::class, 'refresh'])->name('refresh')->middleware('throttle:10,1');
 });
 
-// ── Public: Email Verification ────────────────────────────────────────────────
 Route::get('email/verify/{id}/{hash}', [AuthController::class, 'verifyEmail'])->name('verification.verify');
 Route::post('email/resend', [AuthController::class, 'resendVerificationEmail'])->name('verification.resend')->middleware('throttle:3,1');
 
-// ── Public: Tender listing (vendor can browse without login) ──────────────────
 Route::get('tenders',        [TenderController::class, 'index'])->name('api.tenders.index');
 Route::get('tenders/{tender}', [TenderController::class, 'show'])->name('api.tenders.show');
 
 Route::middleware('auth:api')->group(function () {
 
-    // Auth actions
     Route::post('auth/logout',         [AuthController::class, 'logout'])->name('api.auth.logout');
     Route::get('auth/me',              [AuthController::class, 'me'])->name('api.auth.me');
-    // Throttle 5 percobaan per menit — cegah brute-force ganti password via token yang bocor
+
     Route::put('auth/change-password', [AuthController::class, 'changePassword'])->name('api.auth.change-password')->middleware('throttle:5,1');
 
-    // Notifications
     Route::get('notifications', [\App\Http\Controllers\Api\NotificationController::class, 'index'])->name('api.notifications.index');
     Route::delete('notifications/all', [\App\Http\Controllers\Api\NotificationController::class, 'destroyAll'])->name('api.notifications.destroyAll');
     Route::patch('notifications/read-all', [\App\Http\Controllers\Api\NotificationController::class, 'markAllAsRead'])->name('api.notifications.readAll');
     Route::patch('notifications/{id}/read', [\App\Http\Controllers\Api\NotificationController::class, 'markAsRead'])->name('api.notifications.read');
     Route::delete('notifications/{id}', [\App\Http\Controllers\Api\NotificationController::class, 'destroy'])->name('api.notifications.destroy');
 
-    // Vendor Profile (semua vendor bisa akses, termasuk pending)
     Route::get('vendors/me',     [VendorProfileController::class, 'show'])->name('api.vendors.me');
     Route::put('vendors/me',     [VendorProfileController::class, 'update'])->name('api.vendors.me.update');
     Route::get('vendors/status', [VendorProfileController::class, 'status'])->name('api.vendors.status');
 
-    // Vendor Documents (semua vendor bisa upload dokumen untuk verifikasi)
     Route::get('vendors/documents',                               [VendorDocumentController::class, 'index'])->name('api.vendors.documents.index');
     Route::post('vendors/documents',                              [VendorDocumentController::class, 'store'])->name('api.vendors.documents.store');
     Route::get('vendors/documents/{document}/download',           [VendorDocumentController::class, 'download'])->name('api.vendors.documents.download');
 
-    // Lihat announcements & results (semua vendor bisa lihat)
     Route::get('tenders/{tender}/announcements', [TenderAnnouncementController::class, 'index'])->name('api.tenders.announcements');
     Route::get('tenders/{tender}/result',        [TenderResultController::class, 'show'])->name('api.tenders.result');
     Route::get('tenders/{tender}/winner',        [TenderResultController::class, 'winner'])->name('api.tenders.winner');
 
-    // Cek status kepesertaan tender (semua vendor bisa akses, termasuk pending)
     Route::get('tenders/{tender}/participants/check', [TenderParticipantController::class, 'check'])->name('api.tenders.participants.check');
 
-    // Tender & hasil yang diikuti vendor yang login
     Route::get('vendors/tenders', [VendorController::class, 'myTenders'])->name('api.vendors.my-tenders');
     Route::get('vendors/results', [VendorController::class, 'myResults'])->name('api.vendors.my-results');
 
-    // Cek bid milik vendor sendiri — cukup auth, tidak perlu approved
-    // (agar halaman bid form bisa terbuka untuk semua vendor yang sudah login)
     Route::get('tenders/{tender}/penawaran/me', [BidController::class, 'myBid'])->name('api.tenders.bids.me');
 
-    // ── Hanya vendor APPROVED yang bisa join & bid ────────────────────────────
     Route::middleware('vendor.approved')->group(function () {
         Route::post('tenders/{tender}/participants',  [TenderParticipantController::class, 'store'])->name('api.tenders.join');
         Route::post('tenders/{tender}/penawaran',          [BidController::class, 'store'])->name('api.tenders.bids.store');
@@ -89,14 +66,12 @@ Route::middleware('auth:api')->group(function () {
     });
 });
 
-// ── Vendor Submission Routes ──────────────────────────────────────────────────
 Route::middleware('auth:api')->prefix('vendor')->name('api.vendor.')->group(function () {
     Route::get('submissions',      [VendorSubmissionController::class, 'index'])->name('submissions.index');
     Route::get('submissions/{id}', [VendorSubmissionController::class, 'show'])->name('submissions.show');
     Route::post('submissions',     [VendorSubmissionController::class, 'store'])->name('submissions.store');
 });
 
-// ── Admin Submission Routes ───────────────────────────────────────────────────
 Route::middleware(['auth:api', 'role:admin'])->prefix('admin')->name('api.admin.')->group(function () {
     Route::get('submissions',              [AdminSubmissionController::class, 'index'])->name('submissions.index');
     Route::get('submissions/{id}',         [AdminSubmissionController::class, 'show'])->name('submissions.show');

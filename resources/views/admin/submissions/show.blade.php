@@ -6,7 +6,6 @@
 @section('content')
 <div class="space-y-6">
 
-    {{-- Back link --}}
     <a href="{{ route('admin.submissions.index') }}"
        class="inline-flex items-center gap-2 text-sm font-bold text-gray-700 hover:text-gray-900 transition-colors">
         <svg class="h-4 w-4 stroke-2" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"
@@ -18,10 +17,8 @@
 
     <div class="grid grid-cols-1 gap-6 lg:grid-cols-3">
 
-        {{-- ── Left: Detail Pengajuan ────────────────────────────────────── --}}
         <div class="lg:col-span-2 space-y-6">
 
-            {{-- Detail Barang/Jasa --}}
             <div class="rounded-xl bg-[#3553A8] p-6 shadow-sm">
                 <h2 class="mb-6 text-lg font-bold text-white underline underline-offset-8 decoration-2">
                     Detail Pengajuan
@@ -56,7 +53,6 @@
                 </dl>
             </div>
 
-            {{-- Deskripsi --}}
             @if ($submission->deskripsi)
                 <div class="rounded-xl bg-[#3553A8] p-6 shadow-sm">
                     <h2 class="mb-4 text-lg font-bold text-white">Deskripsi</h2>
@@ -64,7 +60,6 @@
                 </div>
             @endif
 
-            {{-- Spesifikasi --}}
             @if ($submission->spesifikasi)
                 <div class="rounded-xl bg-[#3553A8] p-6 shadow-sm">
                     <h2 class="mb-4 text-lg font-bold text-white">Spesifikasi</h2>
@@ -72,7 +67,6 @@
                 </div>
             @endif
 
-            {{-- Catatan dari Vendor --}}
             @if ($submission->catatan)
                 <div class="rounded-xl bg-[#3553A8] p-6 shadow-sm">
                     <h2 class="mb-4 text-lg font-bold text-white">Catatan dari Vendor</h2>
@@ -82,7 +76,6 @@
                 </div>
             @endif
 
-            {{-- Foto-Foto Pengajuan --}}
             <div class="rounded-xl bg-[#3553A8] p-6 shadow-sm">
                 <div class="mb-5 flex items-center justify-between gap-4">
                     <h2 class="text-lg font-bold text-white flex items-center gap-2">
@@ -90,7 +83,6 @@
                         <span class="text-xs font-normal text-indigo-200">({{ $submission->photos->count() }} foto)</span>
                     </h2>
 
-                    {{-- Tombol Download Semua --}}
                     @if ($submission->photos->isNotEmpty())
                         <button id="btn-download-all"
                                 onclick="downloadAllPhotos()"
@@ -121,7 +113,6 @@
                             <div class="group flex flex-col overflow-hidden rounded-xl border border-[#4A6BCC]
                                         bg-[#2B438A] hover:border-[#28C5D4] transition-colors duration-150">
 
-                                {{-- Preview Foto --}}
                                 <div class="relative aspect-square overflow-hidden cursor-pointer"
                                      onclick="openLightbox('{{ $photo->photo_url }}', {{ $index + 1 }}, {{ $submission->photos->count() }})">
                                     <img src="{{ $photo->photo_url }}"
@@ -129,7 +120,6 @@
                                          class="h-full w-full object-cover transition-transform duration-200 group-hover:scale-105"
                                          onerror="this.parentElement.innerHTML='<div class=\'flex h-full w-full items-center justify-center bg-[#1E3066]\'><p class=\'text-xs text-indigo-300 text-center px-2\'>Foto tidak tersedia</p></div>'">
 
-                                    {{-- Overlay Zoom --}}
                                     <div class="absolute inset-0 flex items-center justify-center opacity-0
                                                 group-hover:opacity-100 transition-opacity duration-200 bg-black/40">
                                         <svg class="h-8 w-8 text-white drop-shadow" xmlns="http://www.w3.org/2000/svg"
@@ -139,14 +129,12 @@
                                         </svg>
                                     </div>
 
-                                    {{-- Badge Nomor --}}
                                     <span class="absolute top-2 left-2 rounded-full bg-black/50 px-2 py-0.5
                                                  text-[10px] font-bold text-white">
                                         {{ $index + 1 }}
                                     </span>
                                 </div>
 
-                                {{-- Tombol Download Individual --}}
                                 <div class="flex items-center justify-between gap-2 px-3 py-2 border-t border-[#4A6BCC]">
                                     <span class="text-[11px] text-indigo-300 truncate">
                                         Foto {{ $index + 1 }}
@@ -169,7 +157,6 @@
                         @endforeach
                     </div>
 
-                    {{-- Data foto untuk JavaScript download semua --}}
                     @php
                         $photoData = $submission->photos->map(function($p, $i) use ($submission) {
                             return [
@@ -222,10 +209,8 @@
 
         </div>
 
-        {{-- ── Right: Info Vendor & Actions ─────────────────────────────── --}}
         <div class="space-y-6">
 
-            {{-- Info Vendor --}}
             <div class="rounded-xl bg-[#3553A8] p-6 shadow-sm">
                 <h2 class="mb-6 text-lg font-bold text-white">Info Vendor</h2>
                 <dl class="space-y-4 text-sm">
@@ -259,7 +244,6 @@
                 </dl>
             </div>
 
-            {{-- Status Pengajuan --}}
             <div class="rounded-xl bg-[#3553A8] p-6 shadow-sm">
                 <h2 class="mb-6 text-lg font-bold text-white">Status Pengajuan</h2>
                 @php
@@ -302,10 +286,8 @@
                 @endif
             </div>
 
-            {{-- ── Action Buttons (only when pending) ─────────────────── --}}
             @if ($submission->status === 'pending')
 
-                {{-- Approve --}}
                 <div class="rounded-xl bg-white border-2 border-[#28C5D4] p-6 shadow-sm">
                     <h3 class="mb-4 text-sm font-bold text-[#28C5D4] flex items-center gap-2">
                         <svg class="h-4 w-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor">
@@ -329,7 +311,6 @@
                     </form>
                 </div>
 
-                {{-- Reject --}}
                 <div class="rounded-xl bg-white border-2 border-red-300 p-6 shadow-sm">
                     <h3 class="mb-4 text-sm font-bold text-red-500 flex items-center gap-2">
                         <svg class="h-4 w-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor">

@@ -15,36 +15,28 @@ use App\Http\Controllers\Admin\SubmissionController;
 use App\Http\Controllers\Admin\WinnerSelectionController;
 use Illuminate\Support\Facades\Route;
 
-// ── Root redirect ────────────────────────────────────────────────────────────
 Route::get('/', fn () => redirect()->route('admin.login'));
 
-// ── Admin Routes ─────────────────────────────────────────────────────────────
 Route::prefix('admin')->name('admin.')->group(function () {
 
-    // Guest
     Route::get('login',  [AdminLoginController::class, 'showLogin'])->name('login');
     Route::post('login', [AdminLoginController::class, 'login'])->name('login.post');
 
-    // Protected
     Route::middleware(['auth', 'role:admin'])->group(function () {
 
         Route::post('logout', [AdminLoginController::class, 'logout'])->name('logout');
 
-        // Dashboard
         Route::get('dashboard', [DashboardController::class, 'index'])->name('dashboard');
 
-        // ── Vendor Management ─────────────────────────────────────────────────────────────
         Route::get('vendors',                   [VendorController::class, 'index'])->name('vendors.index');
         Route::get('vendors/{vendor}',          [VendorController::class, 'show'])->name('vendors.show');
         Route::patch('vendors/{vendor}/approve',[VendorController::class, 'approve'])->name('vendors.approve');
         Route::patch('vendors/{vendor}/reject', [VendorController::class, 'reject'])->name('vendors.reject');
 
-        // Download dokumen vendor untuk validasi legalitas
         Route::get('vendors/{vendor}/documents/{document}/download',
             [VendorDocumentController::class, 'download']
         )->name('vendors.documents.download');
 
-        // ── Tender Management ────────────────────────────────────────────────
         Route::get('tenders',               [TenderController::class, 'index'])->name('tenders.index');
         Route::get('tenders/create',        [TenderController::class, 'create'])->name('tenders.create');
         Route::post('tenders',              [TenderController::class, 'store'])->name('tenders.store');
@@ -54,33 +46,27 @@ Route::prefix('admin')->name('admin.')->group(function () {
         Route::delete('tenders/{tender}/photos/{photo}', [TenderController::class, 'deletePhoto'])->name('tenders.photos.destroy');
         Route::patch('tenders/{tender}/status', [TenderController::class, 'updateStatus'])->name('tenders.status');
 
-        // ── Announcement / Aanwijzing ────────────────────────────────────────
         Route::post('tenders/{tender}/announcements', [TenderAnnouncementController::class, 'store'])
             ->name('tenders.announcements.store');
 
-        // ── Participant Monitoring ───────────────────────────────────────────
         Route::get('tenders/{tender}/participants', [TenderParticipantController::class, 'index'])
             ->name('tenders.participants.index');
 
-        // ── Bid Monitoring ───────────────────────────────────────────────────
         Route::get('tenders/{tender}/bids', [BidMonitoringController::class, 'index'])
             ->name('tenders.bids.index');
         Route::get('tenders/{tender}/bids/{bid}/histories', [BidMonitoringController::class, 'histories'])
             ->name('tenders.bids.histories');
 
-        // ── Winner Selection ─────────────────────────────────────────────────
         Route::get('tenders/{tender}/winner/create', [WinnerSelectionController::class, 'create'])
             ->name('tenders.winner.create');
         Route::post('tenders/{tender}/winner', [WinnerSelectionController::class, 'store'])
             ->name('tenders.winner.store');
 
-        // ── Tender Result ────────────────────────────────────────────────────
         Route::get('tenders/{tender}/result',  [TenderResultController::class, 'show'])
             ->name('tenders.result.show');
         Route::patch('tenders/{tender}/finish', [TenderResultController::class, 'finish'])
             ->name('tenders.finish');
 
-        // ── Purchase Order ───────────────────────────────────────────────────
         Route::get('tenders/{tender}/purchase-order/create', [PurchaseOrderController::class, 'create'])
             ->name('tenders.purchase-order.create');
         Route::post('tenders/{tender}/purchase-order', [PurchaseOrderController::class, 'store'])
@@ -90,11 +76,9 @@ Route::prefix('admin')->name('admin.')->group(function () {
         Route::get('tenders/{tender}/purchase-order/pdf', [PurchaseOrderController::class, 'downloadPdf'])
             ->name('tenders.purchase-order.pdf');
 
-        // ── Tender History ───────────────────────────────────────────────────
         Route::get('tenders/{tender}/histories', [TenderHistoryController::class, 'index'])
             ->name('tenders.histories.index');
 
-        // ── Pengajuan Vendor (dari Mobile App) ───────────────────────────────
         Route::get('submissions',                       [SubmissionController::class, 'index'])->name('submissions.index');
         Route::get('submissions/{submission}',          [SubmissionController::class, 'show'])->name('submissions.show');
         Route::patch('submissions/{submission}/approve',[SubmissionController::class, 'approve'])->name('submissions.approve');

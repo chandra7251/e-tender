@@ -1,48 +1,37 @@
 <?php
-
 namespace App\Http\Requests\Admin;
-
 use Illuminate\Foundation\Http\FormRequest;
-
 class TenderStatusRequest extends FormRequest
 {
-    // Peta transisi status yang diizinkan (kecuali 'finished').
     private const ALLOWED_TRANSITIONS = [
         'draft'      => ['open'],
         'open'       => ['aanwijzing', 'bidding', 'closed'],
         'aanwijzing' => ['bidding', 'closed'],
         'bidding'    => ['closed'],
-        'closed'     => [], // finished hanya via TenderResultController::finish()
-        'finished'   => [], // terminal state — tidak bisa mundur
+        'closed'     => [], 
+        'finished'   => [], 
     ];
-
     public function authorize(): bool
     {
         return auth()->check() && auth()->user()->role === 'admin';
     }
-
     public function rules(): array
     {
         return [
-            // 'finished' tidak bisa diatur via form
             'status'      => ['required', 'in:draft,open,aanwijzing,bidding,closed'],
             'description' => ['nullable', 'string', 'max:500'],
         ];
     }
-
     public function withValidator($validator): void
     {
         $validator->after(function ($validator) {
             $tender = $this->route('tender');
-
             if (!$tender) {
                 return;
             }
-
             $current = $tender->status;
             $new     = $this->input('status');
             $allowed = self::ALLOWED_TRANSITIONS[$current] ?? [];
-
             if (!in_array($new, $allowed)) {
                 $validator->errors()->add(
                     'status',
@@ -54,7 +43,6 @@ class TenderStatusRequest extends FormRequest
             }
         });
     }
-
     public function messages(): array
     {
         return [

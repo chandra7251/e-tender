@@ -6,7 +6,6 @@
 @section('content')
 <div class="space-y-6">
 
-    {{-- Back link --}}
     <a href="{{ route('admin.vendors.index') }}"
        class="inline-flex items-center gap-2 text-sm font-bold text-gray-700 hover:text-gray-900 transition-colors">
         <svg class="h-4 w-4 stroke-2" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"
@@ -18,10 +17,8 @@
 
     <div class="grid grid-cols-1 gap-6 lg:grid-cols-3">
 
-        {{-- ── Left: Vendor Info ──────────────────────────────────────────── --}}
         <div class="lg:col-span-2 space-y-6">
 
-            {{-- Company Info --}}
             <div class="rounded-xl bg-[#3553A8] p-6 shadow-sm">
                 <h2 class="mb-6 text-lg font-bold text-white underline underline-offset-8 decoration-2">Informasi Perusahaan</h2>
                 <dl class="space-y-4 text-sm">
@@ -44,7 +41,6 @@
                 </dl>
             </div>
 
-            {{-- User Info --}}
             <div class="rounded-xl bg-[#3553A8] p-6 shadow-sm">
                 <h2 class="mb-6 text-lg font-bold text-white">Akun User</h2>
                 <dl class="space-y-4 text-sm">
@@ -63,7 +59,6 @@
                 </dl>
             </div>
 
-            {{-- Documents --}}
             <div class="rounded-xl bg-[#3553A8] p-6 shadow-sm">
                 <h2 class="mb-6 text-lg font-bold text-white flex items-center">
                     Dokumen Vendor
@@ -77,7 +72,7 @@
                         @foreach ($vendor->documents as $doc)
                             <li class="flex items-center justify-between rounded-lg border border-[#4A6BCC] bg-[#2B438A] px-4 py-3">
                                 <div class="flex items-center gap-3">
-                                    {{-- Icon file berdasarkan tipe MIME --}}
+
                                     @if (str_contains($doc->mime_type ?? '', 'pdf'))
                                         <svg class="h-5 w-5 shrink-0 text-red-300" xmlns="http://www.w3.org/2000/svg"
                                              fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
@@ -102,7 +97,6 @@
                                     </div>
                                 </div>
 
-                                {{-- Tombol download — hanya admin yang bisa akses karena route ini dilindungi middleware auth + role:admin --}}
                                 <a href="{{ route('admin.vendors.documents.download', [$vendor, $doc]) }}"
                                    title="Download {{ $doc->file_name }}"
                                    class="ml-4 inline-flex shrink-0 items-center gap-1.5 rounded-md bg-[#28C5D4] px-3 py-1.5 text-xs font-bold text-white hover:bg-teal-500 transition-colors duration-150">
@@ -122,10 +116,8 @@
 
         </div>
 
-        {{-- ── Right: Verification Status & Actions ───────────────────────── --}}
         <div class="space-y-6">
 
-            {{-- Status Card --}}
             <div class="rounded-xl bg-[#3553A8] p-6 shadow-sm">
                 <h2 class="mb-6 text-lg font-bold text-white">Status Verifikasi</h2>
 
@@ -164,10 +156,8 @@
                 @endif
             </div>
 
-            {{-- ── Actions (only shown when pending) ─────────────────────── --}}
             @if ($vendor->verification_status === 'pending')
 
-                {{-- Approve Form --}}
                 <div class="rounded-xl bg-white border border-[#28C5D4] p-6 shadow-sm">
                     <h3 class="mb-4 text-sm font-bold text-[#28C5D4]">Approve Vendor</h3>
                     <form method="POST" action="{{ route('admin.vendors.approve', $vendor) }}">
@@ -191,7 +181,6 @@
                     </form>
                 </div>
 
-                {{-- Reject Form --}}
                 <div class="rounded-xl bg-white border border-red-200 p-6 shadow-sm">
                     <h3 class="mb-4 text-sm font-bold text-red-500">Reject Vendor</h3>
                     <form method="POST" action="{{ route('admin.vendors.reject', $vendor) }}">

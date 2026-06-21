@@ -6,9 +6,7 @@ use Illuminate\Support\Facades\Schema;
 
 return new class extends Migration
 {
-    /**
-     * Run the migrations.
-     */
+
     public function up(): void
     {
         Schema::create('tenders', function (Blueprint $table) {
@@ -22,7 +20,7 @@ return new class extends Migration
             $table->dateTime('aanwijzing_date')->nullable();
             $table->dateTime('bidding_start');
             $table->dateTime('bidding_end');
-            $table->string('status')->default('draft'); // draft | open | aanwijzing | bidding | closed | finished
+            $table->string('status')->default('draft'); 
             $table->timestamps();
             $table->softDeletes();
 
@@ -33,9 +31,6 @@ return new class extends Migration
         });
     }
 
-    /**
-     * Reverse the migrations.
-     */
     public function down(): void
     {
         Schema::dropIfExists('tenders');

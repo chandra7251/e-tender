@@ -1,15 +1,11 @@
 <?php
-
 namespace App\Models;
-
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\SoftDeletes;
-
 class PurchaseOrder extends Model
 {
     use SoftDeletes;
-
     protected $fillable = [
         'tender_result_id',
         'tender_id',
@@ -20,7 +16,6 @@ class PurchaseOrder extends Model
         'notes',
         'generated_by',
     ];
-
     protected function casts(): array
     {
         return [
@@ -28,24 +23,18 @@ class PurchaseOrder extends Model
             'issued_date' => 'date',
         ];
     }
-
-    // ─── Relationships ────────────────────────────────────────────────────────
-
     public function tenderResult(): BelongsTo
     {
         return $this->belongsTo(TenderResult::class);
     }
-
     public function tender(): BelongsTo
     {
         return $this->belongsTo(Tender::class);
     }
-
     public function vendor(): BelongsTo
     {
         return $this->belongsTo(Vendor::class);
     }
-
     public function generator(): BelongsTo
     {
         return $this->belongsTo(User::class, 'generated_by');

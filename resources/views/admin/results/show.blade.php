@@ -6,7 +6,6 @@
 @section('content')
 <div class="mx-auto max-w-4xl space-y-6">
 
-    {{-- Toolbar --}}
     <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <a href="{{ route('admin.tenders.show', $tender) }}"
            class="inline-flex items-center gap-1.5 text-sm font-semibold text-[#3553A8] hover:text-[#2B438A] transition-colors">
@@ -41,13 +40,12 @@
         </div>
     </div>
 
-    {{-- Winner Card (Enterprise Style) --}}
     <div class="bg-white rounded-xl shadow-md border border-gray-200 overflow-hidden relative">
-        {{-- Decorative Top Line --}}
+
         <div class="absolute top-0 left-0 right-0 h-2 bg-emerald-500"></div>
 
         <div class="p-6 sm:p-10">
-            {{-- Badge & Winner Name --}}
+
             <div class="flex flex-col md:flex-row items-center md:items-start gap-6 border-b border-gray-200 pb-8 mb-8">
                 <div class="flex-shrink-0">
                     <div class="h-20 w-20 rounded-full bg-emerald-100 border-4 border-emerald-50 flex items-center justify-center shadow-sm">
@@ -68,7 +66,6 @@
                 </div>
             </div>
 
-            {{-- Details Grid --}}
             <div class="grid grid-cols-1 md:grid-cols-2 gap-x-12 gap-y-8 mb-10">
                 <div>
                     <p class="text-xs font-bold text-gray-400 uppercase tracking-wider mb-2">Tender</p>
@@ -97,7 +94,6 @@
                 </div>
             </div>
 
-            {{-- Notes --}}
             @if ($result->notes)
             <div class="mb-8 rounded-lg bg-gray-50 border border-gray-200 p-5 shadow-sm">
                 <p class="text-xs font-bold text-gray-600 uppercase tracking-wider mb-2">Catatan Penunjukan</p>
@@ -109,8 +105,7 @@
                 <div class="text-sm text-gray-500 mb-4 sm:mb-0">
                     Diputuskan oleh: <span class="font-bold text-gray-800">{{ $result->decider->name ?? '-' }}</span>
                 </div>
-                
-                {{-- Secondary Actions --}}
+
                 <div class="flex items-center gap-3">
                     <a href="{{ route('admin.tenders.histories.index', $tender) }}"
                        class="rounded-lg bg-white border border-gray-300 px-4 py-2 text-sm font-semibold text-gray-700 hover:bg-gray-50 shadow-sm transition-colors flex items-center gap-2">
@@ -125,9 +120,8 @@
         </div>
     </div>
 
-    {{-- Purchase Order Banner --}}
     <div class="bg-gradient-to-r from-[#3553A8] to-[#2980b9] rounded-xl shadow-md border border-[#2B438A] p-6 text-white flex flex-col md:flex-row items-center justify-between gap-6 relative overflow-hidden">
-        <!-- Abstract BG Shape -->
+
         <div class="absolute right-0 top-0 bottom-0 w-64 opacity-10 pointer-events-none">
             <svg viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg">
               <path fill="#ffffff" d="M44.7,-76.4C58.8,-69.2,71.8,-59.1,81.4,-46.4C91.1,-33.7,97.5,-18.4,95.5,-3.5C93.4,11.5,82.9,26.1,72.6,39.3C62.4,52.4,52.4,64,39.8,71.7C27.2,79.4,12.1,83.1,-3.5,89C-19.1,94.9,-35.1,102.9,-46.9,96.6C-58.7,90.2,-66.2,69.5,-73.2,50.7C-80.2,31.8,-86.6,14.8,-86.8,-2.3C-87,-19.4,-80.9,-36.5,-70.7,-50.2C-60.5,-63.9,-46.2,-74.1,-31.6,-80.7C-17,-87.3,-2.1,-90.3,12.7,-88.4C27.5,-86.4,42.2,-79.6,44.7,-76.4Z" transform="translate(100 100) scale(1.1)" />

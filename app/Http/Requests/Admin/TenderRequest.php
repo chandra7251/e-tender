@@ -1,16 +1,12 @@
 <?php
-
 namespace App\Http\Requests\Admin;
-
 use Illuminate\Foundation\Http\FormRequest;
-
 class TenderRequest extends FormRequest
 {
     public function authorize(): bool
     {
         return auth()->check() && auth()->user()->role === 'admin';
     }
-
     public function rules(): array
     {
         $rules = [
@@ -25,17 +21,12 @@ class TenderRequest extends FormRequest
             'aanwijzing_date'     => ['nullable', 'date'],
             'bidding_start'       => ['required', 'date', 'after_or_equal:start_date'],
             'bidding_end'         => ['required', 'date', 'after:bidding_start', 'before_or_equal:end_date'],
-            // 'status' dikelola eksklusif via PATCH /tenders/{tender}/status
         ];
-
-        // Jika ini adalah pembuatan tender baru (POST), tanggal mulai tidak boleh di masa lalu
         if ($this->isMethod('post')) {
             $rules['start_date'][] = 'after_or_equal:today';
         }
-
         return $rules;
     }
-
     public function messages(): array
     {
         return [

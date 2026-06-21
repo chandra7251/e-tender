@@ -9,7 +9,7 @@ return new class extends Migration
     public function up(): void
     {
         Schema::table('tenders', function (Blueprint $table) {
-            // Harga pembukaan bidding (Open Bidding Price / HPS)
+
             $table->decimal('open_bidding_price', 15, 2)->nullable()->after('specification');
         });
     }

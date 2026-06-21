@@ -6,7 +6,6 @@
 @section('content')
 <div class="space-y-6">
 
-    {{-- Back + header --}}
     <div class="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
         <a href="{{ route('admin.tenders.show', $tender) }}"
            class="inline-flex items-center gap-2 text-sm font-bold text-[#3553A8] hover:text-[#2B438A] transition-colors">
@@ -21,21 +20,20 @@
         </div>
     </div>
 
-    {{-- Summary cards --}}
     <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
-        {{-- Total Bid --}}
+
         <div class="rounded-lg bg-[#3553A8] p-5 shadow flex flex-col justify-center">
             <p class="text-xs font-semibold text-indigo-200 uppercase tracking-wider mb-1">Total Bid</p>
             <p class="text-2xl font-bold text-white">{{ $bids->count() }}</p>
         </div>
-        {{-- Bid Terendah --}}
+
         <div class="rounded-lg bg-white border-2 border-[#3553A8] p-5 shadow flex flex-col justify-center">
             <p class="text-xs font-semibold text-[#3553A8] uppercase tracking-wider mb-1">Bid Terendah</p>
             <p class="text-2xl font-bold text-[#3553A8]">
                 {{ $bids->isNotEmpty() ? 'Rp ' . number_format($bids->first()->bid_amount, 0, ',', '.') : '-' }}
             </p>
         </div>
-        {{-- Bid Tertinggi --}}
+
         <div class="rounded-lg bg-[#3553A8] p-5 shadow flex flex-col justify-center">
             <p class="text-xs font-semibold text-indigo-200 uppercase tracking-wider mb-1">Bid Tertinggi</p>
             <p class="text-2xl font-bold text-white">
@@ -44,7 +42,6 @@
         </div>
     </div>
 
-    {{-- Table --}}
     <div class="rounded-lg bg-[#3553A8] shadow w-full">
         <table class="w-full text-left text-sm text-white">
             <thead>

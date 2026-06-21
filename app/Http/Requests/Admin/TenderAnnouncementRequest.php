@@ -1,16 +1,12 @@
 <?php
-
 namespace App\Http\Requests\Admin;
-
 use Illuminate\Foundation\Http\FormRequest;
-
 class TenderAnnouncementRequest extends FormRequest
 {
     public function authorize(): bool
     {
         return auth()->check() && auth()->user()->role === 'admin';
     }
-
     public function rules(): array
     {
         return [
@@ -19,7 +15,6 @@ class TenderAnnouncementRequest extends FormRequest
             'published_at' => ['required', 'date'],
         ];
     }
-
     public function messages(): array
     {
         return [

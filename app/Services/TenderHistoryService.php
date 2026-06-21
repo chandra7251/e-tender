@@ -1,14 +1,8 @@
 <?php
-
 namespace App\Services;
-
 use App\Models\TenderHistory;
-
 class TenderHistoryService
 {
-    /**
-     * Log an action to tender_histories.
-     */
     public function log(
         int $tenderId,
         int $actorId,

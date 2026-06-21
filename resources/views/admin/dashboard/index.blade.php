@@ -5,7 +5,7 @@
 
 @section('content')
 @php
-    // Fetch Tender Stats directly in view (tanpa mengubah backend/controller)
+
     $tenderQuery = \App\Models\Tender::query();
     if (request()->has('tender_id')) {
         $selectedTender = \App\Models\Tender::find(request('tender_id'));
@@ -28,33 +28,29 @@
         ];
     }
 
-    // List of active tenders for modal
     $activeTenders = \App\Models\Tender::whereNotIn('status', ['draft'])->latest()->get(['id', 'title']);
 @endphp
 
 <div class="space-y-6">
 
-    {{-- Top Cards Grid --}}
     <div class="grid grid-cols-1 gap-6 md:grid-cols-3">
 
-        {{-- 1. TOTAL VENDOR CARD --}}
         <div class="flex flex-col rounded-2xl bg-white p-6 shadow-sm border border-gray-100">
             <div class="flex items-center justify-between mb-4">
                 <h3 class="text-sm font-bold text-gray-900 tracking-wide">TOTAL VENDOR</h3>
                 <div class="flex h-10 w-10 items-center justify-center rounded-lg bg-[#77ACEC] bg-opacity-15 text-[#3553A8]">
-                    {{-- Users Icon --}}
+
                     <svg class="h-6 w-6" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor">
                         <path d="M4.5 6.375a4.125 4.125 0 118.25 0 4.125 4.125 0 01-8.25 0zM14.25 8.625a3.375 3.375 0 116.75 0 3.375 3.375 0 01-6.75 0zM1.5 19.125a7.125 7.125 0 0114.25 0v.003l-.001.119a.75.75 0 01-.363.63 13.067 13.067 0 01-6.761 1.873c-2.472 0-4.786-.684-6.76-1.873a.75.75 0 01-.364-.63l-.001-.122zM17.25 19.128l-.001.144a2.25 2.25 0 01-.233.96 10.088 10.088 0 005.06-1.01.75.75 0 00.42-.643 4.875 4.875 0 00-6.957-4.611 8.586 8.586 0 011.71 5.157v.003z" />
                     </svg>
                 </div>
             </div>
-            
+
             <div class="mb-4">
                 @php $vendorTotal = \App\Models\Vendor::count(); @endphp
                 <span class="text-5xl font-extrabold text-gray-900">{{ $vendorTotal }}</span>
             </div>
 
-            {{-- Progress Bar --}}
             @php
                 $approved = \App\Models\Vendor::where('verification_status', 'approved')->count();
                 $pending = \App\Models\Vendor::where('verification_status', 'pending')->count();
@@ -70,7 +66,6 @@
                 @if($pctApp > 0)<div style="width: {{ $pctApp }}%" class="bg-[#28C5D4]"></div>@endif
             </div>
 
-            {{-- Legend --}}
             <div class="space-y-1.5 text-xs font-semibold text-gray-800">
                 <div class="flex items-center gap-2">
                     <div class="h-2.5 w-2.5 rounded-full bg-[#28C5D4]"></div>
@@ -87,24 +82,22 @@
             </div>
         </div>
 
-        {{-- 2. TOTAL TENDER CARD --}}
         <div class="flex flex-col rounded-2xl bg-white p-6 shadow-sm border border-gray-100">
             <div class="flex items-center justify-between mb-4">
                 <h3 class="text-sm font-bold text-gray-900 tracking-wide">TOTAL TENDER</h3>
                 <div class="flex h-10 w-10 items-center justify-center rounded-lg bg-[#77ACEC] bg-opacity-15 text-[#3553A8]">
-                    {{-- Document Icon --}}
+
                     <svg class="h-6 w-6" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor">
                         <path fill-rule="evenodd" d="M5.625 1.5c-1.036 0-1.875.84-1.875 1.875v17.25c0 1.035.84 1.875 1.875 1.875h12.75c1.035 0 1.875-.84 1.875-1.875V12.75A3.75 3.75 0 0016.5 9h-1.875a1.875 1.875 0 01-1.875-1.875V5.25A3.75 3.75 0 009 1.5H5.625zM7.5 15a.75.75 0 01.75-.75h7.5a.75.75 0 010 1.5h-7.5A.75.75 0 017.5 15zm.75 2.25a.75.75 0 000 1.5H12a.75.75 0 000-1.5H8.25z" clip-rule="evenodd" />
                     </svg>
                 </div>
             </div>
-            
+
             <div class="mb-4">
                 @php $tenderTotal = \App\Models\Tender::count(); @endphp
                 <span class="text-5xl font-extrabold text-gray-900">{{ $tenderTotal }}</span>
             </div>
 
-            {{-- Progress Bar --}}
             @php
                 $tenderOpen = \App\Models\Tender::where('status', 'open')->count();
                 $tenderBidding = \App\Models\Tender::where('status', 'bidding')->count();
@@ -129,7 +122,6 @@
                 @if($pctDraft > 0)<div style="width: {{ $pctDraft }}%" class="bg-[#6B7280]"></div>@endif
             </div>
 
-            {{-- Legend --}}
             <div class="flex flex-wrap gap-x-3 gap-y-1.5 text-[10px] font-semibold text-gray-800">
                 <div class="flex items-center gap-1.5"><div class="h-2.5 w-2.5 rounded-full bg-[#2AC6D6] shrink-0"></div> Tender Open: {{ $tenderOpen }}</div>
                 <div class="flex items-center gap-1.5"><div class="h-2.5 w-2.5 rounded-full" style="background-color: #F6F6F6; border: 1px solid rgba(0,0,0,0.30);" ></div> Finished: {{ $tenderFinished }}</div>
@@ -140,12 +132,11 @@
             </div>
         </div>
 
-        {{-- 3. BIDDING & PESERTA CARD --}}
         <div class="flex flex-col rounded-2xl bg-white p-6 shadow-sm border border-gray-100 relative">
             <div class="flex items-center justify-between mb-2">
                 <h3 class="text-sm font-bold text-gray-900 tracking-wide">BIDDING & PESERTA :</h3>
                 <div class="flex h-10 w-10 items-center justify-center rounded-xl bg-[#77ACEC] bg-opacity-15 text-[#3553A8]">
-                    {{-- Icon Gavel dari file gambar --}}
+
                     <img src="{{ asset('images/palu.png') }}" alt="Palu Lelang" class="h-5 w-5 object-contain" onerror="this.style.display='none'">
                 </div>
             </div>
@@ -155,14 +146,14 @@
                     Belum ada tender yang berjalan.
                 </div>
             @else
-                {{-- Judul + Tombol Search --}}
+
                 <div class="flex items-center justify-between gap-4 mb-5">
                     <p class="text-base font-bold text-gray-900 leading-snug flex-1"
                        style="-webkit-line-clamp: 2; -webkit-box-orient: vertical; display: -webkit-box; overflow: hidden;"
                        title="{{ $tenderStats['title'] }}">
                         {{ $tenderStats['title'] }}
                     </p>
-                    {{-- Search Button — fixed position, always right --}}
+
                     <button type="button"
                             onclick="openSearchModal()"
                             title="Cari Tender Lain"
@@ -177,7 +168,7 @@
                         </svg>
                     </button>
                 </div>
-                
+
                 <div class="flex justify-between mt-2 mb-8 px-4">
                     <div class="text-center w-1/2">
                         <p class="text-4xl font-extrabold text-gray-900">{{ $tenderStats['total_bid'] }}</p>
@@ -213,7 +204,6 @@
 
     </div>
 
-    {{-- Chart Card --}}
     <div class="rounded-2xl bg-white p-6 shadow-sm border border-gray-100">
 
         @php
@@ -221,7 +211,6 @@
             $nowJkt   = \Carbon\Carbon::now('Asia/Jakarta');
             $todayStr = $nowJkt->format('Y-m-d');
 
-            // ── Reference point (from URL param) ──────────────────────────
             $selectedWeek = request('week', $nowJkt->format('Y-\WW'));
             $selYear = (int) substr($selectedWeek, 0, 4);
             $selWk   = (int) substr($selectedWeek, 6);
@@ -229,19 +218,13 @@
             $selSun  = $selMon->copy()->endOfWeek();
             $selWeekNum = min($selMon->weekOfMonth, 4);
 
-            // Month reference
             $mStart      = $selMon->copy()->startOfMonth();
             $mEnd        = $selMon->copy()->endOfMonth();
             $daysInMonth = $mEnd->day;
 
-            // ── Pre-fetch semua tender untuk eksistensi waktu ────────────
             $allTenders = \App\Models\Tender::select('id', 'status', 'start_date', 'created_at')
                 ->get()->keyBy('id');
 
-            // ── Pre-fetch semua event status dari tender_histories ────────
-            // Dikelompokkan per tender_id, diurutkan berdasarkan waktu kejadian.
-            // Gunakan whereNotNull('new_status') untuk menangkap semua event 
-            // (termasuk 'winner_selected' yang mungkin tidak ber-action 'status_changed')
             $allHistories = \App\Models\TenderHistory::whereNotNull('new_status')
                 ->select('tender_id', 'new_status', 'created_at')
                 ->orderBy('tender_id')
@@ -249,26 +232,23 @@
                 ->get()
                 ->groupBy('tender_id');
 
-            // Helper: hitung jumlah tender per status pada titik waktu $endStr.
             $getCounts = function(string $endStr) use ($allTenders, $allHistories): array {
                 $c = ['open'=>0,'bidding'=>0,'aanwijzing'=>0,'finished'=>0,'closed'=>0,'draft'=>0];
                 foreach ($allTenders as $tenderId => $tender) {
-                    // 1. Kapan tender mulai muncul di grafik?
-                    // Draft -> pakai created_at. Lainnya -> pakai start_date (atau fallback ke created_at)
+
                     $rawDate = $tender->status === 'draft' 
                         ? $tender->created_at 
                         : ($tender->start_date ?: $tender->created_at);
-                    
+
                     $baseDateStr = $rawDate instanceof \Carbon\Carbon
                         ? $rawDate->format('Y-m-d H:i:s')
                         : substr((string)$rawDate, 0, 19);
-                    
+
                     if ($baseDateStr > $endStr) continue; // Tender belum dimulai pada tanggal ini
 
-                    // 2. Cari status historis dari tender_histories
                     $statusAtDate = null;
                     $firstKnownStatus = null;
-                    
+
                     if ($allHistories->has($tenderId)) {
                         $firstKnownStatus = $allHistories[$tenderId]->first()->new_status;
                         foreach ($allHistories[$tenderId] as $h) {
@@ -281,8 +261,6 @@
                         }
                     }
 
-                    // 3. Fallback: Jika tanggal grafik < histori pertama yang tercatat, 
-                    //    gunakan status awal (firstKnownStatus) BUKAN status terkini.
                     if ($statusAtDate === null) {
                         $statusAtDate = $firstKnownStatus ?? $tender->status;
                     }
@@ -301,7 +279,6 @@
                 return array_merge(['label'=>$label,'sub'=>$sub], $c);
             };
 
-            // ── 1. 1 Minggu — 7 daily columns ────────────────────────────
             $dWeek = [];
             for ($i = 0; $i < 7; $i++) {
                 $d = $selMon->copy()->addDays($i);
@@ -313,8 +290,6 @@
                 );
             }
 
-            // ── 2. 1 Bulan — adaptive 6 groups ───────────────────────────
-            // Distribute days evenly: first ($days % 6) groups get (floor+1) days
             $dMonth = [];
             $base   = intdiv($daysInMonth, 6);
             $extra  = $daysInMonth % 6;
@@ -333,7 +308,6 @@
                 $ptr = $dayEnd + 1;
             }
 
-            // ── 3. 3 Bulan — 6 × 15-day groups ──────────────────────────
             $dQuarter = [];
             $qBase    = $mStart->copy()->subMonths(2)->startOfMonth();
             for ($i = 0; $i < 6; $i++) {
@@ -347,7 +321,6 @@
                 );
             }
 
-            // ── 4. 6 Bulan — 6 monthly groups ────────────────────────────
             $dHalf = [];
             $hBase = $mStart->copy()->subMonths(5)->startOfMonth();
             for ($m = 0; $m < 6; $m++) {
@@ -361,7 +334,6 @@
                 );
             }
 
-            // ── 5. 1 Tahun — 12 monthly groups ───────────────────────────
             $dYear = [];
             $yBase = \Carbon\Carbon::create($selMon->year, 1, 1)->startOfMonth();
             for ($m = 0; $m < 12; $m++) {
@@ -375,7 +347,6 @@
                 );
             }
 
-            // ── Navigation URLs & Labels ──────────────────────────────────
             $chartNav = json_encode([
                 'week'     => [
                     'prev'    => route('admin.dashboard', ['week' => $selMon->copy()->subWeek()->format('Y-\WW')]),
@@ -423,12 +394,11 @@
             ], JSON_HEX_TAG);
         @endphp
 
-        {{-- ── Header: Title + Tabs + Navigator ─────────────────────── --}}
         <div class="flex flex-col sm:flex-row sm:flex-wrap sm:items-start sm:justify-between gap-3 mb-6">
             <h3 class="text-base md:text-lg font-bold text-gray-800">Recent Tender & Bidding Activity</h3>
 
             <div class="flex flex-col sm:flex-row sm:flex-wrap items-start sm:items-center gap-2">
-                {{-- Period Tabs --}}
+
                 <div class="flex items-center gap-0.5 bg-gray-100 rounded-xl p-1 overflow-x-auto max-w-full">
                     @foreach(['week'=>'1 Mgg','month'=>'1 Bln','quarter'=>'3 Bln','halfYear'=>'6 Bln','year'=>'1 Thn'] as $pKey => $pLbl)
                     <button type="button"
@@ -440,7 +410,6 @@
                     @endforeach
                 </div>
 
-                {{-- Context Navigator --}}
                 <div class="flex items-center gap-1 rounded-xl border border-gray-200 bg-gray-50 px-2 py-1.5 shadow-sm">
                     <a id="chartNavPrev" href="#"
                        class="flex h-7 w-7 items-center justify-center rounded-lg text-gray-500 hover:bg-[#3553A8] hover:text-white transition-colors duration-150"
@@ -464,7 +433,6 @@
             </div>
         </div>
 
-        {{-- Legend --}}
         <div class="flex flex-wrap items-center justify-center gap-3 md:gap-6 mb-8 md:mb-12 text-xs md:text-sm font-semibold text-gray-500">
             <div class="flex items-center gap-1.5"><div class="h-3.5 w-3.5 md:h-5 md:w-5 rounded-full bg-[#2AC6D6] shrink-0"></div><span>Tender Open</span></div>
             <div class="flex items-center gap-1.5"><div class="h-3.5 w-3.5 md:h-5 md:w-5 rounded-full bg-[#FCE300] shrink-0"></div><span>Bidding</span></div>
@@ -474,7 +442,6 @@
             <div class="flex items-center gap-1.5"><div class="h-3.5 w-3.5 md:h-5 md:w-5 rounded-full bg-[#6B7280] shrink-0"></div><span>Draft</span></div>
         </div>
 
-        {{-- Chart Area (JS-rendered) — scrollable on mobile --}}
         <div class="overflow-x-auto -mx-2">
             <div id="chartContainer" class="relative h-[280px] md:h-[320px] mt-4">
                 <div id="chartYAxis"    class="absolute top-0 right-0 left-0 bottom-[60px] z-0"></div>
@@ -484,12 +451,9 @@
         </div>
     </div>
 
-    {{-- ═══════════════════════════════════════════════════════════════ --}}
-    {{-- Chart Script                                                    --}}
-    {{-- ═══════════════════════════════════════════════════════════════ --}}
     <script>
     (function() {
-        // ── Data injected from PHP ──────────────────────────────────────
+
         const CHART_DATA = {!! $chartAllData !!};
         const CHART_NAV  = {!! $chartNav !!};
 
@@ -508,15 +472,12 @@
         };
         const STATUSES = ['open','bidding','aanwijzing','finished','closed','draft'];
 
-        // ── State ───────────────────────────────────────────────────────
         let _period = localStorage.getItem('chartPeriod') || 'week';
 
-        // ── Set Period ──────────────────────────────────────────────────
         window.setChartPeriod = function(period) {
             _period = period;
             localStorage.setItem('chartPeriod', period);
 
-            // Update tabs
             document.querySelectorAll('.chart-period-tab').forEach(function(btn) {
                 btn.style.background = '';
                 btn.style.color      = '#6B7280';
@@ -529,7 +490,6 @@
                 activeTab.style.boxShadow  = '0 1px 3px rgba(0,0,0,0.12)';
             }
 
-            // Update navigator label + links
             var nav = CHART_NAV[period];
             document.getElementById('chartNavLabel').textContent = nav.label;
             document.getElementById('chartNavSub').textContent   = nav.sub;
@@ -547,18 +507,17 @@
             renderChart(CHART_DATA[period]);
         };
 
-        // ── Render Chart ────────────────────────────────────────────────
         function renderChart(data) {
-            // ── Dynamic width for mobile: 100px per data point ───────
+
             var chartContainer = document.getElementById('chartContainer');
             if (chartContainer) {
                 var isMobile = window.innerWidth < 768;
                 if (isMobile) {
-                    // Give each data point 115px of space, minimum 460px
+
                     var calcWidth = Math.max(460, data.length * 115);
                     chartContainer.style.minWidth = calcWidth + 'px';
                 } else {
-                    // Desktop: fill container naturally, no forced min-width
+
                     chartContainer.style.minWidth = '';
                 }
             }
@@ -567,13 +526,11 @@
             var barsEl   = document.getElementById('chartBarsArea');
             var xlabEl   = document.getElementById('chartXLabels');
 
-            // Max value
             var maxVal = 6;
             data.forEach(function(pt) {
                 STATUSES.forEach(function(s) { if (pt[s] > maxVal) maxVal = pt[s]; });
             });
 
-            // Step
             var step = 1;
             if      (maxVal > 1000) step = 200;
             else if (maxVal > 500)  step = 100;
@@ -583,7 +540,6 @@
             else if (maxVal > 10)   step = 2;
             var yMax = Math.ceil(maxVal / step) * step;
 
-            // Y-Axis
             var yHtml = '';
             for (var v = yMax; v >= 0; v -= step) {
                 var pct = (v / yMax) * 100;
@@ -593,10 +549,9 @@
             }
             yAxisEl.innerHTML = yHtml;
 
-            // Bars + X-Labels
             var barsHtml = '', xlHtml = '';
             data.forEach(function(pt, idx) {
-                // Tooltip rows
+
                 var rows = '';
                 STATUSES.forEach(function(s) {
                     var c = COLORS[s];
@@ -607,7 +562,6 @@
                             '<td>' + STATUS_NAMES[s] + ': ' + pt[s] + '</td></tr>';
                 });
 
-                // Bar elements
                 var barEls = '';
                 STATUSES.forEach(function(s) {
                     if (pt[s] > 0) {
@@ -637,7 +591,6 @@
             xlabEl.innerHTML = xlHtml;
         }
 
-        // ── Boot ────────────────────────────────────────────────────────
         document.addEventListener('DOMContentLoaded', function() {
             setChartPeriod(_period);
         });
@@ -651,15 +604,8 @@
         }
     </style>
 
-
-
 </div>
 
-{{-- ============================================================ --}}
-{{-- Search Tender Modal (Redesigned) --}}
-{{-- ============================================================ --}}
-
-{{-- Data tender diambil ulang di View (tanpa menyentuh Controller) --}}
 @php
     $modalTenders = \App\Models\Tender::whereNotIn('status', ['draft'])
                         ->latest()
@@ -681,7 +627,6 @@
     <div class="bg-white rounded-2xl shadow-2xl w-full max-w-lg mx-4 flex flex-col overflow-hidden"
          style="max-height: 82vh;">
 
-        {{-- Header --}}
         <div class="px-6 pt-5 pb-4 flex items-center justify-between flex-shrink-0"
              style="background: linear-gradient(135deg, #3553A8 0%, #2AC6D6 100%);">
             <div class="flex items-center gap-3">
@@ -711,7 +656,6 @@
             </button>
         </div>
 
-        {{-- Search Bar --}}
         <div class="px-5 py-3.5 border-b border-gray-100 bg-gray-50 flex-shrink-0">
             <div class="relative">
                 <div class="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none">
@@ -737,10 +681,8 @@
             </div>
         </div>
 
-        {{-- List Container --}}
         <div class="flex-1 overflow-y-auto bg-white" id="tenderListContainer">
 
-            {{-- Hidden data source: dibaca oleh JS --}}
             <div id="tenderDataSource" class="hidden">
                 @foreach($modalTenders as $tender)
                     @php
@@ -759,10 +701,8 @@
                 @endforeach
             </div>
 
-            {{-- Rendered list (diisi JS) --}}
             <div id="tenderRenderedList" class="p-3 space-y-1"></div>
 
-            {{-- Empty state --}}
             <div id="tenderEmptyState" class="hidden py-14 text-center px-6">
                 <div class="flex justify-center mb-3">
                     <svg class="w-14 h-14 text-gray-200" xmlns="http://www.w3.org/2000/svg" fill="none"
@@ -776,7 +716,6 @@
             </div>
         </div>
 
-        {{-- Footer Pagination --}}
         <div id="tenderPaginationBar"
              class="px-5 py-3 border-t border-gray-100 bg-gray-50 flex items-center justify-between flex-shrink-0">
             <span class="text-xs text-gray-500 font-medium" id="paginationInfo"></span>
@@ -807,13 +746,12 @@
 </div>
 
 <script>
-    // ─── State ─────────────────────────────────────────────────────
+
     const TENDER_PAGE_SIZE = 10;
     let _tAll  = [];   // master list
     let _tFilt = [];   // setelah filter
     let _tPage = 1;
 
-    // ─── Boot: baca data dari DOM ───────────────────────────────────
     document.addEventListener('DOMContentLoaded', function () {
         const nodes = document.querySelectorAll('#tenderDataSource span[data-id]');
         _tAll = Array.from(nodes).map(el => ({
@@ -829,7 +767,6 @@
         renderTenderList();
     });
 
-    // ─── Render ────────────────────────────────────────────────────
     function renderTenderList() {
         const listEl   = document.getElementById('tenderRenderedList');
         const emptyEl  = document.getElementById('tenderEmptyState');
@@ -904,10 +841,8 @@
 
         infoEl.textContent = total > 0 ? 'Menampilkan ' + from + '–' + to + ' dari ' + total : '';
 
-        // Show / hide footer
         barEl.style.display = (totalPages <= 1 && total > 0) ? 'none' : '';
 
-        // Arrows
         btnPrev.disabled = _tPage <= 1;
         btnNext.disabled = _tPage >= totalPages;
         btnPrev.style.opacity = btnPrev.disabled ? '0.3' : '1';
@@ -915,7 +850,6 @@
         btnPrev.style.cursor  = btnPrev.disabled ? 'not-allowed' : 'pointer';
         btnNext.style.cursor  = btnNext.disabled ? 'not-allowed' : 'pointer';
 
-        // Page dots (max 5)
         if (totalPages <= 1) { dotsEl.innerHTML = ''; return; }
         const maxD  = Math.min(totalPages, 5);
         let startD  = Math.max(1, _tPage - 2);
@@ -935,7 +869,6 @@
         dotsEl.innerHTML = dotsHtml;
     }
 
-    // ─── Actions ───────────────────────────────────────────────────
     function onTenderSearch() {
         const q = document.getElementById('tenderSearchInput').value.toLowerCase().trim();
         const clearBtn = document.getElementById('clearSearchBtn');
@@ -970,7 +903,6 @@
         document.getElementById('tenderListContainer').scrollTop = 0;
     }
 
-    // ─── Open / Close ──────────────────────────────────────────────
     function openSearchModal() {
         const modal = document.getElementById('searchTenderModal');
         modal.classList.remove('hidden');

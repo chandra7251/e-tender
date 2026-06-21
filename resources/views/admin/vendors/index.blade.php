@@ -7,13 +7,10 @@
 <div class="space-y-4">
 
     <div class="rounded-xl bg-[#3553A8] p-6 shadow-sm">
-        {{-- ── Filter & Search Bar ─────────────────────────────────────────────── --}}
+
         <form method="GET" action="{{ route('admin.vendors.index') }}"
               class="flex flex-col gap-3 sm:flex-row sm:items-center mb-6">
 
-            {{-- Search removed as requested --}}
-
-            {{-- Status filter --}}
             <select name="status"
                     class="rounded-md border-0 bg-white px-4 py-2.5 text-sm font-medium
                            text-gray-700 outline-none focus:ring-2 focus:ring-[#2B438A]">
@@ -38,7 +35,6 @@
             @endif
         </form>
 
-        {{-- ── Table ─────────────────────────────────────────────── --}}
         <div class="overflow-x-auto">
             <table class="w-full text-sm text-white" style="min-width: 580px;">
                 <thead>
@@ -98,7 +94,6 @@
         </div>
     </div>
 
-    {{-- Pagination --}}
     @if ($vendors->hasPages())
         <div class="mt-4">
             {{ $vendors->links() }}

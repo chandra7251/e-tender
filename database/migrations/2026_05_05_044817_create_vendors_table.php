@@ -6,9 +6,7 @@ use Illuminate\Support\Facades\Schema;
 
 return new class extends Migration
 {
-    /**
-     * Run the migrations.
-     */
+
     public function up(): void
     {
         Schema::create('vendors', function (Blueprint $table) {
@@ -17,7 +15,7 @@ return new class extends Migration
             $table->string('company_name');
             $table->string('phone');
             $table->text('address');
-            $table->string('verification_status')->default('pending'); // pending | approved | rejected
+            $table->string('verification_status')->default('pending'); 
             $table->text('verification_notes')->nullable();
             $table->foreignId('verified_by')->nullable()->constrained('users')->nullOnDelete();
             $table->timestamp('verified_at')->nullable();
@@ -28,9 +26,6 @@ return new class extends Migration
         });
     }
 
-    /**
-     * Reverse the migrations.
-     */
     public function down(): void
     {
         Schema::dropIfExists('vendors');

@@ -1,15 +1,11 @@
 <?php
-
 namespace App\Models;
-
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\SoftDeletes;
-
 class VendorDocument extends Model
 {
     use SoftDeletes;
-
     protected $fillable = [
         'vendor_id',
         'document_type',
@@ -19,7 +15,6 @@ class VendorDocument extends Model
         'file_size',
         'uploaded_at',
     ];
-
     protected function casts(): array
     {
         return [
@@ -27,9 +22,6 @@ class VendorDocument extends Model
             'file_size'   => 'integer',
         ];
     }
-
-    // ─── Relationships ────────────────────────────────────────────────────────
-
     public function vendor(): BelongsTo
     {
         return $this->belongsTo(Vendor::class);

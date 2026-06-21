@@ -6,7 +6,6 @@
 @section('content')
 <div class="space-y-6">
 
-    {{-- Back + header --}}
     <div class="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
         <a href="{{ route('admin.tenders.show', $tender) }}"
            class="inline-flex items-center gap-2 text-sm font-bold text-gray-700 hover:text-gray-900 transition-colors">
@@ -21,7 +20,6 @@
         </div>
     </div>
 
-    {{-- Stat --}}
     <div class="rounded-md bg-[#3553A8] px-6 py-4 shadow-sm">
         <p class="text-sm font-bold text-white flex items-center">
             Total Peserta:
@@ -29,7 +27,6 @@
         </p>
     </div>
 
-    {{-- Table --}}
     <div class="overflow-x-auto rounded-md bg-[#3553A8] shadow-sm">
         <table class="w-full text-sm text-white">
             <thead>
