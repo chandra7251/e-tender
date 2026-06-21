@@ -17,45 +17,13 @@ use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\Hash;
 
-/**
- * DatabaseSeeder — E-Procurement Demo Data
- *
- * Skenario demo yang tersedia:
- *
- * [A] TENDER BIDDING (Pengadaan Laptop dan Aksesori 2026)
- *     Status  : bidding
- *     Timeline: bidding_start = 3 hari lalu, bidding_end = 7 hari ke depan
- *     Peserta : 2 vendor approved (keduanya sudah join, belum bid)
- *     Winner  : BELUM ADA → untuk demo proses submit bid & pilih pemenang
- *
- * [B] TENDER FINISHED (Pengadaan Komputer dan Perangkat IT 2026)
- *     Status  : finished
- *     Peserta : 2 vendor approved (keduanya join + punya bid)
- *     Winner  : PT Approved Maju (bid Rp 92.500.000 — lowest)
- *     PO      : sudah ada → untuk demo halaman result, winner, dan PO
- *
- * [C] TENDER OPEN (Pengadaan Furnitur Kantor 2026)
- *     Status  : open → untuk demo vendor browsing & join tender baru
- *
- * [D] TENDER DRAFT (Pengadaan ATK 2026)
- *     Status  : draft → tidak tampil di public API (demo filter)
- *
- * Akun demo:
- *   admin@vandrafcy.my.id         / rahasia   (Admin ZETA)
- *   vendor.approved@example.com   / password  (PT Approved Maju — approved)
- *   vendor.kedua@example.com      / password  (CV Karya Prima — approved)
- *   vendor.pending@example.com    / password  (PT Pending Jaya — pending)
- *   vendor.rejected@example.com   / password  (PT Ditolak Jaya — rejected)
- */
 class DatabaseSeeder extends Seeder
 {
     use WithoutModelEvents;
 
     public function run(): void
     {
-        // ═══════════════════════════════════════════════════════════════════════
         // BAGIAN 1 — USERS & VENDORS
-        // ═══════════════════════════════════════════════════════════════════════
 
         // ─── 1. Admin ─────────────────────────────────────────────────────────
         $admin = User::firstOrCreate(
@@ -200,9 +168,7 @@ class DatabaseSeeder extends Seeder
             ]
         );
 
-        // ═══════════════════════════════════════════════════════════════════════
         // BAGIAN 2 — TENDER DRAFT (tidak tampil di public API)
-        // ═══════════════════════════════════════════════════════════════════════
 
         $tenderDraft = Tender::firstOrCreate(
             ['title' => 'Penyediaan Lisensi Perangkat Lunak Keamanan Siber (Endpoint Protection) TA 2026'],
@@ -229,9 +195,7 @@ class DatabaseSeeder extends Seeder
             ]
         );
 
-        // ═══════════════════════════════════════════════════════════════════════
-        // BAGIAN 3 — TENDER OPEN (untuk demo vendor join baru)
-        // ═══════════════════════════════════════════════════════════════════════
+        // BAGIAN 3 — TENDER OPEN (untuk demo vendor join baru
 
         $tenderOpen = Tender::firstOrCreate(
             ['title' => 'Pengadaan Kendaraan Operasional Lapangan 4x4 (Double Cabin) Batch I'],
@@ -269,13 +233,7 @@ class DatabaseSeeder extends Seeder
             ]
         );
 
-        // ═══════════════════════════════════════════════════════════════════════
         // BAGIAN 4 — [A] TENDER BIDDING AKTIF (untuk demo join & bidding)
-        // Skenario: Kedua vendor sudah JOIN tapi BELUM ada bid → bisa demo submit bid
-        // Timeline bidding sedang aktif (bidding_start lalu, bidding_end depan)
-        // TIDAK ada tender_result dan TIDAK ada purchase_order
-        // ═══════════════════════════════════════════════════════════════════════
-
         $tenderBidding = Tender::firstOrCreate(
             ['title' => 'Pembangunan Infrastruktur Jaringan Fiber Optic dan Integrasi Data Center'],
             [
@@ -350,14 +308,9 @@ class DatabaseSeeder extends Seeder
             ]
         );
 
-        // CATATAN: Tidak ada Bid, TenderResult, atau PurchaseOrder untuk tenderBidding.
-        // Ini adalah skenario demo: vendor bisa submit bid via API.
 
-        // ═══════════════════════════════════════════════════════════════════════
         // BAGIAN 5 — [B] TENDER FINISHED (untuk demo result / winner / PO)
         // Skenario: Kedua vendor sudah join + bid. PT Approved Maju menang.
-        // Ada tender_result dan purchase_order.
-        // ═══════════════════════════════════════════════════════════════════════
 
         $tenderFinished = Tender::firstOrCreate(
             ['title' => 'Pengadaan Perangkat Komputasi Workstation untuk Divisi Riset & Pengembangan'],
@@ -547,9 +500,7 @@ class DatabaseSeeder extends Seeder
             ]
         );
 
-        // ═══════════════════════════════════════════════════════════════════════
-        // 6 TENDER DUMMY TAMBAHAN UNTUK DEMO
-        // ═══════════════════════════════════════════════════════════════════════
+        // 6 TENDER DUMMY UNTUK DEMO
 
         $tender5 = Tender::firstOrCreate(
             ['title' => 'Pembangunan Fasilitas Pengolahan Air Bersih (Water Treatment Plant) Area Pabrik'],
