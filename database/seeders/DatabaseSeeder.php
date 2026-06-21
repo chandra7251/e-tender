@@ -205,11 +205,11 @@ class DatabaseSeeder extends Seeder
         // ═══════════════════════════════════════════════════════════════════════
 
         $tenderDraft = Tender::firstOrCreate(
-            ['title' => 'Pengadaan Alat Tulis Kantor 2026'],
+            ['title' => 'Penyediaan Lisensi Perangkat Lunak Keamanan Siber (Endpoint Protection) TA 2026'],
             [
                 'created_by'      => $admin->id,
-                'description'     => 'Pengadaan alat tulis kantor untuk kebutuhan operasional tahun 2026.',
-                'specification'   => 'Spesifikasi ATK meliputi kertas A4, pulpen, map, dan perlengkapan kantor lainnya.',
+                'description'     => 'Pengadaan lisensi tahunan perangkat lunak keamanan siber (Endpoint Protection) untuk 1.500 perangkat karyawan di seluruh cabang, mencakup fitur anti-ransomware, perlindungan ancaman zero-day, dan manajemen terpusat berbasis cloud.',
+                'specification'   => '1. Dukungan perlindungan Next-Gen Antivirus (NGAV) & EDR. 2. Lisensi aktif selama 12 bulan penuh sejak BAST. 3. SLA Resolusi 24/7. 4. Kompatibilitas multi-platform (Windows, macOS, Linux).',
                 'start_date'      => now()->addDays(30),
                 'end_date'        => now()->addDays(60),
                 'aanwijzing_date' => null,
@@ -234,11 +234,11 @@ class DatabaseSeeder extends Seeder
         // ═══════════════════════════════════════════════════════════════════════
 
         $tenderOpen = Tender::firstOrCreate(
-            ['title' => 'Pengadaan Furnitur Kantor 2026'],
+            ['title' => 'Pengadaan Kendaraan Operasional Lapangan 4x4 (Double Cabin) Batch I'],
             [
                 'created_by'      => $admin->id,
-                'description'     => 'Pengadaan meja, kursi, dan lemari arsip untuk kantor baru.',
-                'specification'   => 'Minimal 20 meja kerja, 40 kursi ergonomis, 10 lemari arsip besi.',
+                'description'     => 'Pengadaan 10 unit kendaraan operasional lapangan jenis Double Cabin 4x4 untuk mendukung mobilitas tim teknisi lapangan di area operasional tambang dan perkebunan.',
+                'specification'   => '1. Mesin Diesel min. 2400cc VGT. 2. Transmisi manual 6-percepatan 4WD. 3. Warna putih standar perusahaan. 4. Dilengkapi roll bar, bedliner, dan APAR. 5. Termasuk biaya STNK, BPKB, dan KIR.',
                 'start_date'      => now()->subDay(),
                 'end_date'        => now()->addDays(25),
                 'aanwijzing_date' => now()->addDays(3),
@@ -277,11 +277,11 @@ class DatabaseSeeder extends Seeder
         // ═══════════════════════════════════════════════════════════════════════
 
         $tenderBidding = Tender::firstOrCreate(
-            ['title' => 'Pengadaan Laptop dan Aksesori 2026'],
+            ['title' => 'Pembangunan Infrastruktur Jaringan Fiber Optic dan Integrasi Data Center'],
             [
                 'created_by'      => $admin->id,
-                'description'     => 'Pengadaan laptop, mouse, keyboard, dan aksesori pendukung untuk karyawan baru.',
-                'specification'   => 'Laptop: Core i5 Gen 13, RAM 16GB, SSD 512GB. Mouse wireless. Keyboard mekanikal. Minimal 15 unit.',
+                'description'     => 'Proyek penarikan kabel Fiber Optic (FO) sepanjang 15 KM untuk menghubungkan 3 gedung utama, beserta pengadaan perangkat aktif jaringan (Core Switch, Router) dan integrasi ke Data Center terpusat.',
+                'specification'   => '1. Kabel FO Single-Mode 24 Core (Underground & Aerial). 2. Core Switch Layer 3 min. 48 Port SFP+. 3. Instalasi, terminasi, dan sertifikasi OTDR. 4. Garansi perangkat aktif minimal 3 tahun (NBD Replacement).',
                 'start_date'      => now()->subDays(12),
                 'end_date'        => now()->addDays(18),
                 'aanwijzing_date' => now()->subDays(7),
@@ -360,11 +360,11 @@ class DatabaseSeeder extends Seeder
         // ═══════════════════════════════════════════════════════════════════════
 
         $tenderFinished = Tender::firstOrCreate(
-            ['title' => 'Pengadaan Komputer dan Perangkat IT 2026'],
+            ['title' => 'Pengadaan Perangkat Komputasi Workstation untuk Divisi Riset & Pengembangan'],
             [
                 'created_by'      => $admin->id,
-                'description'     => 'Pengadaan komputer, laptop, dan perangkat IT untuk kebutuhan kantor pusat.',
-                'specification'   => 'Spesifikasi: Desktop Core i5 Gen 12, RAM 16GB, SSD 512GB, minimal 10 unit.',
+                'description'     => 'Pengadaan 25 unit High-Performance Workstation untuk kebutuhan rendering 3D, simulasi data, dan pemrosesan AI di divisi Riset dan Pengembangan (R&D).',
+                'specification'   => '1. Prosesor min. 16 Cores / 32 Threads. 2. RAM 128GB DDR5 ECC. 3. GPU RTX 4090 atau setara (VRAM 24GB). 4. Storage 2x 2TB NVMe Gen4 (RAID 1). 5. Termasuk monitor profesional kalibrasi warna 27-inch 4K.',
                 'start_date'      => now()->subDays(30),
                 'end_date'        => now()->subDays(5),
                 'aanwijzing_date' => now()->subDays(25),
@@ -544,6 +544,100 @@ class DatabaseSeeder extends Seeder
                 'description' => 'Purchase Order ' . $po->po_number . ' diterbitkan.',
                 'metadata'    => ['po_id' => $po->id, 'po_number' => $po->po_number],
                 'created_at'  => now()->subDays(7),
+            ]
+        );
+
+        // ═══════════════════════════════════════════════════════════════════════
+        // 6 TENDER DUMMY TAMBAHAN UNTUK DEMO
+        // ═══════════════════════════════════════════════════════════════════════
+
+        $tender5 = Tender::firstOrCreate(
+            ['title' => 'Pembangunan Fasilitas Pengolahan Air Bersih (Water Treatment Plant) Area Pabrik'],
+            [
+                'created_by'      => $admin->id,
+                'description'     => 'Proyek EPC (Engineering, Procurement, and Construction) untuk pembangunan Water Treatment Plant (WTP) dengan kapasitas 50 liter/detik untuk memenuhi kebutuhan operasional pabrik.',
+                'specification'   => 'Lingkup kerja meliputi desain sipil, instalasi perpipaan, pengadaan pompa distribusi, dan sistem filtrasi RO (Reverse Osmosis). Target penyelesaian 6 bulan.',
+                'start_date'      => now()->addDays(5),
+                'end_date'        => now()->addDays(45),
+                'aanwijzing_date' => now()->addDays(10),
+                'bidding_start'   => now()->addDays(15),
+                'bidding_end'     => now()->addDays(30),
+                'status'          => 'open',
+            ]
+        );
+
+        $tender6 = Tender::firstOrCreate(
+            ['title' => 'Pengadaan Layanan Jasa Konsultan Audit Keuangan Independen Tahun Buku 2026'],
+            [
+                'created_by'      => $admin->id,
+                'description'     => 'Pengadaan jasa konsultan akuntan publik (KAP) tier-1 atau tier-2 untuk melakukan audit laporan keuangan konsolidasi perusahaan periode tahun buku 2026.',
+                'specification'   => 'KAP harus terdaftar di OJK dan BPK. Memiliki pengalaman audit di industri manufaktur minimal 10 tahun. Laporan audit selesai maksimal minggu pertama Maret 2027.',
+                'start_date'      => now()->addDays(2),
+                'end_date'        => now()->addDays(20),
+                'aanwijzing_date' => now()->addDays(5),
+                'bidding_start'   => now()->addDays(8),
+                'bidding_end'     => now()->addDays(15),
+                'status'          => 'open',
+            ]
+        );
+
+        $tender7 = Tender::firstOrCreate(
+            ['title' => 'Revitalisasi Sistem Tata Udara (HVAC) Gedung Perkantoran Pusat'],
+            [
+                'created_by'      => $admin->id,
+                'description'     => 'Penggantian chiller dan sistem AHU lama dengan teknologi VRV/VRF yang lebih hemat energi untuk gedung perkantoran 15 lantai.',
+                'specification'   => 'Kapasitas pendinginan total min. 500 PK. Teknologi Inverter. Menggunakan refrigeran ramah lingkungan (R32). Kontrak termasuk instalasi, pemipaan, dan maintenance 2 tahun.',
+                'start_date'      => now()->addDays(10),
+                'end_date'        => now()->addDays(40),
+                'aanwijzing_date' => now()->addDays(15),
+                'bidding_start'   => now()->addDays(20),
+                'bidding_end'     => now()->addDays(35),
+                'status'          => 'open',
+            ]
+        );
+
+        $tender8 = Tender::firstOrCreate(
+            ['title' => 'Pengadaan Mesin Cetak Rotogravure 8 Warna untuk Divisi Packaging'],
+            [
+                'created_by'      => $admin->id,
+                'description'     => 'Pengadaan 1 unit mesin cetak rotogravure 8 warna kecepatan tinggi untuk meningkatkan kapasitas produksi kemasan fleksibel (flexible packaging).',
+                'specification'   => 'Kecepatan cetak min. 250 m/menit. Lebar web min. 1000 mm. Dilengkapi sistem Auto Splicer dan ARC (Automatic Register Control). Garansi mesin 12 bulan.',
+                'start_date'      => now()->addDays(20),
+                'end_date'        => now()->addDays(60),
+                'aanwijzing_date' => null,
+                'bidding_start'   => now()->addDays(25),
+                'bidding_end'     => now()->addDays(50),
+                'status'          => 'draft',
+            ]
+        );
+
+        $tender9 = Tender::firstOrCreate(
+            ['title' => 'Penyediaan Jasa Katering Karyawan Pabrik Kapasitas 2.000 Porsi/Hari'],
+            [
+                'created_by'      => $admin->id,
+                'description'     => 'Tender kontrak penyediaan makan siang untuk 2.000 karyawan shift pagi dan siang di area pabrik selama periode 1 tahun.',
+                'specification'   => 'Penyedia wajib memiliki sertifikat Laik Higiene Sanitasi Jasaboga. Menu bervariasi dengan standar kalori 700 kcal per porsi. Sistem prasmanan dan box.',
+                'start_date'      => now()->addDays(1),
+                'end_date'        => now()->addDays(14),
+                'aanwijzing_date' => now()->addDays(3),
+                'bidding_start'   => now()->addDays(5),
+                'bidding_end'     => now()->addDays(12),
+                'status'          => 'open',
+            ]
+        );
+
+        $tender10 = Tender::firstOrCreate(
+            ['title' => 'Sewa Jangka Panjang Alat Berat (Excavator & Bulldozer) Site Pertambangan'],
+            [
+                'created_by'      => $admin->id,
+                'description'     => 'Pengadaan sewa jangka panjang (2 tahun) alat berat berupa 5 unit Excavator kelas 30-ton dan 2 unit Bulldozer kelas 20-ton untuk operasional di site tambang.',
+                'specification'   => 'Tahun pembuatan alat berat min. 2024. Harga sewa sudah termasuk biaya maintenance rutin, mekanik standby di site, dan asuransi all-risk. Tidak termasuk BBM dan Operator.',
+                'start_date'      => now()->addDays(7),
+                'end_date'        => now()->addDays(30),
+                'aanwijzing_date' => now()->addDays(12),
+                'bidding_start'   => now()->addDays(15),
+                'bidding_end'     => now()->addDays(25),
+                'status'          => 'open',
             ]
         );
     }
