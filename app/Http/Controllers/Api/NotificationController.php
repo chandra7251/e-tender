@@ -64,4 +64,37 @@ class NotificationController extends Controller
             'message' => 'All notifications marked as read'
         ]);
     }
+
+    // Fungsi buat ngehapus notifikasi
+    public function destroy(Request $request, $id)
+    {
+        $user = $request->user();
+
+        if (!$user) {
+            return response()->json(['message' => 'Unauthorized'], 401);
+        }
+
+        $notification = $user->notifications()->find($id);
+        
+        if ($notification) {
+            $notification->delete();
+            return response()->json(['status' => 'success', 'message' => 'Notification deleted']);
+        }
+
+        return response()->json(['status' => 'error', 'message' => 'Notification not found'], 404);
+    }
+
+    // Fungsi buat hapus semua notifikasi
+    public function destroyAll(Request $request)
+    {
+        $user = $request->user();
+
+        if (!$user) {
+            return response()->json(['message' => 'Unauthorized'], 401);
+        }
+
+        $user->notifications()->delete();
+
+        return response()->json(['status' => 'success', 'message' => 'All notifications deleted']);
+    }
 }

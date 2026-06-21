@@ -50,8 +50,10 @@ Route::middleware('auth:api')->group(function () {
 
     // Notifications
     Route::get('notifications', [\App\Http\Controllers\Api\NotificationController::class, 'index'])->name('api.notifications.index');
+    Route::delete('notifications/all', [\App\Http\Controllers\Api\NotificationController::class, 'destroyAll'])->name('api.notifications.destroyAll');
     Route::patch('notifications/read-all', [\App\Http\Controllers\Api\NotificationController::class, 'markAllAsRead'])->name('api.notifications.readAll');
     Route::patch('notifications/{id}/read', [\App\Http\Controllers\Api\NotificationController::class, 'markAsRead'])->name('api.notifications.read');
+    Route::delete('notifications/{id}', [\App\Http\Controllers\Api\NotificationController::class, 'destroy'])->name('api.notifications.destroy');
 
     // Vendor Profile (semua vendor bisa akses, termasuk pending)
     Route::get('vendors/me',     [VendorProfileController::class, 'show'])->name('api.vendors.me');
