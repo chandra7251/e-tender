@@ -4,10 +4,10 @@ namespace App\Notifications;
 
 use App\Models\Tender;
 use Illuminate\Bus\Queueable;
-// Notifikasi dikirim langsung (synchronous) tanpa queue biar ga perlu queue worker di server
+use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Notifications\Notification;
 
-class TenderStatusChanged extends Notification
+class TenderStatusChanged extends Notification implements ShouldQueue
 {
     use Queueable;
 
