@@ -41,7 +41,7 @@ use Illuminate\Support\Facades\Hash;
  *     Status  : draft → tidak tampil di public API (demo filter)
  *
  * Akun demo:
- *   admin@example.com             / password  (Admin)
+ *   admin@vandrafcy.my.id         / rahasia   (Admin ZETA)
  *   vendor.approved@example.com   / password  (PT Approved Maju — approved)
  *   vendor.kedua@example.com      / password  (CV Karya Prima — approved)
  *   vendor.pending@example.com    / password  (PT Pending Jaya — pending)
@@ -59,10 +59,10 @@ class DatabaseSeeder extends Seeder
 
         // ─── 1. Admin ─────────────────────────────────────────────────────────
         $admin = User::firstOrCreate(
-            ['email' => 'admin@example.com'],
+            ['email' => 'admin@vandrafcy.my.id'],
             [
-                'name'     => 'Admin Procurement',
-                'password' => Hash::make('password'),
+                'name'     => 'Admin ZETA',
+                'password' => Hash::make('rahasia'),
                 'role'     => 'admin',
             ]
         );

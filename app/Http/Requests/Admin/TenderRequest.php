@@ -13,7 +13,7 @@ class TenderRequest extends FormRequest
 
     public function rules(): array
     {
-        return [
+        $rules = [
             'title'               => ['required', 'string', 'max:255'],
             'description'         => ['required', 'string'],
             'specification'       => ['required', 'string'],
@@ -27,6 +27,13 @@ class TenderRequest extends FormRequest
             'bidding_end'         => ['required', 'date', 'after:bidding_start', 'before_or_equal:end_date'],
             // 'status' dikelola eksklusif via PATCH /tenders/{tender}/status
         ];
+
+        // Jika ini adalah pembuatan tender baru (POST), tanggal mulai tidak boleh di masa lalu
+        if ($this->isMethod('post')) {
+            $rules['start_date'][] = 'after_or_equal:today';
+        }
+
+        return $rules;
     }
 
     public function messages(): array
@@ -38,6 +45,7 @@ class TenderRequest extends FormRequest
             'open_bidding_price.numeric'   => 'Harga pembukaan harus berupa angka.',
             'open_bidding_price.min'       => 'Harga pembukaan tidak boleh negatif.',
             'start_date.required'          => 'Tanggal mulai wajib diisi.',
+            'start_date.after_or_equal'    => 'Tanggal mulai tidak boleh kurang dari hari ini.',
             'end_date.required'            => 'Tanggal selesai wajib diisi.',
             'end_date.after'               => 'Tanggal selesai harus setelah tanggal mulai.',
             'bidding_start.required'       => 'Tanggal mulai bidding wajib diisi.',

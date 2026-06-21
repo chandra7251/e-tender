@@ -251,12 +251,6 @@
                         </button>
                     </div>
 
-                    <!-- Forgot Password -->
-                    <div class="text-center mt-5">
-                        <a href="#" class="text-sm text-gray-400 hover:text-gray-600 transition-colors">
-                            Lupa kata sandi?
-                        </a>
-                    </div>
                 </form>
                 </div>
 

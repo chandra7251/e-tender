@@ -172,6 +172,7 @@
                 Tanggal Mulai <span class="text-red-500">*</span>
             </label>
             <input id="start_date" type="datetime-local" name="start_date"
+                   @if(!$tender) min="{{ \Carbon\Carbon::today()->format('Y-m-d\T00:00') }}" @endif
                    value="{{ $dateVal('start_date') }}"
                    class="w-full rounded-md border border-[#4A6BCC] bg-[#2B438A] px-4 py-2.5 text-sm
                           text-white outline-none [color-scheme:dark]
