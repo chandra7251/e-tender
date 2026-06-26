@@ -1,69 +1,49 @@
 <?php
 namespace App\Http\Controllers\Api;
 use App\Http\Controllers\Controller;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+
 class NotificationController extends Controller
 {
-    public function index(Request $request)
+    public function index(Request $request): JsonResponse
     {
         $user = $request->user();
-        if (!$user) {
-            return response()->json(['message' => 'Unauthorized'], 401);
-        }
         $notifications = $user->notifications()->paginate(15);
-        $unreadCount = $user->unreadNotifications()->count();
-        $paginatedData = $notifications->toArray();
-        $paginatedData['unread_count'] = $unreadCount;
-        return response()->json([
-            'status' => 'success',
-            'data'   => $paginatedData,
-        ]);
+        $data = $notifications->toArray();
+        $data['unread_count'] = $user->unreadNotifications()->count();
+        return $this->success($data);
     }
-    public function markAsRead(Request $request, $id)
+
+    public function markAsRead(Request $request, string $id): JsonResponse
     {
-        $user = $request->user();
-        if (!$user) {
-            return response()->json(['message' => 'Unauthorized'], 401);
+        $notification = $request->user()->notifications()->find($id);
+        if (!$notification) {
+            return $this->error('Notifikasi tidak ditemukan.', null, 404);
         }
-        $notification = $user->notifications()->find($id);
-        if ($notification) {
-            $notification->markAsRead();
-            return response()->json(['status' => 'success', 'message' => 'Notification marked as read']);
-        }
-        return response()->json(['status' => 'error', 'message' => 'Notification not found'], 404);
+        $notification->markAsRead();
+        return $this->success(null, 'Notifikasi ditandai sudah dibaca.');
     }
-    public function markAllAsRead(Request $request)
+
+    public function markAllAsRead(Request $request): JsonResponse
     {
-        $user = $request->user();
-        if (!$user) {
-            return response()->json(['message' => 'Unauthorized'], 401);
-        }
-        $user->unreadNotifications->markAsRead();
-        return response()->json([
-            'status' => 'success',
-            'message' => 'All notifications marked as read'
-        ]);
+        $request->user()->unreadNotifications->markAsRead();
+        return $this->success(null, 'Semua notifikasi ditandai sudah dibaca.');
     }
-    public function destroy(Request $request, $id)
+
+    public function destroy(Request $request, string $id): JsonResponse
     {
-        $user = $request->user();
-        if (!$user) {
-            return response()->json(['message' => 'Unauthorized'], 401);
+        $notification = $request->user()->notifications()->find($id);
+        if (!$notification) {
+            return $this->error('Notifikasi tidak ditemukan.', null, 404);
         }
-        $notification = $user->notifications()->find($id);
-        if ($notification) {
-            $notification->delete();
-            return response()->json(['status' => 'success', 'message' => 'Notification deleted']);
-        }
-        return response()->json(['status' => 'error', 'message' => 'Notification not found'], 404);
+        $notification->delete();
+        return $this->success(null, 'Notifikasi dihapus.');
     }
-    public function destroyAll(Request $request)
+
+    public function destroyAll(Request $request): JsonResponse
     {
-        $user = $request->user();
-        if (!$user) {
-            return response()->json(['message' => 'Unauthorized'], 401);
-        }
-        $user->notifications()->delete();
-        return response()->json(['status' => 'success', 'message' => 'All notifications deleted']);
+        $request->user()->notifications()->delete();
+        return $this->success(null, 'Semua notifikasi dihapus.');
     }
 }

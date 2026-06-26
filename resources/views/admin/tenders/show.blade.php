@@ -61,6 +61,61 @@
                 @endif
             @endif
 
+            {{-- Evaluation Buttons --}}
+            <a href="{{ route('admin.tenders.evaluation-criteria.create', $tender) }}"
+               class="inline-flex items-center gap-2 rounded-md bg-[#2B438A] border border-[#4A6BCC] px-4 py-2 text-sm font-bold text-white
+                      hover:bg-[#1E3066] transition-colors duration-150"
+               title="Kelola Kriteria Evaluasi">
+                <svg class="h-4 w-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M10.5 6h9.75M10.5 6a1.5 1.5 0 11-3 0m3 0a1.5 1.5 0 10-3 0M3.75 6H7.5m3 12h9.75m-9.75 0a1.5 1.5 0 01-3 0m3 0a1.5 1.5 0 00-3 0m-3.75 0H7.5m9-6h3.75m-3.75 0a1.5 1.5 0 01-3 0m3 0a1.5 1.5 0 00-3 0m-9.75 0h9.75"/>
+                </svg>
+                Kriteria
+            </a>
+
+            @if (in_array($tender->status, ['closed', 'finished']))
+                <a href="{{ route('admin.tenders.evaluations.create', $tender) }}"
+                   class="inline-flex items-center gap-2 rounded-md bg-[#2B438A] border border-[#4A6BCC] px-4 py-2 text-sm font-bold text-white
+                          hover:bg-[#1E3066] transition-colors duration-150"
+                   title="Evaluasi Bid">
+                    <svg class="h-4 w-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M11.48 3.499a.562.562 0 011.04 0l2.125 5.111a.563.563 0 00.475.345l5.518.442c.499.04.701.663.321.988l-4.204 3.602a.563.563 0 00-.182.557l1.285 5.385a.562.562 0 01-.84.61l-4.725-2.885a.563.563 0 00-.586 0L6.982 20.54a.562.562 0 01-.84-.61l1.285-5.386a.562.562 0 00-.182-.557l-4.204-3.602a.563.563 0 01.321-.988l5.518-.442a.563.563 0 00.475-.345L11.48 3.5z"/>
+                    </svg>
+                    Evaluasi
+                </a>
+
+                <a href="{{ route('admin.tenders.ranking', $tender) }}"
+                   class="inline-flex items-center gap-2 rounded-md bg-[#28C5D4] border border-teal-400 px-4 py-2 text-sm font-bold text-white
+                          hover:bg-teal-400 transition-colors duration-150"
+                   title="Lihat Ranking">
+                    <svg class="h-4 w-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M3 13.125C3 12.504 3.504 12 4.125 12h2.25c.621 0 1.125.504 1.125 1.125v6.75C7.5 20.496 6.996 21 6.375 21h-2.25A1.125 1.125 0 013 19.875v-6.75zM9.75 8.625c0-.621.504-1.125 1.125-1.125h2.25c.621 0 1.125.504 1.125 1.125v11.25c0 .621-.504 1.125-1.125 1.125h-2.25a1.125 1.125 0 01-1.125-1.125V8.625zM16.5 4.125c0-.621.504-1.125 1.125-1.125h2.25C20.496 3 21 3.504 21 4.125v15.75c0 .621-.504 1.125-1.125 1.125h-2.25a1.125 1.125 0 01-1.125-1.125V4.125z"/>
+                    </svg>
+                    Ranking
+                </a>
+
+                {{-- Two-Envelope buttons (only if tender uses two_envelope method) --}}
+                @if ($tender->evaluation_method === 'two_envelope')
+                <a href="{{ route('admin.tenders.envelope.technical', $tender) }}"
+                   class="inline-flex items-center gap-2 rounded-md bg-purple-600 border border-purple-500 px-4 py-2 text-sm font-bold text-white
+                          hover:bg-purple-700 transition-colors duration-150"
+                   title="Evaluasi Teknis (Amplop 1)">
+                    📦 Amplop 1
+                </a>
+                <a href="{{ route('admin.tenders.envelope.price', $tender) }}"
+                   class="inline-flex items-center gap-2 rounded-md bg-emerald-600 border border-emerald-500 px-4 py-2 text-sm font-bold text-white
+                          hover:bg-emerald-700 transition-colors duration-150"
+                   title="Evaluasi Harga (Amplop 2)">
+                    💰 Amplop 2
+                </a>
+                <a href="{{ route('admin.tenders.envelope.ranking', $tender) }}"
+                   class="inline-flex items-center gap-2 rounded-md bg-amber-500 border border-amber-400 px-4 py-2 text-sm font-bold text-white
+                          hover:bg-amber-600 transition-colors duration-150"
+                   title="Ranking Gabungan 2 Amplop">
+                    🏆 Ranking 2 Amplop
+                </a>
+                @endif
+            @endif
+
             <a href="{{ route('admin.tenders.histories.index', $tender) }}"
                class="inline-flex items-center gap-2 rounded-md bg-[#2B438A] border border-[#4A6BCC] px-4 py-2 text-sm font-bold text-white
                       hover:bg-[#1E3066] transition-colors duration-150">

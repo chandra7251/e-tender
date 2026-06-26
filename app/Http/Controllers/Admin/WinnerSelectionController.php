@@ -1,53 +1,80 @@
 <?php
+
 namespace App\Http\Controllers\Admin;
+
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Admin\WinnerSelectionRequest;
+use App\Models\ActivityLog;
 use App\Models\Bid;
 use App\Models\Tender;
 use App\Models\TenderHistory;
 use App\Models\TenderResult;
+use App\Services\EvaluationService;
+use App\Services\FcmService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Illuminate\View\View;
+
 class WinnerSelectionController extends Controller
 {
+    public function __construct(protected EvaluationService $evaluationService, protected FcmService $fcm) {}
+
     public function create(Tender $tender): View|RedirectResponse
     {
         if ($tender->status !== 'closed') {
             return redirect()->route('admin.tenders.show', $tender)
                 ->with('error', "Pemenang hanya bisa dipilih saat tender berstatus 'closed'. Status saat ini: '{$tender->status}'.");
         }
+
         if ($tender->result()->exists()) {
             return redirect()->route('admin.tenders.show', $tender)
                 ->with('error', 'Pemenang tender sudah dipilih sebelumnya.');
         }
+
         if ($tender->bids()->count() === 0) {
             return redirect()->back()
                 ->with('error', 'Tender belum memiliki bid.');
         }
-        $bids = $tender->bids()
-            ->with(['vendor.user'])
-            ->orderBy('bid_amount', 'asc')
-            ->orderBy('submitted_at', 'asc')
-            ->orderBy('ulid', 'asc')
-            ->get();
-        return view('admin.winners.create', compact('tender', 'bids'));
+
+        $criteria = $tender->evaluationCriteria;
+        $hasCriteria = $criteria->isNotEmpty();
+        $isFullyEvaluated = $this->evaluationService->isFullyEvaluated($tender);
+
+        if ($hasCriteria) {
+            // Use multi-criteria ranked bids
+            $bids = $tender->getRankedBids();
+        } else {
+            // Fallback: rank by lowest price (original behavior)
+            $bids = $tender->bids()
+                ->with(['vendor.user'])
+                ->orderBy('bid_amount', 'asc')
+                ->orderBy('submitted_at', 'asc')
+                ->orderBy('ulid', 'asc')
+                ->get();
+        }
+
+        return view('admin.winners.create', compact('tender', 'bids', 'criteria', 'hasCriteria', 'isFullyEvaluated'));
     }
+
     public function store(WinnerSelectionRequest $request, Tender $tender): RedirectResponse
     {
         if ($tender->status !== 'closed') {
             return redirect()->route('admin.tenders.show', $tender)
                 ->with('error', "Pemenang hanya bisa dipilih saat tender berstatus 'closed'.");
         }
+
         if ($tender->result()->exists()) {
             return redirect()->route('admin.tenders.show', $tender)
                 ->with('error', 'Pemenang tender sudah dipilih.');
         }
+
         $bid = Bid::with('vendor')->findOrFail($request->input('bid_id'));
+
         if ($bid->tender_id !== $tender->id) {
             return redirect()->back()->with('error', 'Bid tidak berasal dari tender ini.');
         }
+
         try {
             DB::transaction(function () use ($tender, $bid, $request) {
                 TenderResult::create([
@@ -60,7 +87,9 @@ class WinnerSelectionController extends Controller
                     'decided_by'         => auth()->id(),
                     'decided_at'         => now(),
                 ]);
+
                 $tender->update(['status' => 'finished']);
+
                 TenderHistory::create([
                     'tender_id'   => $tender->id,
                     'actor_id'    => auth()->id(),
@@ -69,11 +98,30 @@ class WinnerSelectionController extends Controller
                     'new_status'  => 'finished',
                     'description' => "Pemenang dipilih: {$bid->vendor->company_name}, "
                                    . "bid Rp " . number_format($bid->bid_amount, 0, ',', '.')
+                                   . ". Metode: {$request->input('selection_method')}"
                                    . ". Status tender diubah ke 'finished'.",
                     'created_at'  => now(),
                 ]);
+
+                // Activity log
+                ActivityLog::log(
+                    action: 'winner_selected',
+                    module: 'tender',
+                    description: "Pemenang tender \"{$tender->title}\" dipilih: {$bid->vendor->company_name} "
+                        . "(Rp " . number_format($bid->bid_amount, 0, ',', '.') . ").",
+                    subjectType: Tender::class,
+                    subjectId: $tender->id,
+                    newValues: [
+                        'winner_vendor_id' => $bid->vendor_id,
+                        'winning_bid_amount' => $bid->bid_amount,
+                        'selection_method' => $request->input('selection_method'),
+                    ],
+                );
+
+                // Notify participants
                 $participants = $tender->participants()->with('vendor.user')->get();
                 $usersToNotify = $participants->pluck('vendor.user')->filter();
+
                 if ($usersToNotify->isNotEmpty()) {
                     \Illuminate\Support\Facades\Notification::send(
                         $usersToNotify,
@@ -81,6 +129,28 @@ class WinnerSelectionController extends Controller
                             $tender, 'closed', 'finished',
                             "Pemenang tender telah dipilih: {$bid->vendor->company_name}."
                         )
+                    );
+                }
+
+                // Push notification via FCM
+                $fcmTokens = $usersToNotify->pluck('fcm_token')->filter()->values()->toArray();
+                if (!empty($fcmTokens)) {
+                    $this->fcm->sendToMultiple(
+                        $fcmTokens,
+                        '\ud83c\udfc6 Pemenang Tender Diumumkan!',
+                        "Pemenang tender \\\"{$tender->title}\\\" telah dipilih. Cek hasilnya sekarang!",
+                        ['type' => 'winner_announced', 'tender_id' => (string)$tender->id]
+                    );
+                }
+
+                // Push khusus ke pemenang
+                $winnerUser = $bid->vendor->user ?? null;
+                if ($winnerUser && $winnerUser->fcm_token) {
+                    $this->fcm->notifyUser(
+                        $winnerUser,
+                        '\ud83c\udfc6 Selamat! Anda Memenangkan Tender!',
+                        "Anda terpilih sebagai pemenang tender \\\"{$tender->title}\\\". Tunggu proses kontrak.",
+                        ['type' => 'winner_you', 'tender_id' => (string)$tender->id]
                     );
                 }
             });
@@ -92,6 +162,7 @@ class WinnerSelectionController extends Controller
             ]);
             return back()->with('error', 'Terjadi kesalahan saat menyimpan pemenang. Silakan coba lagi.');
         }
+
         return redirect()
             ->route('admin.tenders.result.show', $tender)
             ->with('success', "Pemenang berhasil dipilih. Status tender diubah ke 'finished'.");

@@ -21,6 +21,10 @@ class TenderRequest extends FormRequest
             'aanwijzing_date'     => ['nullable', 'date'],
             'bidding_start'       => ['required', 'date', 'after_or_equal:start_date'],
             'bidding_end'         => ['required', 'date', 'after:bidding_start', 'before_or_equal:end_date'],
+            'evaluation_method'   => ['nullable', 'in:lowest_price,multi_criteria,two_envelope'],
+            'technical_weight'    => ['nullable', 'numeric', 'min:0', 'max:100'],
+            'price_weight'        => ['nullable', 'numeric', 'min:0', 'max:100'],
+            'passing_grade'       => ['nullable', 'numeric', 'min:0', 'max:100'],
         ];
         if ($this->isMethod('post')) {
             $rules['start_date'][] = 'after_or_equal:today';

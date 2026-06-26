@@ -16,6 +16,12 @@ class EnsureVendorApproved
                 'message' => 'Akun vendor tidak ditemukan.',
             ], 403);
         }
+        if ($user->vendor->is_blacklisted) {
+            return response()->json([
+                'status'  => 'error',
+                'message' => 'Akun Anda telah diblokir (blacklist). Hubungi admin untuk informasi lebih lanjut.',
+            ], 403);
+        }
         if ($user->vendor->verification_status !== 'approved') {
             return response()->json([
                 'status'  => 'error',

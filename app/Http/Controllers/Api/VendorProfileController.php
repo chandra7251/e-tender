@@ -52,4 +52,40 @@ class VendorProfileController extends Controller
             'verified_at'         => $vendor->verified_at?->toIso8601String(),
         ]);
     }
+
+    /**
+     * Get vendor's own rating summary (for mobile profile page).
+     */
+    public function myRating(): \Illuminate\Http\JsonResponse
+    {
+        $vendor = auth('api')->user()?->vendor;
+        if (!$vendor) {
+            return $this->error('Profil vendor tidak ditemukan.', null, 403);
+        }
+
+        $ratings = \App\Models\VendorRating::where('vendor_id', $vendor->id)
+            ->with('tender:id,title')
+            ->latest()
+            ->get();
+
+        $avg = $ratings->avg('overall_score');
+
+        return $this->success([
+            'average_rating'   => $avg ? round((float)$avg, 2) : null,
+            'total_ratings'    => $ratings->count(),
+            'is_blacklisted'   => (bool) $vendor->is_blacklisted,
+            'blacklist_reason' => $vendor->is_blacklisted ? $vendor->blacklist_reason : null,
+            'ratings'          => $ratings->map(fn($r) => [
+                'tender_title'       => $r->tender?->title,
+                'overall_score'      => $r->overall_score,
+                'quality_score'      => $r->quality_score,
+                'delivery_score'     => $r->delivery_score,
+                'communication_score'=> $r->communication_score,
+                'compliance_score'   => $r->compliance_score,
+                'review'             => $r->review,
+                'rated_at'           => $r->created_at?->toIso8601String(),
+            ])->values(),
+        ]);
+    }
+
 }

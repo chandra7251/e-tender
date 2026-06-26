@@ -18,16 +18,25 @@ class User extends Authenticatable implements JWTSubject, MustVerifyEmail
         'email',
         'password',
         'role',
+        'two_factor_secret',
+        'two_factor_enabled',
+        'last_login_ip',
+        'last_login_at',
+        'admin_permissions',
+        'department',
     ];
     protected $hidden = [
         'password',
         'remember_token',
+        'fcm_token',
+        'two_factor_secret',
     ];
     protected function casts(): array
     {
         return [
-            'email_verified_at' => 'datetime',
-            'password'          => 'hashed',
+            'email_verified_at'    => 'datetime',
+            'password'             => 'hashed',
+            'admin_permissions'    => 'array',
         ];
     }
     public function getJWTIdentifier(): mixed
@@ -59,5 +68,19 @@ class User extends Authenticatable implements JWTSubject, MustVerifyEmail
     public function sendPasswordResetNotification($token)
     {
         $this->notify(new CustomResetPasswordNotification($token));
+    }
+
+    /** Cek apakah user punya role admin (semua variant) */
+    public function isAdminRole(): bool
+    {
+        return in_array($this->role, ['admin','super_admin','procurement_manager','evaluator','verifikator','auditor']);
+    }
+
+    /** Cek apakah user punya permission tertentu */
+    public function hasPermission(string $permission): bool
+    {
+        if ($this->role === 'super_admin' || $this->role === 'admin') return true;
+        $perms = $this->admin_permissions ?? [];
+        return in_array('*', $perms) || in_array($permission, $perms);
     }
 }

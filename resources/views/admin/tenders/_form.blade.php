@@ -151,6 +151,55 @@
 
 </div>
 
+{{-- Evaluation Method Settings --}}
+<div class="rounded-xl bg-[#3553A8] p-6 shadow-sm mt-6" x-data="{ method: '{{ old('evaluation_method', $tender?->evaluation_method ?? 'lowest_price') }}' }">
+    <h3 class="mb-6 text-lg font-bold text-white">Metode Evaluasi</h3>
+    <div class="space-y-4">
+        <div>
+            <label for="evaluation_method" class="mb-2 block text-sm font-bold text-white">Metode Evaluasi</label>
+            <select id="evaluation_method" name="evaluation_method" x-model="method"
+                class="w-full rounded-md border border-[#4A6BCC] bg-[#2B438A] px-4 py-2.5 text-sm text-white outline-none focus:border-white focus:ring-1 focus:ring-white">
+                <option value="lowest_price">Harga Terendah</option>
+                <option value="multi_criteria">Multi Kriteria (Scoring)</option>
+                <option value="two_envelope">Sistem 2 Amplop (Teknis + Harga)</option>
+            </select>
+        </div>
+
+        {{-- Two Envelope Settings --}}
+        <div x-show="method === 'two_envelope'" x-transition class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+            <div>
+                <label for="technical_weight" class="mb-2 block text-sm font-bold text-white">
+                    Bobot Teknis (%)
+                </label>
+                <input id="technical_weight" type="number" name="technical_weight" min="0" max="100" step="1"
+                    value="{{ old('technical_weight', $tender?->technical_weight ?? 60) }}"
+                    class="w-full rounded-md border border-[#4A6BCC] bg-[#2B438A] px-4 py-2.5 text-sm text-white outline-none focus:border-white focus:ring-1 focus:ring-white">
+            </div>
+            <div>
+                <label for="price_weight" class="mb-2 block text-sm font-bold text-white">
+                    Bobot Harga (%)
+                </label>
+                <input id="price_weight" type="number" name="price_weight" min="0" max="100" step="1"
+                    value="{{ old('price_weight', $tender?->price_weight ?? 40) }}"
+                    class="w-full rounded-md border border-[#4A6BCC] bg-[#2B438A] px-4 py-2.5 text-sm text-white outline-none focus:border-white focus:ring-1 focus:ring-white">
+            </div>
+            <div>
+                <label for="passing_grade" class="mb-2 block text-sm font-bold text-white">
+                    Passing Grade Teknis
+                </label>
+                <input id="passing_grade" type="number" name="passing_grade" min="0" max="100" step="1"
+                    value="{{ old('passing_grade', $tender?->passing_grade ?? 70) }}"
+                    class="w-full rounded-md border border-[#4A6BCC] bg-[#2B438A] px-4 py-2.5 text-sm text-white outline-none focus:border-white focus:ring-1 focus:ring-white">
+            </div>
+            <div class="sm:col-span-3">
+                <p class="text-xs text-indigo-200">
+                    ⚠️ Total bobot teknis + harga harus 100%. Passing grade adalah nilai minimum untuk lulus evaluasi teknis.
+                </p>
+            </div>
+        </div>
+    </div>
+</div>
+
 <div class="rounded-xl bg-[#3553A8] p-6 shadow-sm mt-6">
     <h3 class="mb-6 text-lg font-bold text-white">Timeline Tender</h3>
     <div class="grid grid-cols-1 gap-6 sm:grid-cols-2">

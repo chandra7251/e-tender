@@ -31,6 +31,9 @@ class TenderParticipantController extends Controller
         if (!$vendor) {
             return $this->error('Profil vendor tidak ditemukan. Silakan hubungi admin.', null, 403);
         }
+        if ($vendor->is_blacklisted) {
+            return $this->error('Akun Anda diblokir (blacklist). Hubungi admin untuk informasi lebih lanjut.', null, 403);
+        }
         if ($vendor->verification_status !== 'approved') {
             return $this->error(
                 'Vendor belum diverifikasi. Tunggu persetujuan admin.',

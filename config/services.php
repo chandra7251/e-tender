@@ -23,4 +23,22 @@ return [
         ],
     ],
 
+    'midtrans' => [
+        'server_key'    => env('MIDTRANS_SERVER_KEY', ''),
+        'client_key'    => env('MIDTRANS_CLIENT_KEY', ''),
+        'is_production' => env('MIDTRANS_PRODUCTION', false),
+    ],
+
+    'blockchain' => [
+        'network' => env('BLOCKCHAIN_NETWORK', 'local'),
+        'rpc_url' => env('BLOCKCHAIN_RPC_URL', ''),
+    ],
+
+    'fcm' => [
+        'project_id'       => env('FCM_PROJECT_ID', ''),
+        'credentials_path' => storage_path('app/fcm-service-account.json'),
+        'server_key'       => env('FCM_SERVER_KEY', ''),
+    ],
+
 ];
+

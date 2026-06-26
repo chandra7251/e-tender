@@ -11,7 +11,7 @@ class WinnerSelectionRequest extends FormRequest
     {
         return [
             'bid_id'           => ['required', 'integer', 'exists:bids,id'],
-            'selection_method' => ['required', 'in:lowest_price,admin_consideration'],
+            'selection_method' => ['required', 'in:lowest_price,multi_criteria,admin_consideration'],
             'notes'            => ['nullable', 'string', 'max:1000'],
         ];
     }

@@ -195,4 +195,41 @@ class AuthController extends Controller
         $user->sendEmailVerificationNotification();
         return $this->success(null, 'Link verifikasi telah dikirim ulang ke email Anda.');
     }
+
+    /**
+     * Hapus akun vendor yang sedang login (soft delete user + vendor data).
+     * Vendor harus konfirmasi password sebelum akun dihapus.
+     */
+    public function deleteAccount(\Illuminate\Http\Request $request): \Illuminate\Http\JsonResponse
+    {
+        $request->validate([
+            'password' => 'required|string',
+        ]);
+
+        $user = auth('api')->user();
+
+        // Verifikasi password
+        if (!\Illuminate\Support\Facades\Hash::check($request->input('password'), $user->password)) {
+            return $this->error('Password tidak sesuai. Akun tidak dapat dihapus.', null, 403);
+        }
+
+        // Log aktivitas sebelum hapus
+        \App\Models\ActivityLog::log(
+            'account_deleted',
+            'user',
+            $user->id,
+            ['email' => $user->email, 'name' => $user->name],
+            null,
+            $user->id
+        );
+
+        // Invalidate JWT token
+        try { auth('api')->logout(); } catch (\Throwable) {}
+
+        // Soft delete user (cascade ke vendor via SoftDeletes)
+        $user->delete();
+
+        return $this->success(null, 'Akun berhasil dihapus.');
+    }
+
 }

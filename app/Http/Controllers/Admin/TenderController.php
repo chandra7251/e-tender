@@ -3,6 +3,7 @@ namespace App\Http\Controllers\Admin;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Admin\TenderRequest;
 use App\Http\Requests\Admin\TenderStatusRequest;
+use App\Models\ActivityLog;
 use App\Models\Tender;
 use App\Models\TenderHistory;
 use Illuminate\Http\RedirectResponse;
@@ -66,6 +67,10 @@ class TenderController extends Controller
             'description' => 'Tender dibuat oleh admin.',
             'created_at'  => now(),
         ]);
+        ActivityLog::log('tender_created', 'tender',
+            "Tender \"{$tender->title}\" dibuat.",
+            subjectType: Tender::class, subjectId: $tender->id,
+        );
         return redirect()
             ->route('admin.tenders.show', $tender)
             ->with('success', 'Tender berhasil dibuat.');

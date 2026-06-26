@@ -210,6 +210,54 @@
 
             @endif
 
+            {{-- Vendor Rating --}}
+            <div class="rounded-xl bg-[#3553A8] p-6 shadow-sm">
+                <h2 class="mb-4 text-lg font-bold text-white">⭐ Rating Vendor</h2>
+                @php $avgRating = $vendor->average_rating; @endphp
+                @if($avgRating)
+                <div class="text-center mb-4">
+                    <div class="text-3xl font-bold text-yellow-400">{{ number_format($avgRating, 1) }}/5</div>
+                    <div class="text-yellow-300 text-lg mt-1">
+                        @for($i = 1; $i <= 5; $i++)
+                            {{ $i <= round($avgRating) ? '★' : '☆' }}
+                        @endfor
+                    </div>
+                    <p class="text-xs text-indigo-200 mt-1">{{ $vendor->ratings()->count() }} rating dari tender</p>
+                </div>
+                @else
+                <p class="text-sm text-indigo-200 text-center">Belum ada rating.</p>
+                @endif
+                <a href="{{ route('admin.vendors.ratings', $vendor) }}"
+                   class="block w-full text-center rounded-md bg-[#2B438A] border border-[#4A6BCC] px-4 py-2 text-sm font-bold text-white hover:bg-[#1E3066] transition-colors mt-3">
+                    Lihat Riwayat Rating
+                </a>
+            </div>
+
+            {{-- Blacklist Status --}}
+            <div class="rounded-xl {{ $vendor->is_blacklisted ? 'bg-red-600' : 'bg-[#3553A8]' }} p-6 shadow-sm">
+                <h2 class="mb-4 text-lg font-bold text-white">
+                    {{ $vendor->is_blacklisted ? '⛔ Status: Blacklisted' : '✅ Status: Aktif' }}
+                </h2>
+                @if($vendor->is_blacklisted)
+                <div class="bg-red-700/50 rounded-lg p-3 mb-3">
+                    <p class="text-sm text-red-100"><strong>Alasan:</strong> {{ $vendor->blacklist_reason }}</p>
+                    <p class="text-xs text-red-200 mt-1">
+                        Tanggal: {{ $vendor->blacklisted_at?->format('d M Y') }}
+                        • Oleh: {{ $vendor->blacklister?->name ?? '-' }}
+                    </p>
+                </div>
+                <form action="{{ route('admin.vendors.unblacklist', $vendor) }}" method="POST"
+                    onsubmit="return confirm('Hapus vendor ini dari blacklist?')">
+                    @csrf
+                    <button type="submit" class="w-full rounded-md bg-green-600 border border-green-500 px-4 py-2 text-sm font-bold text-white hover:bg-green-700 transition-colors">
+                        Hapus dari Blacklist
+                    </button>
+                </form>
+                @else
+                <p class="text-sm text-indigo-200 mb-3">Vendor dapat berpartisipasi dalam tender.</p>
+                @endif
+            </div>
+
         </div>
     </div>
 

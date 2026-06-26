@@ -4,6 +4,7 @@ use App\Models\Bid;
 use App\Models\BidHistory;
 use App\Models\Tender;
 use App\Models\TenderParticipant;
+use App\Models\BidItem;
 use App\Models\Vendor;
 use Illuminate\Support\Facades\DB;
 class BiddingService
@@ -11,6 +12,9 @@ class BiddingService
     public function __construct(protected TenderHistoryService $historyService) {}
     public function assertVendorCanBid(Vendor $vendor, Tender $tender): void
     {
+        if ($vendor->is_blacklisted) {
+            throw new \RuntimeException('Akun Anda diblokir (blacklist). Hubungi admin.', 403);
+        }
         if ($vendor->verification_status !== 'approved') {
             throw new \RuntimeException('Vendor belum diverifikasi.', 403);
         }
@@ -34,9 +38,9 @@ class BiddingService
             throw new \RuntimeException('Periode bidding sudah berakhir.', 422);
         }
     }
-    public function submitBid(Vendor $vendor, Tender $tender, float $amount, ?string $notes = null): Bid
+    public function submitBid(Vendor $vendor, Tender $tender, float $amount, ?string $notes = null, array $items = []): Bid
     {
-        return DB::transaction(function () use ($vendor, $tender, $amount, $notes) {
+        return DB::transaction(function () use ($vendor, $tender, $amount, $notes, $items) {
             $exists = Bid::where('tender_id', $tender->id)
                 ->where('vendor_id', $vendor->id)
                 ->lockForUpdate()
@@ -51,6 +55,16 @@ class BiddingService
                 'notes'        => $notes,
                 'submitted_at' => now(),
             ]);
+            // Simpan BidItems jika ada
+            if (!empty($items)) {
+                foreach ($items as $item) {
+                    BidItem::create([
+                        'bid_id'         => $bid->id,
+                        'tender_item_id' => $item['tender_item_id'],
+                        'unit_price'     => $item['unit_price'],
+                    ]);
+                }
+            }
             BidHistory::create([
                 'bid_id'         => $bid->id,
                 'tender_id'      => $tender->id,

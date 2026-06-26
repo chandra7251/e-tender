@@ -1,58 +1,182 @@
-<p align="center"><a href="https://laravel.com" target="_blank"><img src="https://raw.githubusercontent.com/laravel/art/master/logo-lockup/5%20SVG/2%20CMYK/1%20Full%20Color/laravel-logolockup-cmyk-red.svg" width="400" alt="Laravel Logo"></a></p>
+# ZETA E-Procurement v2.0
 
-<p align="center">
-<a href="https://github.com/laravel/framework/actions"><img src="https://github.com/laravel/framework/workflows/tests/badge.svg" alt="Build Status"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/dt/laravel/framework" alt="Total Downloads"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/v/laravel/framework" alt="Latest Stable Version"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/l/laravel/framework" alt="License"></a>
-</p>
+> Sistem Pengadaan Barang & Jasa Digital Terintegrasi
+> Laravel 13 · JWT Auth · REST API · Admin Panel
 
-## About Laravel
+---
 
-Laravel is a web application framework with expressive, elegant syntax. We believe development must be an enjoyable and creative experience to be truly fulfilling. Laravel takes the pain out of development by easing common tasks used in many web projects, such as:
+## Tech Stack
 
-- [Simple, fast routing engine](https://laravel.com/docs/routing).
-- [Powerful dependency injection container](https://laravel.com/docs/container).
-- Multiple back-ends for [session](https://laravel.com/docs/session) and [cache](https://laravel.com/docs/cache) storage.
-- Expressive, intuitive [database ORM](https://laravel.com/docs/eloquent).
-- Database agnostic [schema migrations](https://laravel.com/docs/migrations).
-- [Robust background job processing](https://laravel.com/docs/queues).
-- [Real-time event broadcasting](https://laravel.com/docs/broadcasting).
+| Layer        | Teknologi                                |
+|--------------|------------------------------------------|
+| Backend      | Laravel 13 (PHP 8.3)                     |
+| Auth API     | JWT (tymon/jwt-auth)                     |
+| Database     | MySQL 8.x                                |
+| PDF Export   | barryvdh/laravel-dompdf                  |
+| Push Notif   | FCM (Firebase Cloud Messaging)           |
+| Queue        | Database Driver                          |
+| Admin UI     | Blade + Tailwind CSS CDN + Alpine.js     |
+| Mobile API   | RESTful JSON API (Capacitor/Flutter)     |
 
-Laravel is accessible, powerful, and provides tools required for large, robust applications.
+---
 
-## Learning Laravel
+## Fitur Utama
 
-Laravel has the most extensive and thorough [documentation](https://laravel.com/docs) and video tutorial library of all modern web application frameworks, making it a breeze to get started with the framework.
+### Admin Panel (`/admin`)
+| Menu              | Deskripsi                                                       |
+|-------------------|-----------------------------------------------------------------|
+| Dashboard         | Statistik real-time: tender, vendor, penawaran, kontrak         |
+| Vendor            | Manajemen vendor, approval/reject, dokumen, rating              |
+| Pengajuan Vendor  | Antrian registrasi + badge notif pending                        |
+| Blacklist         | Daftar hitam vendor                                             |
+| Tender            | CRUD tender, status, foto, Bill of Quantity (BQ)               |
+| Evaluasi          | Kriteria, scoring, metode 2-amplop, ranking                     |
+| Pemenang          | Seleksi pemenang, hasil tender, BAST                            |
+| **Sanggahan**     | Manajemen sanggahan & banding vendor                            |
+| **Kontrak**       | Kontrak digital, TTD elektronik, milestone monitoring           |
+| Audit Log         | Log aktivitas seluruh pengguna                                  |
+| Laporan           | Export laporan tender & vendor (PDF/Excel)                      |
+| **Pengaturan**    | White-label instansi: logo, warna, nama, header/footer dokumen  |
 
-In addition, [Laracasts](https://laracasts.com) contains thousands of video tutorials on a range of topics including Laravel, modern PHP, unit testing, and JavaScript. Boost your skills by digging into our comprehensive video library.
+### REST API (Mobile)
+| Grup          | Endpoint Utama                                                     |
+|---------------|--------------------------------------------------------------------||
+| Auth          | Register, Login, Forgot/Reset Password, Verify Email, 2FA          |
+| Vendor        | Profil, dokumen, kualifikasi, sertifikasi, rating, status          |
+| Tender        | List, detail, join, pengumuman, hasil, **BQ items**                |
+| Penawaran     | Submit bid, update, riwayat, **BidItems per item BQ**              |
+| Notifikasi    | FCM token, inbox notifikasi                                        |
+| **Sanggahan** | Ajukan sanggahan/banding, cek status                               |
+| **Kontrak**   | Lihat kontrak, TTD vendor, progress milestone                      |
+| Admin API     | Dashboard stats, ranking, export PDF, webhook, settings, BQ        |
 
-You can also watch bite-sized lessons with real-world projects on [Laravel Learn](https://laravel.com/learn), where you will be guided through building a Laravel application from scratch while learning PHP fundamentals.
+---
 
-## Agentic Development
+## Setup Lokal
 
-Laravel's predictable structure and conventions make it ideal for AI coding agents like Claude Code, Cursor, and GitHub Copilot. Install [Laravel Boost](https://laravel.com/docs/ai) to supercharge your AI workflow:
-
+### 1. Clone & Install
 ```bash
-composer require laravel/boost --dev
-
-php artisan boost:install
+git clone <repo-url> lelang-2.0
+cd lelang-2.0
+composer install
+cp .env.example .env
 ```
 
-Boost provides your agent 15+ tools and skills that help agents build Laravel applications while following best practices.
+### 2. Konfigurasi `.env`
+```env
+APP_NAME=ZETA
+APP_URL=http://localhost:8000
 
-## Contributing
+DB_CONNECTION=mysql
+DB_DATABASE=lelang_2
+DB_USERNAME=root
+DB_PASSWORD=
 
-Thank you for considering contributing to the Laravel framework! The contribution guide can be found in the [Laravel documentation](https://laravel.com/docs/contributions).
+JWT_SECRET=   # generate: php artisan jwt:secret
+FCM_PROJECT_ID=   # Firebase Project ID untuk push notif
+MAIL_FROM_ADDRESS=noreply@zeta.co.id
+MAIL_FROM_NAME="ZETA E-Procurement"
+```
 
-## Code of Conduct
+### 3. Migrate & Seed
+```bash
+php artisan key:generate
+php artisan jwt:secret
+php artisan migrate:fresh --seed
+php artisan storage:link
+```
 
-In order to ensure that the Laravel community is welcoming to all, please review and abide by the [Code of Conduct](https://laravel.com/docs/contributions#code-of-conduct).
+### 4. Jalankan
+```bash
+# Development (tanpa queue)
+php artisan serve
 
-## Security Vulnerabilities
+# Production-like (dengan queue worker)
+php artisan serve &
+php artisan queue:work --queue=default
+```
 
-If you discover a security vulnerability within Laravel, please send an e-mail to Taylor Otwell via [taylor@laravel.com](mailto:taylor@laravel.com). All security vulnerabilities will be promptly addressed.
+---
 
-## License
+## Default Login Admin
 
-The Laravel framework is open-sourced software licensed under the [MIT license](https://opensource.org/licenses/MIT).
+| Field    | Value                                       |
+|----------|---------------------------------------------|
+| URL      | `http://localhost:8000/admin/login`         |
+| Email    | `admin@vandrafcy.my.id`                     |
+| Password | `rahasia`                                   |
+
+---
+
+## API Base URL & Auth
+
+```
+Base URL: http://<HOST>:8000/api
+```
+
+Header wajib untuk endpoint protected:
+```
+Authorization: Bearer <JWT_TOKEN>
+Content-Type: application/json
+Accept: application/json
+```
+
+### Standard Response Format
+```json
+{ "status": true, "message": "OK", "data": { ... } }
+{ "status": false, "message": "Error message", "errors": { ... } }
+```
+
+---
+
+## Database Schema (28 tabel)
+
+```
+users                   vendors                 vendor_documents
+vendor_submissions      vendor_submission_photos vendor_qualifications
+vendor_certifications   vendor_ratings
+tenders                 tender_photos           tender_requirements
+tender_announcements    tender_participants      tender_histories
+tender_evaluation_criteria tender_items         tender_complaints
+tender_results          bids                    bid_histories
+bid_evaluations         bid_items               purchase_orders
+contracts               contract_deliveries      instansi_settings
+activity_logs           webhook_subscriptions
+```
+
+---
+
+## Fitur Advanced
+
+- **Two-Envelope Evaluation** — Evaluasi 2 amplop (teknis + harga) Perpres 16/2018
+- **Digital Contract** — Hash SHA-256 & QR Code verifikasi keaslian
+- **Bill of Quantity (BQ)** — Rincian item tender + penawaran per item (BidItem)
+- **Sanggahan & Banding** — Mekanisme keberatan vendor sesuai regulasi
+- **Webhook System** — Event-driven integration ke sistem eksternal
+- **FCM Push Notification** — Notifikasi real-time ke mobile app
+- **PDF Export** — Rekap tender, BA Evaluasi, BA Pemenang, Kontrak
+- **White-Label** — Branding instansi: logo, warna, nama, header/footer PDF
+- **Audit Log** — Jejak aktivitas seluruh pengguna admin & vendor
+- **2FA Support** — Two-factor authentication (toggle via pengaturan)
+
+---
+
+## Changelog
+
+### v2.0.0 (Jun 2026)
+- Tambah: Bill of Quantity / Tender Items + BidItem per baris
+- Tambah: Sanggahan & Banding vendor
+- Tambah: Kontrak Digital + TTD Elektronik + Milestone
+- Tambah: Vendor Kualifikasi & Sertifikasi
+- Tambah: Two-Envelope Evaluation
+- Tambah: White-Label / Instansi Settings
+- Tambah: Webhook Subscriptions
+- Tambah: FCM Push Notification
+- Tambah: Export PDF (Rekap, BA Evaluasi, BA Pemenang, Kontrak)
+- Tambah: Vendor Rating & Blacklist
+- Tambah: Audit Log System
+
+### v1.0.0 (v `lelang-priority2`)
+- Core tender & bidding system
+- Vendor management & document upload
+- Admin panel dasar

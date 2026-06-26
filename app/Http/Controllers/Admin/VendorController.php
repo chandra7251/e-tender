@@ -2,6 +2,7 @@
 namespace App\Http\Controllers\Admin;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Admin\VendorVerificationRequest;
+use App\Models\ActivityLog;
 use App\Models\TenderHistory;
 use App\Models\Vendor;
 use Illuminate\Http\RedirectResponse;
@@ -41,6 +42,10 @@ class VendorController extends Controller
         $this->logVendorEvent($vendor, 'vendor_approved',
             "Vendor {$vendor->company_name} diapprove oleh admin."
         );
+        ActivityLog::log('vendor_approved', 'vendor',
+            "Vendor \"{$vendor->company_name}\" diapprove.",
+            subjectType: Vendor::class, subjectId: $vendor->id,
+        );
         return redirect()
             ->route('admin.vendors.show', $vendor)
             ->with('success', "Vendor {$vendor->company_name} berhasil diapprove.");
@@ -56,6 +61,10 @@ class VendorController extends Controller
         $this->logVendorEvent($vendor, 'vendor_rejected',
             "Vendor {$vendor->company_name} direject oleh admin." .
             ($request->notes ? " Alasan: {$request->notes}" : '')
+        );
+        ActivityLog::log('vendor_rejected', 'vendor',
+            "Vendor \"{$vendor->company_name}\" direject." . ($request->notes ? " Alasan: {$request->notes}" : ''),
+            subjectType: Vendor::class, subjectId: $vendor->id,
         );
         return redirect()
             ->route('admin.vendors.show', $vendor)

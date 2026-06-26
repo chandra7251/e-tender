@@ -23,6 +23,7 @@ class DatabaseSeeder extends Seeder
 
     public function run(): void
     {
+        $this->call(AdminUserSeeder::class);
 
 
         $admin = User::firstOrCreate(
@@ -567,6 +568,127 @@ class DatabaseSeeder extends Seeder
                 'bidding_end'     => now()->addDays(25),
                 'status'          => 'open',
             ]
-        );
+
+        // ─── [TAMBAHAN] Tender Items / BQ untuk tenderDraft ───────────────────
+        // Note: tenderDraft sudah di-create di atas (Lisensi Endpoint Protection)
+        // Kita query ulang untuk get ID-nya
+        $tenderForItems = Tender::where('title', 'LIKE', '%Lisensi Perangkat Lunak Keamanan Siber%')->first();
+        if ($tenderForItems) {
+            $bqItems = [
+                ['description' => 'Lisensi Endpoint Protection Enterprise - 1500 seat', 'unit' => 'lisensi',  'quantity' => 1500, 'hps_unit_price' => 350000, 'sort_order' => 1],
+                ['description' => 'Biaya Implementasi & Konfigurasi Awal',              'unit' => 'paket',    'quantity' => 1,    'hps_unit_price' => 15000000, 'sort_order' => 2],
+                ['description' => 'Pelatihan Admin & End-User (2 hari)',                'unit' => 'paket',    'quantity' => 1,    'hps_unit_price' => 8000000,  'sort_order' => 3],
+                ['description' => 'Dukungan Teknis On-site (12 bulan)',                 'unit' => 'bulan',    'quantity' => 12,   'hps_unit_price' => 3500000,  'sort_order' => 4],
+            ];
+            foreach ($bqItems as $item) {
+                TenderItem::firstOrCreate(
+                    ['tender_id' => $tenderForItems->id, 'description' => $item['description']],
+                    array_merge(['tender_id' => $tenderForItems->id], $item)
+                );
+            }
+        }
+
+        // ─── [TAMBAHAN] Tender Items untuk tenderBidding ──────────────────────
+        $tenderForBQ = Tender::where('title', 'LIKE', '%Fiber Optic%')->first();
+        if ($tenderForBQ) {
+            $bqFO = [
+                ['description' => 'Kabel FO Single-Mode 24 Core (outdoor armored)',  'unit' => 'meter', 'quantity' => 15000, 'hps_unit_price' => 12000, 'sort_order' => 1],
+                ['description' => 'Core Switch Layer 3 48 Port SFP+',               'unit' => 'unit',  'quantity' => 3,     'hps_unit_price' => 85000000, 'sort_order' => 2],
+                ['description' => 'ODF (Optical Distribution Frame) 48 Port',       'unit' => 'unit',  'quantity' => 6,     'hps_unit_price' => 4500000, 'sort_order' => 3],
+                ['description' => 'Jasa Instalasi & Splicing FO',                   'unit' => 'paket', 'quantity' => 1,     'hps_unit_price' => 25000000, 'sort_order' => 4],
+                ['description' => 'Pengujian & Commissioning (OTDR Test)',           'unit' => 'paket', 'quantity' => 1,     'hps_unit_price' => 8000000, 'sort_order' => 5],
+            ];
+            foreach ($bqFO as $item) {
+                TenderItem::firstOrCreate(
+                    ['tender_id' => $tenderForBQ->id, 'description' => $item['description']],
+                    array_merge(['tender_id' => $tenderForBQ->id], $item)
+                );
+            }
+        }
+
+        // ─── [TAMBAHAN] TenderComplaint / Sanggahan ───────────────────────────
+        $tenderFinishedRef = Tender::where('status', 'finished')->first();
+        if ($tenderFinishedRef) {
+            TenderComplaint::firstOrCreate(
+                [
+                    'tender_id' => $tenderFinishedRef->id,
+                    'vendor_id' => $vendorApproved2->id,
+                    'type'      => 'sanggahan',
+                ],
+                [
+                    'reason'          => 'Kami mengajukan sanggahan atas penetapan pemenang. Metode evaluasi teknis yang digunakan tidak sesuai dengan Dokumen Pengadaan Bab IV. Vendor pemenang tidak memenuhi persyaratan pengalaman minimum 3 proyek sejenis.',
+                    'supporting_docs' => json_encode(['docs/complaint/bukti_evaluasi_1.pdf', 'docs/complaint/pengalaman_kerja.pdf']),
+                    'status'          => 'pending',
+                    'deadline'        => now()->addDays(5),
+                ]
+            );
+
+            TenderComplaint::firstOrCreate(
+                [
+                    'tender_id' => $tenderFinishedRef->id,
+                    'vendor_id' => $vendorApproved->id,
+                    'type'      => 'banding',
+                ],
+                [
+                    'reason'          => 'Banding atas keputusan sanggahan. Kami berpendapat bahwa respon panitia tidak memberikan dasar hukum yang jelas atas penolakan sanggahan kami sebelumnya.',
+                    'supporting_docs' => json_encode(['docs/complaint/banding_1.pdf']),
+                    'status'          => 'reviewed',
+                    'response'        => 'Banding sedang dalam proses penelaahan oleh Direktur Pengadaan. Akan direspons dalam 3 hari kerja.',
+                    'responded_by'    => $admin->id,
+                    'responded_at'    => now()->subDay(),
+                    'deadline'        => now()->addDays(3),
+                ]
+            );
+        }
+
+        // ─── [TAMBAHAN] Contract Digital ─────────────────────────────────────
+        $tenderWon = Tender::where('status', 'finished')->first();
+        if ($tenderWon) {
+            $winnerVendorId = TenderResult::where('tender_id', $tenderWon->id)->value('winner_vendor_id');
+            if (!$winnerVendorId) {
+                $winnerVendorId = $vendorApproved->id;
+            }
+            Contract::firstOrCreate(
+                ['contract_number' => 'KONTRAK-ZETA/06/2026/001'],
+                [
+                    'tender_id'      => $tenderWon->id,
+                    'vendor_id'      => $winnerVendorId,
+                    'created_by'     => $admin->id,
+                    'status'         => 'active',
+                    'contract_value' => 92500000.00,
+                    'start_date'     => now()->subDays(3),
+                    'end_date'       => now()->addDays(87),
+                    'terms'          => "SYARAT DAN KETENTUAN KONTRAK\n\n1. LINGKUP PEKERJAAN\nPihak Kedua wajib menyerahkan seluruh item pekerjaan sesuai Spesifikasi Teknis yang tertuang dalam Dokumen Tender No. {$tenderWon->id}.\n\n2. NILAI KONTRAK\nNilai kontrak sebesar Rp 92.500.000 (Sembilan Puluh Dua Juta Lima Ratus Ribu Rupiah) sudah termasuk PPN 11%.\n\n3. JANGKA WAKTU\nPelaksanaan pekerjaan selama 90 hari kalender terhitung dari tanggal penandatanganan kontrak.\n\n4. PEMBAYARAN\nPembayaran dilakukan dalam 2 (dua) termin: 40% setelah serah terima pertama, 60% setelah serah terima akhir dan BAST ditandatangani kedua belah pihak.\n\n5. DENDA KETERLAMBATAN\nDenda keterlambatan sebesar 1/1000 dari nilai kontrak per hari kalender, maksimum 5% dari nilai kontrak.\n\n6. GARANSI\nVendor menjamin kualitas pekerjaan selama 12 (dua belas) bulan sejak tanggal BAST.",
+                    'admin_signed_at' => now()->subDays(3),
+                    'vendor_signed_at' => now()->subDays(2),
+                ]
+            );
+
+            // Contract Deliveries / Milestone
+            $contract = Contract::where('contract_number', 'KONTRAK-ZETA/06/2026/001')->first();
+            if ($contract) {
+                $milestones = [
+                    ['milestone_name' => 'Serah Terima Pertama (40%)',   'description' => 'Penyerahan seluruh unit workstation dan instalasi OS.', 'due_date' => now()->addDays(30), 'status' => 'scheduled'],
+                    ['milestone_name' => 'Uji Fungsi & Konfigurasi',      'description' => 'Pengujian performa, konfigurasi jaringan, dan domain join.', 'due_date' => now()->addDays(45), 'status' => 'scheduled'],
+                    ['milestone_name' => 'Serah Terima Akhir (BAST)',     'description' => 'Penyerahan BAST, dokumentasi teknis, dan garansi unit.', 'due_date' => now()->addDays(87), 'status' => 'scheduled'],
+                ];
+                foreach ($milestones as $m) {
+                    ContractDelivery::firstOrCreate(
+                        ['contract_id' => $contract->id, 'milestone_name' => $m['milestone_name']],
+                        array_merge(['contract_id' => $contract->id], $m)
+                    );
+                }
+            }
+        }
+
+        // ─── [TAMBAHAN] InstansiSetting - update ke ZETA branding ────────────
+        \DB::table('instansi_settings')->where('key', 'instansi_name')->update(['value' => 'PT ZETA Nusantara Persada']);
+        \DB::table('instansi_settings')->where('key', 'instansi_tagline')->update(['value' => 'Sistem Pengadaan Barang & Jasa Digital Terintegrasi']);
+        \DB::table('instansi_settings')->where('key', 'instansi_address')->update(['value' => 'Jl. Jend. Sudirman Kav. 52-53, Jakarta Selatan 12190']);
+        \DB::table('instansi_settings')->where('key', 'instansi_phone')->update(['value' => '(021) 5155-1234']);
+        \DB::table('instansi_settings')->where('key', 'instansi_email')->update(['value' => 'procurement@zeta.co.id']);
+        \DB::table('instansi_settings')->where('key', 'primary_color')->update(['value' => '#3553A8']);
+        \DB::table('instansi_settings')->where('key', 'document_header')->update(['value' => 'PT ZETA NUSANTARA PERSADA']);
+        \DB::table('instansi_settings')->where('key', 'document_footer')->update(['value' => 'Dokumen ini diterbitkan secara elektronik oleh Sistem ZETA E-Procurement. Sah tanpa tanda tangan basah.']);
     }
 }
