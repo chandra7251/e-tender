@@ -167,10 +167,7 @@ Route::prefix('admin')->name('admin.')->group(function () {
 // ─── Multi-Role: Admin Users Management ──────────────────────────────────────
 Route::prefix('admin')->name('admin.')->middleware(['auth', 'role:admin,super_admin'])->group(function () {
     
-    // AI Analysis
-    Route::get('ai',             [\App\Http\Controllers\Admin\AiAdminController::class, 'index'])->name('admin.ai.index');
-    // Blockchain
-    Route::get('blockchain',     [\App\Http\Controllers\Admin\BlockchainAdminController::class, 'index'])->name('admin.blockchain.index');
+
     Route::resource('users', \App\Http\Controllers\Admin\AdminUserController::class)
          ->except(['show']);
 

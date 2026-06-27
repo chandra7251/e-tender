@@ -72,6 +72,7 @@ class AuthController extends Controller
                 'email' => $user->email,
                 'role'  => $user->role,
             ],
+            'vendor'     => new VendorResource($user->vendor()->with('user')->first()),
         ], 'Login berhasil.');
     }
     public function logout(Request $request): JsonResponse

@@ -34,8 +34,8 @@
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
 </head>
 
-<body class="h-full">
-<div class="flex h-full min-h-screen bg-[#F0F2F5] text-gray-800">
+<body class="h-full overflow-hidden">
+<div class="flex h-full bg-[#F0F2F5] text-gray-800">
 
     <div id="sidebar-backdrop"
          class="fixed inset-0 z-40 bg-black/50 md:hidden"
@@ -48,7 +48,7 @@
             <img src="{{ asset('images/auth/logo.png') }}" alt="E-Tender Logo" class="h-14 w-auto object-contain">
         </div>
 
-        <nav class="flex-1 space-y-2 px-4 py-6">
+        <nav class="flex-1 space-y-2 px-4 py-6 overflow-y-auto">
             <a href="{{ route('admin.dashboard') }}"
                class="flex items-center gap-3 rounded-lg px-4 py-3 text-sm font-semibold
                       {{ request()->routeIs('admin.dashboard') ? 'bg-white text-[#3553A8]' : 'text-white hover:bg-[#2B438A]' }}
@@ -69,6 +69,7 @@
                 Vendor
             </a>
 
+            @if(in_array(auth()->user()->role, ['admin', 'super_admin']))
             <a href="{{ route('admin.vendors.blacklist.index') }}"
                class="flex items-center gap-3 rounded-lg px-4 py-3 text-sm font-semibold
                       {{ request()->routeIs('admin.vendors.blacklist*') ? 'bg-white text-[#3553A8]' : 'text-white hover:bg-[#2B438A]' }}
@@ -78,6 +79,7 @@
                 </svg>
                 Blacklist
             </a>
+            @endif
 
             <a href="{{ route('admin.submissions.index') }}"
                class="flex items-center gap-3 rounded-lg px-4 py-3 text-sm font-semibold
@@ -174,6 +176,7 @@
                 </svg>
                 E-Catalogue
             </a>
+            @if(in_array(auth()->user()->role, ['admin', 'super_admin']))
             <a href="{{ route('admin.users.index') }}"
                class="flex items-center gap-3 rounded-lg px-4 py-3 text-sm font-semibold
                        {{ request()->routeIs('admin.users*') ? 'bg-white text-[#3553A8]' : 'text-white hover:bg-[#2B438A]' }}
@@ -184,25 +187,7 @@
                 </svg>
                 User Admin
             </a>
-            <a href="{{ route('admin.admin.ai.index') }}"
-               class="flex items-center gap-3 rounded-lg px-4 py-3 text-sm font-semibold
-                       {{ request()->routeIs('admin.admin.ai*') ? 'bg-white text-[#3553A8]' : 'text-white hover:bg-[#2B438A]' }}
-                      transition-colors duration-150">
-                <svg class="h-5 w-5 shrink-0" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor">
-                    <path d="M16.5 7.5h-9v9h9v-9z"/>
-                    <path fill-rule="evenodd" d="M8.25 2.25A.75.75 0 019 3v.75h2.25V3a.75.75 0 011.5 0v.75H15V3a.75.75 0 011.5 0v.75h.75a3 3 0 013 3v.75H21A.75.75 0 0121 9h-.75v2.25H21a.75.75 0 010 1.5h-.75V15H21a.75.75 0 010 1.5h-.75v.75a3 3 0 01-3 3h-.75V21a.75.75 0 01-1.5 0v-.75h-2.25V21a.75.75 0 01-1.5 0v-.75H9V21a.75.75 0 01-1.5 0v-.75h-.75a3 3 0 01-3-3v-.75H3A.75.75 0 013 15h.75v-2.25H3a.75.75 0 010-1.5h.75V9H3a.75.75 0 010-1.5h.75v-.75a3 3 0 013-3h.75V3a.75.75 0 01.75-.75z" clip-rule="evenodd"/>
-                </svg>
-                AI Analytics
-            </a>
-            <a href="{{ route('admin.admin.blockchain.index') }}"
-               class="flex items-center gap-3 rounded-lg px-4 py-3 text-sm font-semibold
-                       {{ request()->routeIs('admin.admin.blockchain*') ? 'bg-white text-[#3553A8]' : 'text-white hover:bg-[#2B438A]' }}
-                      transition-colors duration-150">
-                <svg class="h-5 w-5 shrink-0" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor">
-                    <path d="M4.5 6.375a4.125 4.125 0 118.25 0 4.125 4.125 0 01-8.25 0zM14.25 8.625a3.375 3.375 0 116.75 0 3.375 3.375 0 01-6.75 0zM1.5 19.125a7.125 7.125 0 0114.25 0v.003l-.001.119a.75.75 0 01-.363.63 13.067 13.067 0 01-6.761 1.873c-2.472 0-4.786-.684-6.76-1.873a.75.75 0 01-.364-.63l-.001-.122zM17.25 19.128l-.001.144a2.25 2.25 0 01-.233.96 10.088 10.088 0 005.06-1.01.75.75 0 00.42-.643 4.875 4.875 0 00-6.957-4.611 8.586 8.586 0 011.71 5.157v.003z"/>
-                </svg>
-                Blockchain
-            </a>
+            @endif
 </nav>
 
         <div class="border-t border-[#4A6BCC] p-4">
@@ -259,6 +244,7 @@
                 Vendor
             </a>
 
+            @if(in_array(auth()->user()->role, ['admin', 'super_admin']))
             <a href="{{ route('admin.vendors.blacklist.index') }}"
                onclick="closeMobileSidebar()"
                class="flex items-center gap-3 rounded-lg px-4 py-3 text-sm font-semibold
@@ -269,6 +255,7 @@
                 </svg>
                 Blacklist
             </a>
+            @endif
 
             <a href="{{ route('admin.submissions.index') }}"
                onclick="closeMobileSidebar()"
@@ -359,6 +346,20 @@
                 </svg>
                 Laporan
             </a>
+
+            @if(in_array(auth()->user()->role, ['admin', 'super_admin']))
+            <a href="{{ route('admin.users.index') }}"
+               onclick="closeMobileSidebar()"
+               class="flex items-center gap-3 rounded-lg px-4 py-3 text-sm font-semibold
+                       {{ request()->routeIs('admin.users*') ? 'bg-white text-[#3553A8]' : 'text-white hover:bg-[#2B438A]' }}
+                      transition-colors duration-150">
+                <svg class="h-5 w-5 shrink-0" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor">
+                    <path fill-rule="evenodd" d="M8.25 6.75a3.75 3.75 0 117.5 0 3.75 3.75 0 01-7.5 0zM15.75 9.75a3 3 0 116 0 3 3 0 01-6 0zM2.25 9.75a3 3 0 116 0 3 3 0 01-6 0zM6.31 15.117A6.745 6.745 0 0112 12a6.745 6.745 0 016.709 7.498.75.75 0 01-.372.568A12.696 12.696 0 0112 21.75c-2.305 0-4.47-.612-6.337-1.684a.75.75 0 01-.372-.568 6.787 6.787 0 011.019-4.38z" clip-rule="evenodd"/>
+                    <path d="M5.082 14.254a8.287 8.287 0 00-1.308 5.135 9.687 9.687 0 01-1.764-.44l-.115-.04a.563.563 0 01-.373-.487l-.01-.121a3.75 3.75 0 013.57-4.047zM20.226 19.389a8.287 8.287 0 00-1.308-5.135 3.75 3.75 0 013.57 4.047l-.01.121a.563.563 0 01-.373.487l-.115.04c-.567.2-1.156.349-1.764.441z"/>
+                </svg>
+                User Admin
+            </a>
+            @endif
         </nav>
 
         <div class="border-t border-[#4A6BCC] p-4">
