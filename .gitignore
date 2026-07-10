@@ -16,3 +16,9 @@ yarn-error.log
 google-services*.json
 firebase-credentials.json
 *.log
+
+# Laravel auto-generated cache — jangan di-track git
+/bootstrap/cache/*.php
+/storage/framework/views/*.php
+/storage/framework/cache/*
+/storage/framework/sessions/*
