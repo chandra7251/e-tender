@@ -62,6 +62,7 @@ class AuthController extends Controller
             return $this->error('Email belum diverifikasi. Silakan cek kotak masuk email Anda.', null, 403);
         }
         $token = JWTAuth::fromUser($user);
+        $vendor = $user->vendor()->with('user')->first();
         return $this->success([
             'token'      => $token,
             'token_type' => 'bearer',
@@ -72,7 +73,7 @@ class AuthController extends Controller
                 'email' => $user->email,
                 'role'  => $user->role,
             ],
-            'vendor'     => new VendorResource($user->vendor()->with('user')->first()),
+            'vendor'     => $vendor ? new VendorResource($vendor) : null,
         ], 'Login berhasil.');
     }
     public function logout(Request $request): JsonResponse
