@@ -368,7 +368,7 @@ Documentation previews organized in `docs/screenshots/`:
 
 - **Application Identifier**: `com.vandrafcy.zeta`
 - **Client Architecture**: Ionic Framework + Angular + Capacitor
-- **Release Version**: `1.24` (versionCode `24` defined in `android/app/build.gradle`)
+- **Release Version**: `1.25` (versionCode `25` defined in `android/app/build.gradle`)
 - **Play Store Listing**: *TODO: Add verified production Play Store URL once public rollout is completed.*
 
 ---
