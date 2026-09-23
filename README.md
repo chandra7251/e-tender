@@ -352,15 +352,17 @@ Key configuration variables defined in `.env.example`:
 
 ## Screenshots
 
-Documentation previews organized in `docs/screenshots/`:
+System interface previews from the web administration panel and vendor mobile client:
 
-| Admin Web Dashboard | Mobile App Dashboard |
-| --- | --- |
-| `docs/screenshots/admin-dashboard.png` *(pending capture)* | ![Mobile Dashboard](docs/screenshots/mobile-dashboard.png) |
+### Web Administration Panel
+| Admin Dashboard | Tender List | Tender Detail & Evaluation |
+| --- | --- | --- |
+| ![Admin Web Dashboard](docs/screenshots/admin-dashboard.png) | ![Tender List](docs/screenshots/tender-list.png) | ![Tender Detail](docs/screenshots/tender-detail.png) |
 
-| Tender Details & Bidding | Mobile Tenders Tab |
+### Vendor Mobile Application
+| Mobile Dashboard | Mobile Bidding & Schedule |
 | --- | --- |
-| `docs/screenshots/tender-detail.png` *(pending capture)* | ![Mobile Bidding](docs/screenshots/mobile-bidding.png) |
+| ![Mobile Dashboard](docs/screenshots/mobile-dashboard.png) | ![Mobile Bidding](docs/screenshots/mobile-bidding.png) |
 
 ---
 
