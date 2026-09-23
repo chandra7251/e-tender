@@ -10,6 +10,11 @@ use Illuminate\Support\Facades\Storage;
 
 class VendorCatalogueController extends BaseApiController
 {
+    private function resolveVendor(): ?\App\Models\Vendor
+    {
+        return auth('api')->user()?->vendor;
+    }
+
     /** GET /api/catalogue — publik, semua item aktif */
     public function index(Request $request): JsonResponse
     {
@@ -49,8 +54,8 @@ class VendorCatalogueController extends BaseApiController
     /** GET /api/vendor/catalogue — katalog milik vendor yg login */
     public function myItems(): JsonResponse
     {
-        $vendor = auth('api')->user()->vendor;
-        if (!$vendor) return $this->error('Vendor tidak ditemukan.', 404);
+        $vendor = $this->resolveVendor();
+        if (!$vendor) return $this->error('Vendor tidak ditemukan.', null, 404);
 
         $items = VendorCatalogueItem::with(['category','photos'])
             ->where('vendor_id', $vendor->id)->latest()->get();
@@ -60,8 +65,8 @@ class VendorCatalogueController extends BaseApiController
     /** POST /api/vendor/catalogue */
     public function store(Request $request): JsonResponse
     {
-        $vendor = auth('api')->user()->vendor;
-        if (!$vendor) return $this->error('Vendor tidak ditemukan.', 404);
+        $vendor = $this->resolveVendor();
+        if (!$vendor) return $this->error('Vendor tidak ditemukan.', null, 404);
 
         $data = $request->validate([
             'name'          => 'required|string|max:200',
@@ -103,7 +108,8 @@ class VendorCatalogueController extends BaseApiController
     /** PUT /api/vendor/catalogue/{id} */
     public function update(Request $request, int $id): JsonResponse
     {
-        $vendor = auth('api')->user()->vendor;
+        $vendor = $this->resolveVendor();
+        if (!$vendor) return $this->error('Vendor tidak ditemukan.', null, 404);
         $item = VendorCatalogueItem::where('vendor_id', $vendor->id)->findOrFail($id);
 
         $data = $request->validate([
@@ -123,7 +129,8 @@ class VendorCatalogueController extends BaseApiController
     /** DELETE /api/vendor/catalogue/{id} */
     public function destroy(int $id): JsonResponse
     {
-        $vendor = auth('api')->user()->vendor;
+        $vendor = $this->resolveVendor();
+        if (!$vendor) return $this->error('Vendor tidak ditemukan.', null, 404);
         $item = VendorCatalogueItem::where('vendor_id', $vendor->id)->findOrFail($id);
         $item->photos->each(fn($p) => Storage::disk('public')->delete($p->photo_path));
         $item->delete();

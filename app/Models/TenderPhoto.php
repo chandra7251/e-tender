@@ -9,6 +9,9 @@ class TenderPhoto extends Model
         'tender_id',
         'photo_path',
     ];
+
+    protected $appends = ['photo_url'];
+
     public function getPhotoUrlAttribute(): ?string
     {
         return $this->photo_path

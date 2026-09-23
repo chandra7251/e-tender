@@ -82,7 +82,7 @@ class ContractController extends Controller
     /** Vendor: list kontrak milik vendor */
     public function vendorContracts(): JsonResponse
     {
-        $vendor = auth('api')->user()->vendor;
+        $vendor = auth('api')->user()?->vendor;
         if (! $vendor) {
             return $this->error('Vendor tidak ditemukan.', null, 404);
         }
@@ -95,7 +95,7 @@ class ContractController extends Controller
     /** Vendor/Admin: detail kontrak */
     public function show(Contract $contract): JsonResponse
     {
-        $vendor = auth('api')->user()->vendor;
+        $vendor = auth('api')->user()?->vendor;
         if ($vendor && $contract->vendor_id !== $vendor->id) {
             return $this->error('Tidak diizinkan.', null, 403);
         }
@@ -106,7 +106,7 @@ class ContractController extends Controller
     /** Vendor: tanda tangan kontrak */
     public function vendorSign(Contract $contract): JsonResponse
     {
-        $vendor = auth('api')->user()->vendor;
+        $vendor = auth('api')->user()?->vendor;
         if (! $vendor || $contract->vendor_id !== $vendor->id) {
             return $this->error('Tidak diizinkan.', null, 403);
         }

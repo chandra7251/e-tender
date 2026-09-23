@@ -7,6 +7,7 @@ class VendorCataloguePhoto extends Model
 {
     protected $fillable = ['catalogue_item_id','photo_path','is_primary'];
     protected $casts    = ['is_primary' => 'boolean'];
+    protected $appends  = ['url'];
 
     public function item(): BelongsTo
     {
