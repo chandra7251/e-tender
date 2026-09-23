@@ -1,5 +1,7 @@
 <?php
+
 namespace App\Http\Middleware;
+
 use Closure;
 use Illuminate\Http\Request;
 use Symfony\Component\HttpFoundation\Response;
@@ -11,16 +13,29 @@ class RoleMiddleware
      */
     public function handle(Request $request, Closure $next, string ...$roles): Response
     {
-        if (!auth()->check()) {
+        $user = $request->user() ?? auth('api')->user() ?? auth()->user();
+
+        if (! $user) {
             if ($request->expectsJson() || $request->is('api/*')) {
                 return response()->json(['status' => false, 'message' => 'Unauthenticated.'], 401);
             }
+
             return redirect()->route('admin.login');
         }
 
-        $userRole = auth()->user()->role;
+        $userRole = $user->role;
+        $allowedRoles = collect($roles)
+            ->flatMap(fn ($r) => explode(',', $r))
+            ->map(fn ($r) => trim($r))
+            ->filter()
+            ->values()
+            ->all();
 
-        if (!in_array($userRole, $roles)) {
+        $isAdminTarget = count(array_intersect($allowedRoles, ['admin', 'procurement_manager', 'evaluator', 'verifikator', 'auditor'])) > 0;
+        $hasAccess = in_array($userRole, $allowedRoles, true)
+            || ($userRole === 'super_admin' && $isAdminTarget);
+
+        if (! $hasAccess) {
             if ($request->expectsJson() || $request->is('api/*')) {
                 return response()->json(['status' => false, 'message' => 'Akses ditolak. Role tidak sesuai.'], 403);
             }
@@ -28,6 +43,7 @@ class RoleMiddleware
             if (in_array($userRole, ['admin', 'super_admin', 'procurement_manager', 'evaluator', 'verifikator', 'auditor'])) {
                 return redirect()->route('admin.dashboard')->with('error', 'Anda tidak memiliki akses ke halaman ini.');
             }
+
             return redirect()->route('admin.login');
         }
 

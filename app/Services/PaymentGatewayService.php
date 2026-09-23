@@ -2,9 +2,11 @@
 
 namespace App\Services;
 
+use App\Models\Bid;
 use App\Models\TenderPayment;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Schema;
 
 /**
  * Payment Gateway Service — Midtrans Integration
@@ -13,16 +15,19 @@ use Illuminate\Support\Facades\Log;
 class PaymentGatewayService
 {
     private string $serverKey;
+
     private string $clientKey;
+
     private string $baseUrl;
-    private bool   $isProduction;
+
+    private bool $isProduction;
 
     public function __construct()
     {
         $this->isProduction = config('services.midtrans.is_production', false);
-        $this->serverKey    = config('services.midtrans.server_key', env('MIDTRANS_SERVER_KEY', ''));
-        $this->clientKey    = config('services.midtrans.client_key', env('MIDTRANS_CLIENT_KEY', ''));
-        $this->baseUrl      = $this->isProduction
+        $this->serverKey = config('services.midtrans.server_key', env('MIDTRANS_SERVER_KEY', ''));
+        $this->clientKey = config('services.midtrans.client_key', env('MIDTRANS_CLIENT_KEY', ''));
+        $this->baseUrl = $this->isProduction
             ? 'https://app.midtrans.com/snap/v1'
             : 'https://app.sandbox.midtrans.com/snap/v1';
     }
@@ -33,28 +38,28 @@ class PaymentGatewayService
      */
     public function createDepositPayment(int $tenderId, int $vendorId, float $depositAmount, array $vendorInfo): array
     {
-        $orderId = 'DEPOSIT-' . $tenderId . '-' . $vendorId . '-' . time();
+        $orderId = 'DEPOSIT-'.$tenderId.'-'.$vendorId.'-'.time();
 
         $payload = [
             'transaction_details' => [
-                'order_id'     => $orderId,
+                'order_id' => $orderId,
                 'gross_amount' => (int) $depositAmount,
             ],
             'customer_details' => [
-                'first_name' => $vendorInfo['name']     ?? 'Vendor',
-                'email'      => $vendorInfo['email']    ?? 'vendor@zeta.id',
-                'phone'      => $vendorInfo['phone']    ?? '08000000000',
+                'first_name' => $vendorInfo['name'] ?? 'Vendor',
+                'email' => $vendorInfo['email'] ?? 'vendor@zeta.id',
+                'phone' => $vendorInfo['phone'] ?? '08000000000',
             ],
             'item_details' => [[
-                'id'       => 'DEPOSIT-JAMINAN',
-                'price'    => (int) $depositAmount,
+                'id' => 'DEPOSIT-JAMINAN',
+                'price' => (int) $depositAmount,
                 'quantity' => 1,
-                'name'     => 'Deposit Jaminan Tender #' . $tenderId,
+                'name' => 'Deposit Jaminan Tender #'.$tenderId,
             ]],
             'callbacks' => [
-                'finish'    => config('app.url') . '/payment/finish',
-                'error'     => config('app.url') . '/payment/error',
-                'pending'   => config('app.url') . '/payment/pending',
+                'finish' => config('app.url').'/payment/finish',
+                'error' => config('app.url').'/payment/error',
+                'pending' => config('app.url').'/payment/pending',
             ],
         ];
 
@@ -63,14 +68,14 @@ class PaymentGatewayService
         if ($response['success']) {
             // Simpan ke DB
             TenderPayment::create([
-                'tender_id'    => $tenderId,
-                'vendor_id'    => $vendorId,
-                'order_id'     => $orderId,
-                'type'         => 'deposit',
-                'amount'       => $depositAmount,
-                'status'       => 'pending',
-                'snap_token'   => $response['data']['token'] ?? null,
-                'snap_url'     => $response['data']['redirect_url'] ?? null,
+                'tender_id' => $tenderId,
+                'vendor_id' => $vendorId,
+                'order_id' => $orderId,
+                'type' => 'deposit',
+                'amount' => $depositAmount,
+                'status' => 'pending',
+                'snap_token' => $response['data']['token'] ?? null,
+                'snap_url' => $response['data']['redirect_url'] ?? null,
             ]);
         }
 
@@ -82,22 +87,22 @@ class PaymentGatewayService
      */
     public function createContractPayment(int $contractId, float $amount, array $details): array
     {
-        $orderId = 'CONTRACT-' . $contractId . '-' . time();
+        $orderId = 'CONTRACT-'.$contractId.'-'.time();
 
         $payload = [
             'transaction_details' => [
-                'order_id'     => $orderId,
+                'order_id' => $orderId,
                 'gross_amount' => (int) $amount,
             ],
             'customer_details' => [
                 'first_name' => $details['instansi_name'] ?? 'Instansi',
-                'email'      => $details['instansi_email'] ?? 'instansi@zeta.id',
+                'email' => $details['instansi_email'] ?? 'instansi@zeta.id',
             ],
             'item_details' => [[
-                'id'       => 'CONTRACT-PAYMENT',
-                'price'    => (int) $amount,
+                'id' => 'CONTRACT-PAYMENT',
+                'price' => (int) $amount,
                 'quantity' => 1,
-                'name'     => 'Pembayaran Kontrak #' . $details['contract_number'],
+                'name' => 'Pembayaran Kontrak #'.$details['contract_number'],
             ]],
         ];
 
@@ -112,9 +117,9 @@ class PaymentGatewayService
     {
         // Validate signature key dari Midtrans
         $signatureKey = hash('sha512',
-            $notification['order_id'] .
-            $notification['status_code'] .
-            $notification['gross_amount'] .
+            $notification['order_id'].
+            $notification['status_code'].
+            $notification['gross_amount'].
             $this->serverKey
         );
 
@@ -122,27 +127,29 @@ class PaymentGatewayService
             return ['success' => false, 'message' => 'Invalid signature'];
         }
 
-        $orderId       = $notification['order_id'];
+        $orderId = $notification['order_id'];
         $transactionStatus = $notification['transaction_status'];
-        $fraudStatus   = $notification['fraud_status'] ?? 'accept';
+        $fraudStatus = $notification['fraud_status'] ?? 'accept';
 
         $payment = TenderPayment::where('order_id', $orderId)->first();
-        if (!$payment) return ['success' => false, 'message' => 'Order tidak ditemukan'];
+        if (! $payment) {
+            return ['success' => false, 'message' => 'Order tidak ditemukan'];
+        }
 
         // Map Midtrans status
-        $newStatus = match(true) {
+        $newStatus = match (true) {
             $transactionStatus === 'capture' && $fraudStatus === 'accept' => 'paid',
-            $transactionStatus === 'settlement'                           => 'paid',
-            $transactionStatus === 'pending'                              => 'pending',
-            in_array($transactionStatus, ['deny','expire','cancel'])      => 'failed',
-            $transactionStatus === 'refund'                              => 'refunded',
-            default                                                       => 'pending',
+            $transactionStatus === 'settlement' => 'paid',
+            $transactionStatus === 'pending' => 'pending',
+            in_array($transactionStatus, ['deny', 'expire', 'cancel']) => 'failed',
+            $transactionStatus === 'refund' => 'refunded',
+            default => 'pending',
         };
 
         $payment->update([
-            'status'        => $newStatus,
+            'status' => $newStatus,
             'midtrans_data' => json_encode($notification),
-            'paid_at'       => $newStatus === 'paid' ? now() : null,
+            'paid_at' => $newStatus === 'paid' ? now() : null,
         ]);
 
         // Jika deposit paid → update vendor permission di tender
@@ -164,9 +171,9 @@ class PaymentGatewayService
         }
 
         $refundPayload = [
-            'refund_key' => 'REFUND-' . $payment->order_id,
-            'amount'     => (int) $payment->amount,
-            'reason'     => 'Deposit dikembalikan - vendor tidak memenangkan tender',
+            'refund_key' => 'REFUND-'.$payment->order_id,
+            'amount' => (int) $payment->amount,
+            'reason' => 'Deposit dikembalikan - vendor tidak memenangkan tender',
         ];
 
         // Midtrans Refund API
@@ -175,10 +182,11 @@ class PaymentGatewayService
 
         if ($response->successful()) {
             $payment->update(['status' => 'refunded', 'refunded_at' => now()]);
+
             return ['success' => true, 'message' => 'Refund berhasil diproses'];
         }
 
-        return ['success' => false, 'message' => 'Gagal memproses refund: ' . $response->body()];
+        return ['success' => false, 'message' => 'Gagal memproses refund: '.$response->body()];
     }
 
     /**
@@ -195,12 +203,13 @@ class PaymentGatewayService
     public function getTenderPayments(int $tenderId): array
     {
         $payments = TenderPayment::with('vendor')->where('tender_id', $tenderId)->get();
+
         return [
-            'total_deposits'   => $payments->where('type', 'deposit')->where('status', 'paid')->count(),
-            'total_amount'     => $payments->where('status', 'paid')->sum('amount'),
-            'pending_count'    => $payments->where('status', 'pending')->count(),
-            'refunded_count'   => $payments->where('status', 'refunded')->count(),
-            'payments'         => $payments->toArray(),
+            'total_deposits' => $payments->where('type', 'deposit')->where('status', 'paid')->count(),
+            'total_amount' => $payments->where('status', 'paid')->sum('amount'),
+            'pending_count' => $payments->where('status', 'pending')->count(),
+            'refunded_count' => $payments->where('status', 'refunded')->count(),
+            'payments' => $payments->toArray(),
         ];
     }
 
@@ -211,25 +220,28 @@ class PaymentGatewayService
         try {
             $response = Http::withBasicAuth($this->serverKey, '')
                 ->timeout(15)
-                ->post($this->baseUrl . $endpoint, $payload);
+                ->post($this->baseUrl.$endpoint, $payload);
 
             if ($response->successful()) {
                 return ['success' => true, 'data' => $response->json()];
             }
 
-            Log::error('Midtrans error: ' . $response->body());
+            Log::error('Midtrans error: '.$response->body());
+
             return ['success' => false, 'message' => $response->json('error_messages.0') ?? 'Midtrans error'];
         } catch (\Throwable $e) {
-            Log::error('Midtrans exception: ' . $e->getMessage());
+            Log::error('Midtrans exception: '.$e->getMessage());
+
             return ['success' => false, 'message' => 'Koneksi ke payment gateway gagal.'];
         }
     }
 
     private function onDepositPaid(TenderPayment $payment): void
     {
-        // Update TenderBid atau flag bahwa vendor sudah bayar deposit
-        \App\Models\TenderBid::where('tender_id', $payment->tender_id)
-            ->where('vendor_id', $payment->vendor_id)
-            ->update(['deposit_paid' => true]);
+        if (Schema::hasTable('bids') && Schema::hasColumn('bids', 'deposit_paid')) {
+            Bid::where('tender_id', $payment->tender_id)
+                ->where('vendor_id', $payment->vendor_id)
+                ->update(['deposit_paid' => true]);
+        }
     }
 }

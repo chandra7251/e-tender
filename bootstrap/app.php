@@ -42,21 +42,28 @@ return Application::configure(basePath: dirname(__DIR__))
                         'data'    => null,
                     ], 401);
                 }
-                $status = method_exists($e, 'getStatusCode') ? $e->getStatusCode() : 500;
+                $status = $e instanceof \Illuminate\Validation\ValidationException
+                    ? 422
+                    : (method_exists($e, 'getStatusCode') ? $e->getStatusCode() : 500);
 
                 // Jangan expose pesan internal di production
                 $message = $status >= 500
                     ? 'Terjadi kesalahan server. Silakan coba beberapa saat lagi.'
                     : $e->getMessage();
 
-                return response()->json([
+                $response = [
                     'status'  => false,
                     'message' => $message,
                     'data'    => null,
-                ], $status);
+                ];
+
+                if ($e instanceof \Illuminate\Validation\ValidationException) {
+                    $response['errors'] = $e->errors();
+                }
+
+                return response()->json($response, $status);
             }
 
             return null; // fallback ke handler default untuk non-API
         });
     })->create();
-

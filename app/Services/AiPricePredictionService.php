@@ -2,9 +2,11 @@
 
 namespace App\Services;
 
+use App\Models\Bid;
 use App\Models\Tender;
-use App\Models\TenderBid;
-use Illuminate\Support\Collection;
+use App\Models\TenderResult;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Schema;
 
 /**
  * AI Price Prediction & Vendor Scoring Service
@@ -19,15 +21,25 @@ class AiPricePredictionService
      */
     public function predictPrice(string $category, float $hps): array
     {
-        // Get historical winning bids in similar category
-        $historicalBids = TenderBid::join('tenders', 'tender_bids.tender_id', '=', 'tenders.id')
-            ->where('tenders.category', $category)
-            ->where('tender_bids.is_winner', true)
-            ->where('tenders.status', 'finished')
-            ->select('tender_bids.bid_price', 'tenders.hps')
-            ->latest('tender_bids.created_at')
-            ->limit(50)
-            ->get();
+        $hpsColumn = Schema::hasColumn('tenders', 'open_bidding_price')
+            ? 'tenders.open_bidding_price'
+            : (Schema::hasColumn('tenders', 'hps') ? 'tenders.hps' : null);
+
+        $query = Bid::join('tenders', 'bids.tender_id', '=', 'tenders.id')
+            ->join('tender_results', 'tender_results.winning_bid_id', '=', 'bids.id')
+            ->where('tenders.status', 'finished');
+
+        if (Schema::hasColumn('tenders', 'category')) {
+            $query->where('tenders.category', $category);
+        }
+
+        if ($hpsColumn) {
+            $query->select('bids.bid_amount as bid_price', "{$hpsColumn} as hps");
+        } else {
+            $query->select('bids.bid_amount as bid_price', DB::raw("{$hps} as hps"));
+        }
+
+        $historicalBids = $query->latest('bids.created_at')->limit(50)->get();
 
         if ($historicalBids->count() < 3) {
             // Fallback: tidak cukup data historis, pakai rule-based
@@ -35,29 +47,33 @@ class AiPricePredictionService
         }
 
         // Hitung rasio harga menang terhadap HPS (win-to-HPS ratio)
-        $ratios = $historicalBids->map(fn($b) => $b->bid_price / $b->hps)->values();
+        $ratios = $historicalBids->map(function ($b) use ($hps) {
+            $baseHps = (float) ($b->hps > 0 ? $b->hps : $hps);
 
-        $mean   = $ratios->avg();
+            return $baseHps > 0 ? (float) $b->bid_price / $baseHps : 1.0;
+        })->values();
+
+        $mean = $ratios->avg();
         $stdDev = $this->standardDeviation($ratios->toArray());
 
         // Predicted price = HPS * mean ratio
         $predictedPrice = $hps * $mean;
-        $lowerBound     = $hps * ($mean - $stdDev);
-        $upperBound     = $hps * ($mean + $stdDev);
+        $lowerBound = $hps * ($mean - $stdDev);
+        $upperBound = $hps * ($mean + $stdDev);
 
         // Confidence score berdasarkan jumlah data (more data = higher confidence)
         $confidence = min(95, 50 + ($historicalBids->count() * 0.9));
 
         return [
-            'predicted_price'   => round($predictedPrice),
-            'lower_bound'       => round(max($lowerBound, $hps * 0.5)),
-            'upper_bound'       => round(min($upperBound, $hps)),
-            'confidence'        => round($confidence, 1),
-            'data_points'       => $historicalBids->count(),
-            'mean_ratio'        => round($mean, 4),
-            'category'          => $category,
-            'method'            => 'linear_regression',
-            'recommendation'    => $this->priceRecommendation($mean),
+            'predicted_price' => round($predictedPrice),
+            'lower_bound' => round(max($lowerBound, $hps * 0.5)),
+            'upper_bound' => round(min($upperBound, $hps)),
+            'confidence' => round($confidence, 1),
+            'data_points' => $historicalBids->count(),
+            'mean_ratio' => round($mean, 4),
+            'category' => $category,
+            'method' => 'linear_regression',
+            'recommendation' => $this->priceRecommendation($mean),
         ];
     }
 
@@ -68,37 +84,38 @@ class AiPricePredictionService
     public function detectAnomaly(int $tenderId, float $bidPrice): array
     {
         $tender = Tender::findOrFail($tenderId);
-        $allBids = TenderBid::where('tender_id', $tenderId)->pluck('bid_price')->toArray();
+        $tenderHps = (float) ($tender->hps > 0 ? $tender->hps : ($bidPrice > 0 ? $bidPrice : 1.0));
+        $allBids = Bid::where('tender_id', $tenderId)->pluck('bid_amount')->map(fn ($v) => (float) $v)->toArray();
 
         if (count($allBids) < 2) {
             return [
-                'anomaly_score'   => 0,
-                'is_anomaly'      => false,
-                'reason'          => 'Tidak cukup data bid untuk analisis',
-                'hps_ratio'       => round($bidPrice / $tender->hps, 4),
+                'anomaly_score' => 0,
+                'is_anomaly' => false,
+                'reason' => 'Tidak cukup data bid untuk analisis',
+                'hps_ratio' => round($bidPrice / $tenderHps, 4),
             ];
         }
 
-        $mean   = array_sum($allBids) / count($allBids);
+        $mean = array_sum($allBids) / count($allBids);
         $stdDev = $this->standardDeviation($allBids);
         $zScore = $stdDev > 0 ? abs($bidPrice - $mean) / $stdDev : 0;
 
         // HPS ratio — harga wajar harusnya 70-100% HPS
-        $hpsRatio = $bidPrice / $tender->hps;
-        $hpsFlag  = $hpsRatio > 1.0   // melebihi HPS
+        $hpsRatio = $bidPrice / $tenderHps;
+        $hpsFlag = $hpsRatio > 1.0   // melebihi HPS
                  || $hpsRatio < 0.5;  // terlalu murah (suspicious)
 
         // Anomaly score 0-100
         $anomalyScore = min(100, ($zScore * 20) + ($hpsFlag ? 40 : 0));
-        $isAnomaly    = $anomalyScore > 60;
+        $isAnomaly = $anomalyScore > 60;
 
         return [
             'anomaly_score' => round($anomalyScore, 1),
-            'is_anomaly'    => $isAnomaly,
-            'z_score'       => round($zScore, 3),
-            'hps_ratio'     => round($hpsRatio, 4),
-            'reason'        => $this->anomalyReason($hpsRatio, $zScore, $isAnomaly),
-            'flag'          => $isAnomaly ? 'PERIKSA_ULANG' : 'NORMAL',
+            'is_anomaly' => $isAnomaly,
+            'z_score' => round($zScore, 3),
+            'hps_ratio' => round($hpsRatio, 4),
+            'reason' => $this->anomalyReason($hpsRatio, $zScore, $isAnomaly),
+            'flag' => $isAnomaly ? 'PERIKSA_ULANG' : 'NORMAL',
         ];
     }
 
@@ -108,30 +125,31 @@ class AiPricePredictionService
      */
     public function scoreVendors(int $tenderId): array
     {
-        $tender  = Tender::findOrFail($tenderId);
-        $bidders = TenderBid::with('vendor.ratings')
+        $tender = Tender::findOrFail($tenderId);
+        $tenderHps = (float) ($tender->open_bidding_price ?: ($tender->hps ?? 0));
+        $bidders = Bid::with('vendor.ratings')
             ->where('tender_id', $tenderId)
             ->get();
 
-        $scored = $bidders->map(function ($bid) use ($tender) {
+        $scored = $bidders->map(function ($bid) use ($tenderHps) {
             $vendor = $bid->vendor;
 
             // 1. Price score (0-40 pts): lebih rendah dari HPS = lebih baik
-            $hpsRatio   = $bid->bid_price / $tender->hps;
+            $hpsRatio = $tenderHps > 0 ? (float) $bid->bid_amount / $tenderHps : 1.0;
             $priceScore = $hpsRatio <= 1.0
                 ? round((1 - $hpsRatio) * 40 + 10, 1)
                 : 0;
             $priceScore = min(40, $priceScore);
 
             // 2. Win-rate score (0-25 pts)
-            $totalTenders = TenderBid::where('vendor_id', $vendor->id)->count() ?: 1;
-            $wonTenders   = TenderBid::where('vendor_id', $vendor->id)->where('is_winner', true)->count();
-            $winRate      = $wonTenders / $totalTenders;
+            $totalTenders = Bid::where('vendor_id', $vendor->id)->count() ?: 1;
+            $wonTenders = TenderResult::where('winner_vendor_id', $vendor->id)->count();
+            $winRate = $wonTenders / $totalTenders;
             $winRateScore = round($winRate * 25, 1);
 
             // 3. Rating score (0-20 pts)
-            $avgRating  = $vendor->ratings->avg('rating') ?? 3;
-            $ratingScore= round(($avgRating / 5) * 20, 1);
+            $avgRating = $vendor->ratings->avg('rating') ?? 3;
+            $ratingScore = round(($avgRating / 5) * 20, 1);
 
             // 4. Experience score (0-15 pts): makin banyak tender diikuti = pengalaman lebih
             $expScore = min(15, round(log($totalTenders + 1) * 4, 1));
@@ -139,18 +157,18 @@ class AiPricePredictionService
             $totalScore = $priceScore + $winRateScore + $ratingScore + $expScore;
 
             return [
-                'vendor_id'    => $vendor->id,
-                'vendor_name'  => $vendor->company_name,
-                'bid_price'    => $bid->bid_price,
-                'total_score'  => round($totalScore, 1),
+                'vendor_id' => $vendor->id,
+                'vendor_name' => $vendor->company_name,
+                'bid_price' => (float) $bid->bid_amount,
+                'total_score' => round($totalScore, 1),
                 'breakdown' => [
-                    'price_score'    => $priceScore,
-                    'winrate_score'  => $winRateScore,
-                    'rating_score'   => $ratingScore,
-                    'exp_score'      => $expScore,
-                    'win_rate_pct'   => round($winRate * 100, 1),
-                    'avg_rating'     => round($avgRating, 1),
-                    'total_tenders'  => $totalTenders,
+                    'price_score' => $priceScore,
+                    'winrate_score' => $winRateScore,
+                    'rating_score' => $ratingScore,
+                    'exp_score' => $expScore,
+                    'win_rate_pct' => round($winRate * 100, 1),
+                    'avg_rating' => round($avgRating, 1),
+                    'total_tenders' => $totalTenders,
                 ],
                 'recommendation' => $this->vendorRecommendation($totalScore),
             ];
@@ -164,28 +182,29 @@ class AiPricePredictionService
      */
     public function analyzeTender(int $tenderId): array
     {
-        $tender  = Tender::with('bids.vendor')->findOrFail($tenderId);
-        $bids    = $tender->bids;
+        $tender = Tender::with('bids.vendor')->findOrFail($tenderId);
+        $bids = $tender->bids;
+        $tenderHps = (float) ($tender->open_bidding_price ?: ($tender->hps ?? 0));
 
-        $anomalies = $bids->map(fn($bid) => array_merge(
-            ['vendor_name' => $bid->vendor->company_name ?? 'Unknown', 'bid_price' => $bid->bid_price],
-            $this->detectAnomaly($tenderId, $bid->bid_price)
+        $anomalies = $bids->map(fn ($bid) => array_merge(
+            ['vendor_name' => $bid->vendor->company_name ?? 'Unknown', 'bid_price' => (float) $bid->bid_amount],
+            $this->detectAnomaly($tenderId, (float) $bid->bid_amount)
         ))->sortByDesc('anomaly_score')->values();
 
-        $pricePrediction = $this->predictPrice($tender->category ?? 'general', $tender->hps);
-        $vendorScores    = $this->scoreVendors($tenderId);
+        $pricePrediction = $this->predictPrice($tender->category ?? 'general', $tenderHps);
+        $vendorScores = $this->scoreVendors($tenderId);
 
         return [
-            'tender_id'        => $tenderId,
-            'tender_title'     => $tender->title,
-            'hps'              => $tender->hps,
-            'bid_count'        => $bids->count(),
+            'tender_id' => $tenderId,
+            'tender_title' => $tender->title,
+            'hps' => $tenderHps,
+            'bid_count' => $bids->count(),
             'price_prediction' => $pricePrediction,
-            'vendor_ranking'   => $vendorScores,
-            'anomaly_report'   => $anomalies->toArray(),
-            'anomaly_flags'    => $anomalies->where('is_anomaly', true)->count(),
-            'ai_recommendation'=> $vendorScores[0]['vendor_name'] ?? null,
-            'analysis_at'      => now()->toIso8601String(),
+            'vendor_ranking' => $vendorScores,
+            'anomaly_report' => $anomalies->toArray(),
+            'anomaly_flags' => $anomalies->where('is_anomaly', true)->count(),
+            'ai_recommendation' => $vendorScores[0]['vendor_name'] ?? null,
+            'analysis_at' => now()->toIso8601String(),
         ];
     }
 
@@ -194,49 +213,75 @@ class AiPricePredictionService
     private function standardDeviation(array $values): float
     {
         $n = count($values);
-        if ($n < 2) return 0;
+        if ($n < 2) {
+            return 0;
+        }
         $mean = array_sum($values) / $n;
-        $variance = array_sum(array_map(fn($v) => ($v - $mean) ** 2, $values)) / ($n - 1);
+        $variance = array_sum(array_map(fn ($v) => ($v - $mean) ** 2, $values)) / ($n - 1);
+
         return sqrt($variance);
     }
 
     private function ruleBasedPrediction(float $hps): array
     {
         return [
-            'predicted_price'  => round($hps * 0.82),
-            'lower_bound'      => round($hps * 0.65),
-            'upper_bound'      => round($hps * 0.95),
-            'confidence'       => 50.0,
-            'data_points'      => 0,
-            'mean_ratio'       => 0.82,
-            'category'         => 'general',
-            'method'           => 'rule_based',
-            'recommendation'   => 'Data historis terbatas. Gunakan kisaran 65-95% dari HPS sebagai acuan.',
+            'predicted_price' => round($hps * 0.82),
+            'lower_bound' => round($hps * 0.65),
+            'upper_bound' => round($hps * 0.95),
+            'confidence' => 50.0,
+            'data_points' => 0,
+            'mean_ratio' => 0.82,
+            'category' => 'general',
+            'method' => 'rule_based',
+            'recommendation' => 'Data historis terbatas. Gunakan kisaran 65-95% dari HPS sebagai acuan.',
         ];
     }
 
     private function priceRecommendation(float $meanRatio): string
     {
-        if ($meanRatio < 0.70) return 'Kompetisi sangat ketat di kategori ini. Tetapkan HPS lebih rendah.';
-        if ($meanRatio < 0.85) return 'Kompetisi sehat. HPS saat ini sudah tepat.';
-        if ($meanRatio < 0.95) return 'Penawaran cenderung tinggi. Pertimbangkan negosiasi atau revisi HPS.';
+        if ($meanRatio < 0.70) {
+            return 'Kompetisi sangat ketat di kategori ini. Tetapkan HPS lebih rendah.';
+        }
+        if ($meanRatio < 0.85) {
+            return 'Kompetisi sehat. HPS saat ini sudah tepat.';
+        }
+        if ($meanRatio < 0.95) {
+            return 'Penawaran cenderung tinggi. Pertimbangkan negosiasi atau revisi HPS.';
+        }
+
         return 'Penawaran mendekati HPS. Pertimbangkan memperkecil HPS agar lebih kompetitif.';
     }
 
     private function anomalyReason(float $hpsRatio, float $zScore, bool $isAnomaly): string
     {
-        if (!$isAnomaly) return 'Harga penawaran dalam batas normal.';
-        if ($hpsRatio > 1.0) return 'Harga melebihi HPS — tidak memenuhi syarat.';
-        if ($hpsRatio < 0.5) return 'Harga terlalu rendah (< 50% HPS) — indikasi vendor tidak kompeten atau dump pricing.';
-        if ($zScore > 2.5)   return 'Harga menyimpang jauh dari rata-rata penawaran lain (z-score tinggi).';
+        if (! $isAnomaly) {
+            return 'Harga penawaran dalam batas normal.';
+        }
+        if ($hpsRatio > 1.0) {
+            return 'Harga melebihi HPS — tidak memenuhi syarat.';
+        }
+        if ($hpsRatio < 0.5) {
+            return 'Harga terlalu rendah (< 50% HPS) — indikasi vendor tidak kompeten atau dump pricing.';
+        }
+        if ($zScore > 2.5) {
+            return 'Harga menyimpang jauh dari rata-rata penawaran lain (z-score tinggi).';
+        }
+
         return 'Kombinasi faktor anomali terdeteksi. Perlu verifikasi manual.';
     }
 
     private function vendorRecommendation(float $score): string
     {
-        if ($score >= 70) return 'SANGAT_DIREKOMENDASIKAN';
-        if ($score >= 50) return 'DIREKOMENDASIKAN';
-        if ($score >= 30) return 'PERTIMBANGKAN';
+        if ($score >= 70) {
+            return 'SANGAT_DIREKOMENDASIKAN';
+        }
+        if ($score >= 50) {
+            return 'DIREKOMENDASIKAN';
+        }
+        if ($score >= 30) {
+            return 'PERTIMBANGKAN';
+        }
+
         return 'PERLU_VERIFIKASI';
     }
 }
